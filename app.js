@@ -401,7 +401,9 @@ function createMicButton(targetText, onComplete) {
                 if(retryCount === 0) {
                     retryCount++;
                     feedbackText.innerText = "Hmm, didn't catch that.";
-                    speak("Let's try that one again.");
+                    speak("Let's try that one again.", () => {
+                        startListening();
+                    });
                 } else {
                     feedbackText.innerText = "Missed it.";
                     playPop();
