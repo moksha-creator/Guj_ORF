@@ -435,6 +435,7 @@ function renderWords() {
         mainContent.innerHTML = `<h2>Words complete!</h2>`;
         return;
     }
+    mainContent.innerHTML = '';
     
     const word = sessionContent.words[currentItemIndex];
     const display = document.createElement('div');
@@ -457,6 +458,7 @@ function renderSentences() {
         mainContent.innerHTML = `<h2>Sentences complete!</h2>`;
         return;
     }
+    mainContent.innerHTML = '';
     
     const sentence = sessionContent.sentences[currentItemIndex];
     const words = sentence.split(' ').length;
