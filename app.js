@@ -7,7 +7,8 @@ const activities = {
     VOCAB: 4,
     COMPREHENSION: 5,
     SEQUENCING: 6,
-    RESULT: 7
+    RETELLING: 7,
+    RESULT: 8
 };
 
 const wordBank = ["cat", "dog", "sun", "hat", "run", "jump", "blue", "tree", "bird", "play"];
@@ -28,6 +29,7 @@ let scores = {
     vocab: 0, // out of 2
     comp: 0, // out of 2
     seq: 0, // out of 2
+    retell: 0 // out of 2
 };
 
 let currentItemIndex = 0;
@@ -142,6 +144,11 @@ function startActivity(activityType) {
         case activities.SEQUENCING:
             speak("Can you put the story in the right order? Drag the pictures.");
             renderSequencing();
+            break;
+            
+        case activities.RETELLING:
+            speak("Can you tell me what happened in the story?");
+            renderRetelling();
             break;
             
         case activities.RESULT:
@@ -402,8 +409,34 @@ function checkSequenceComplete() {
         if(correct === 4) scores.seq = 2;
         else scores.seq = 1;
         playSuccess();
-        setTimeout(() => startActivity(activities.RESULT), 1500);
+        setTimeout(() => startActivity(activities.RETELLING), 1500);
     }
+}
+
+function renderRetelling() {
+    const container = document.createElement('div');
+    container.className = 'story-display';
+    
+    const imagesDiv = document.createElement('div');
+    imagesDiv.className = 'story-images';
+    // Show visual prompts
+    storyImages.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'story-img';
+        img.style.width = '120px';
+        img.style.height = '120px';
+        imagesDiv.appendChild(img);
+    });
+    
+    const mic = createMicButton((passed) => {
+        scores.retell = passed ? 2 : 1;
+        controlsContainer.classList.remove('hidden');
+    });
+    
+    container.appendChild(imagesDiv);
+    container.appendChild(mic);
+    mainContent.appendChild(container);
 }
 
 function renderResult() {
@@ -412,8 +445,8 @@ function renderResult() {
     
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
     let level = "Needs Support";
-    if (totalScore >= 10) level = "Proficient";
-    else if (totalScore >= 7) level = "Developing";
+    if (totalScore >= 12) level = "Proficient";
+    else if (totalScore >= 8) level = "Developing";
     
     const card = document.createElement('div');
     card.className = 'result-card bounce';
@@ -421,7 +454,7 @@ function renderResult() {
     card.innerHTML = `
         <h1>Teacher Dashboard</h1>
         <h2>Overall Level: ${level}</h2>
-        <div class="score-badge">${totalScore} / 12</div>
+        <div class="score-badge">${totalScore} / 14</div>
         <div style="text-align: left; margin: 0 auto; display: inline-block; font-size: 1.2rem;">
             <p>Reading Words: ${scores.words}/2</p>
             <p>Reading Sentences: ${scores.sentences}/2</p>
@@ -429,6 +462,7 @@ function renderResult() {
             <p>Vocabulary: ${scores.vocab}/2</p>
             <p>Comprehension: ${scores.comp}/2</p>
             <p>Sequencing: ${scores.seq}/2</p>
+            <p>Story Retelling: ${scores.retell}/2</p>
         </div>
         <p style="margin-top: 2rem; color: #666;">(This screen is for teachers only)</p>
         <button class="btn-primary" style="margin-top:2rem;" onclick="location.reload()">Start Next Child</button>
