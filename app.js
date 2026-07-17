@@ -11,9 +11,8 @@ const SpeechEngine = {
         }
     },
     listen(targetText, onResult, onInterim) {
-        if (!this.recognition) {
-            return onResult('NO_STT'); // Expose failure state for manual override
-        }
+        if (!this.recognition) return onResult('NO_STT'); 
+        
         let hasMatched = false;
         let targetWords = targetText.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/);
         
@@ -27,7 +26,7 @@ const SpeechEngine = {
                     if (results[i][j].confidence >= 0.5) transcript += results[i][j].transcript.toLowerCase() + " ";
                 }
                 
-                if(onInterim) onInterim(results[i][0].transcript);
+                if(onInterim) onInterim(transcript.trim());
                 
                 let wordsSpoken = transcript.trim().split(/\s+/);
                 
@@ -60,8 +59,7 @@ const screens = {
     ACTIVITY: document.getElementById('screen-03-activity'),
     END: document.getElementById('screen-04-end')
 };
-const mikoContainer = document.getElementById('miko-container');
-const mikoBubble = document.getElementById('miko-bubble');
+const mikoGlobal = document.getElementById('miko-global');
 
 // Audio
 const sfxPop = document.getElementById('sfx-pop');
@@ -81,34 +79,38 @@ let retryCount = 0;
 let activityPhase = 'READING'; // or 'MEANING'
 
 // TTS
-let lastSpokenText = "";
+function setMikoState(state) {
+    mikoGlobal.className = '';
+    if(state) mikoGlobal.classList.add(`miko-${state}`);
+    mikoGlobal.classList.remove('hidden');
+}
+
 function speak(text, callback) {
-    if(text) lastSpokenText = text;
-    // P2-2: Removed visual bubble to reduce on-screen chrome and duplication
     isSpeaking = true;
+    setMikoState('speaking');
+    
     const finish = () => {
         isSpeaking = false;
+        setMikoState('encouraging');
         window.dispatchEvent(new Event('miko-done-speaking'));
         if(callback) callback();
     };
     
-    if ('speechSynthesis' in window) {
+    if ('speechSynthesis' in window && text) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(lastSpokenText);
+        const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.9; 
         utterance.onend = finish; utterance.onerror = finish;
         window.speechSynthesis.speak(utterance);
     } else { setTimeout(finish, 1000); }
 }
 
-document.getElementById('btn-replay').classList.remove('hidden');
-document.getElementById('btn-replay').onclick = () => { if(!isSpeaking) speak(); };
-
 // Switch Screen Helper
 function showScreen(screenElem) {
-    Object.values(screens).forEach(s => s.classList.add('hidden'));
+    Object.values(screens).forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
     screenElem.classList.remove('hidden');
-    mikoContainer.classList.add('hidden'); // hidden by default unless ACTIVITY
+    screenElem.classList.add('active');
+    setMikoState('encouraging'); // Always visible global Miko
 }
 
 // ==========================================
@@ -117,91 +119,95 @@ function showScreen(screenElem) {
 function renderHome() {
     showScreen(screens.HOME);
     const students = getStudents();
-    const list = document.getElementById('student-list');
-    list.innerHTML = '';
+    const upNextSection = document.getElementById('up-next-section');
+    const queueSection = document.getElementById('queue-section');
+    
+    // Progress Bar
+    const completed = students.filter(s => s.dailyStatus === 'done').length;
+    document.getElementById('progress-bar-fill').style.width = `${(completed / students.length) * 100}%`;
     
     const nextStudent = students.find(s => s.dailyStatus === 'waiting');
+    currentStudent = nextStudent;
     
+    // Up Next Card
     if (nextStudent) {
-        document.getElementById('up-next-banner').classList.remove('hidden');
-        document.getElementById('up-next-name').innerText = nextStudent.name;
-        // P0-3: Level removed from front end banner
-        currentStudent = nextStudent;
+        upNextSection.innerHTML = `
+            <div class="card up-next-card">
+                <div class="avatar-placeholder"></div>
+                <h2>${nextStudent.name}</h2>
+                <p>Roll No. ${nextStudent.id}</p>
+                <div style="display:flex; gap:16px; justify-content:center;">
+                    <button class="btn-primary" onclick="startSession()">Start Reading</button>
+                    <button class="btn-secondary" onclick="updateStudentStatus('${nextStudent.id}', 'absent'); renderHome();">Mark Absent</button>
+                </div>
+            </div>
+        `;
     } else {
-        document.getElementById('up-next-banner').classList.add('hidden');
-        currentStudent = null;
+        upNextSection.innerHTML = `<h2>All done for today!</h2><button class="btn-secondary" onclick="resetDailyQueue(); renderHome();">Reset Queue</button>`;
     }
     
+    // Queue Chips
+    queueSection.innerHTML = '';
     students.forEach(s => {
-        const card = document.createElement('div');
-        card.className = `student-card status-${s.dailyStatus}`;
-        // P0-3: Level removed from public roster card
-        card.innerText = `${s.name}`;
-        card.onclick = () => {
-            if (s.dailyStatus !== 'waiting') {
-                updateStudentStatus(s.id, 'waiting');
-                renderHome();
-            }
+        const chip = document.createElement('div');
+        chip.className = `chip status-${s.dailyStatus}`;
+        chip.innerText = s.name;
+        chip.onclick = () => {
+            if (s.dailyStatus !== 'waiting') { updateStudentStatus(s.id, 'waiting'); renderHome(); }
         };
-        list.appendChild(card);
+        queueSection.appendChild(chip);
     });
 }
-
-document.getElementById('btn-add-student').onclick = () => {
-    const inp = document.getElementById('new-student-name');
-    if(inp.value.trim()){ addStudent(inp.value.trim()); inp.value=''; renderHome(); }
-};
-document.getElementById('btn-reset-queue').onclick = () => { resetDailyQueue(); renderHome(); };
-
-document.getElementById('btn-mark-absent').onclick = () => {
-    if(currentStudent) { updateStudentStatus(currentStudent.id, 'absent'); renderHome(); }
-};
 
 // Teacher Dashboard (PIN Gated)
 window.renderTeacherDashboard = function() {
     document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
+    const students = getStudents();
+    const completed = students.filter(s => s.dailyStatus === 'done').length;
+    
+    document.getElementById('dashboard-stats').innerHTML = `
+        <div class="stat-card"><h3>${completed}</h3><p>Completed</p></div>
+        <div class="stat-card"><h3>${students.length - completed}</h3><p>Remaining</p></div>
+    `;
+    
     const content = document.getElementById('dashboard-content');
     let html = '';
-    getStudents().forEach(s => {
-        html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
-                    <h3>${s.name} - Currently L${s.currentLevel}</h3>
-                    <div style="display:flex; gap: 0.5rem; align-items:center;">
-                        <button onclick="setStudentLevel('${s.id}', ${s.currentLevel - 1}); renderTeacherDashboard();" style="padding:0.2rem 0.5rem;">-</button>
-                        <span> L${s.currentLevel} </span>
-                        <button onclick="setStudentLevel('${s.id}', ${s.currentLevel + 1}); renderTeacherDashboard();" style="padding:0.2rem 0.5rem;">+</button>
+    students.forEach(s => {
+        html += `<div class="dash-student-card">
+                    <div>
+                        <h2>${s.name}</h2>
+                        <div style="color:var(--text-muted); font-size:1.2rem;">
+                            ${s.sessions.slice(-3).map(sess => `${new Date(sess.timestamp).toLocaleDateString()} | Read: ${sess.readPassed?'Yes':'No'} | Result Lvl: ${sess.resultLevel}`).join('<br>')}
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; background:#E5E7EB; border-radius:50px; padding:8px;">
+                        <button class="btn-secondary lvl-btn" onclick="setStudentLevel('${s.id}', ${s.currentLevel - 1}); renderTeacherDashboard();">-</button>
+                        <span style="font-size:24px; font-weight:900; margin:0 16px;">L${s.currentLevel}</span>
+                        <button class="btn-secondary lvl-btn" onclick="setStudentLevel('${s.id}', ${s.currentLevel + 1}); renderTeacherDashboard();">+</button>
                     </div>
                  </div>`;
-        html += '<div style="font-size:0.9rem; color:#555; margin-bottom:1rem;">';
-        s.sessions.slice(-3).forEach(sess => {
-            const date = new Date(sess.timestamp).toLocaleDateString();
-            html += `<p>${date} | Read Pass: ${sess.readPassed} | Meaning Pass: ${sess.meaningPassed} | WCPM: ${sess.wcpm} | Result Lvl: ${sess.resultLevel}</p>`;
-        });
-        html += '</div><hr>';
     });
     content.innerHTML = html;
 };
 
 document.getElementById('btn-teacher-dashboard-trigger').onclick = () => {
     const pin = prompt("Enter Teacher PIN to view scores (hint: 1234):");
-    if (pin !== '1234') {
-        alert("Incorrect PIN.");
-        return;
-    }
-    renderTeacherDashboard();
+    if (pin === '1234') renderTeacherDashboard();
 };
 document.getElementById('btn-close-dashboard').onclick = () => document.getElementById('teacher-dashboard-modal').classList.add('hidden');
 
 // Start Session
-document.getElementById('btn-start').onclick = () => {
+window.startSession = function() {
     if(!currentStudent) return;
     playPop();
     showScreen(screens.TRANSITION);
+    setMikoState('encouraging');
     
     currentSessionData = getContentForLevel(currentStudent.currentLevel);
     sessionStats = { readPassed: false, meaningPassed: false, wcpm: 0 };
     activityPhase = 'READING';
     
-    document.getElementById('transition-name').innerText = currentStudent.name;
+    document.getElementById('transition-greeting').innerText = `Hi ${currentStudent.name}!`;
     let count = 3;
     document.getElementById('countdown').innerText = count;
     
@@ -220,7 +226,6 @@ document.getElementById('btn-start').onclick = () => {
 // ==========================================
 function startActivity() {
     showScreen(screens.ACTIVITY);
-    mikoContainer.classList.remove('hidden');
     screens.ACTIVITY.innerHTML = '';
     retryCount = 0;
     
@@ -230,12 +235,11 @@ function startActivity() {
         else if(lvl === 2) { speak("Read the sentence out loud."); renderSentenceTask(); }
         else { speak("Let's read this story."); storyStartTime = Date.now(); renderStoryTask(); }
     } else {
-        speak("Tap the correct answer.");
+        speak("Tap the correct picture.");
         renderMeaningTask();
     }
 }
 
-// P0-5: Auto-advance (Replacing btn-next)
 function autoAdvanceSession() {
     if(activityPhase === 'READING') {
         activityPhase = 'MEANING';
@@ -249,46 +253,37 @@ function autoAdvanceSession() {
         sessionStats.resultLevel = newLevel;
         saveSession(currentStudent.id, sessionStats, newLevel);
         
-        showScreen(screens.END);
-        playSuccess();
-        setTimeout(() => { renderHome(); }, 4000);
+        triggerCelebration();
     }
 }
 
 // --- Task Renderers ---
 function createMicButton(targetText, onComplete) {
-    const container = document.createElement('div');
-    container.style.display = 'flex'; container.style.flexDirection = 'column'; container.style.alignItems = 'center';
-    
-    const micBtn = document.createElement('div');
-    micBtn.className = 'mic-btn'; micBtn.innerHTML = '🎤';
-    
-    const feedback = document.createElement('div');
-    feedback.style.fontSize = '1.5rem'; feedback.style.color = '#666'; feedback.style.marginTop = '1rem';
-    feedback.innerText = "Waiting for Miko...";
+    const wrapper = document.createElement('div'); wrapper.className = 'mic-wrapper';
+    const micBtn = document.createElement('div'); micBtn.className = 'mic-btn'; micBtn.innerHTML = '🎤';
     
     // Manual Override container
     const overrideContainer = document.createElement('div');
-    overrideContainer.style.display = 'none'; overrideContainer.style.marginTop = '1rem';
+    overrideContainer.style.display = 'none'; overrideContainer.style.marginTop = '16px';
     overrideContainer.innerHTML = `
-        <button id="override-pass" style="background:#4ECDC4; padding:0.5rem 1rem; border-radius:10px; color:white; border:none; margin-right:1rem;">Manual Pass</button>
-        <button id="override-fail" style="background:#FF6B6B; padding:0.5rem 1rem; border-radius:10px; color:white; border:none;">Manual Fail</button>
+        <button id="override-pass" class="btn-primary" style="font-size:20px; padding:12px 24px;">Manual Pass</button>
+        <button id="override-fail" class="btn-secondary" style="font-size:20px; padding:12px 24px;">Manual Fail</button>
     `;
     
-    container.appendChild(micBtn); 
-    container.appendChild(feedback);
-    container.appendChild(overrideContainer);
+    wrapper.appendChild(micBtn);
+    wrapper.appendChild(overrideContainer);
     
     const startListening = () => {
         micBtn.classList.add('listening');
-        playChime(); feedback.innerText = "Listening...";
+        setMikoState('listening');
+        playChime();
         
         SpeechEngine.listen(targetText, (passed) => {
             micBtn.classList.remove('listening');
+            setMikoState('thinking');
             
-            // P0-4: Handle STT unavailability
             if (passed === 'NO_STT') {
-                feedback.innerText = "Recognition Unavailable - Teacher Override";
+                setMikoState('encouraging');
                 overrideContainer.style.display = 'block';
                 document.getElementById('override-pass').onclick = () => onComplete(true);
                 document.getElementById('override-fail').onclick = () => onComplete(false);
@@ -296,88 +291,94 @@ function createMicButton(targetText, onComplete) {
             }
             
             if(passed) {
-                feedback.innerText = "Great job!"; feedback.style.color = "var(--secondary)";
+                setMikoState('celebrating');
                 playSuccess(); onComplete(true);
             } else {
                 if(retryCount === 0) {
-                    retryCount++; feedback.innerText = "Hmm, didn't catch that.";
+                    retryCount++; 
                     speak("Let's try that one again.", () => startListening());
                 } else {
-                    feedback.innerText = "Missed it.";
+                    setMikoState('encouraging');
                     playPop(); retryCount = 0; onComplete(false);
                 }
             }
-        }, (interim) => { feedback.innerText = '"' + interim + '"'; });
+        }, (interim) => {
+            // Soft pointer logic for interim highlighting
+            const display = document.getElementById('text-display');
+            if (display) {
+                const words = targetText.split(' ');
+                const interimWords = interim.split(' ').length;
+                const highlightIndex = Math.min(interimWords, words.length) - 1;
+                if(highlightIndex >= 0) {
+                    const html = words.map((w, i) => i === highlightIndex ? `<span class="highlight">${w}</span>` : w).join(' ');
+                    display.innerHTML = html;
+                }
+            }
+        });
     };
 
     if (isSpeaking) window.addEventListener('miko-done-speaking', startListening, {once: true});
     else startListening();
 
-    return container;
+    return wrapper;
 }
 
 function handleReadComplete(passed) {
     sessionStats.readPassed = passed;
-    // P0-5 auto advance after 2 seconds
     setTimeout(() => {
         if(!isSpeaking) autoAdvanceSession();
         else window.addEventListener('miko-done-speaking', autoAdvanceSession, {once: true});
     }, 1500);
 }
 
-function renderWordTask() {
-    const word = currentSessionData.words[Math.floor(Math.random() * currentSessionData.words.length)];
-    const div = document.createElement('div'); div.className = 'word-display'; div.innerText = word;
-    const mic = createMicButton(word, handleReadComplete);
-    screens.ACTIVITY.appendChild(div); screens.ACTIVITY.appendChild(mic);
+function renderTextTask(textClass, dataArray) {
+    const text = dataArray[Math.floor(Math.random() * dataArray.length)];
+    const card = document.createElement('div'); card.className = 'reading-card';
+    const div = document.createElement('div'); div.id = 'text-display'; div.className = textClass; div.innerText = text;
+    card.appendChild(div);
+    const mic = createMicButton(text, handleReadComplete);
+    screens.ACTIVITY.appendChild(card); screens.ACTIVITY.appendChild(mic);
 }
 
-function renderSentenceTask() {
-    const sent = currentSessionData.sentences[Math.floor(Math.random() * currentSessionData.sentences.length)];
-    const div = document.createElement('div'); div.className = 'sentence-display'; div.innerText = sent;
-    const mic = createMicButton(sent, handleReadComplete);
-    screens.ACTIVITY.appendChild(div); screens.ACTIVITY.appendChild(mic);
-}
+function renderWordTask() { renderTextTask('word-text', currentSessionData.words); }
+function renderSentenceTask() { renderTextTask('sentence-text', currentSessionData.sentences); }
 
 function renderStoryTask() {
-    const container = document.createElement('div'); container.className = 'story-display';
-    const text = document.createElement('div'); text.className = 'story-text';
-    text.innerText = currentSessionData.story.text;
+    const card = document.createElement('div'); card.className = 'reading-card';
+    const text = currentSessionData.story.text;
+    const div = document.createElement('div'); div.id = 'text-display'; div.className = 'passage-text'; div.innerText = text;
+    card.appendChild(div);
     
-    const mic = createMicButton(currentSessionData.story.text, (passed) => {
-        if(currentSessionData.level === 4) { // Compute WCPM
+    const mic = createMicButton(text, (passed) => {
+        if(currentSessionData.level === 4) {
             let min = (Date.now() - storyStartTime) / 60000;
-            if(passed) sessionStats.wcpm = Math.round((currentSessionData.story.text.split(' ').length) / min);
+            if(passed) sessionStats.wcpm = Math.round((text.split(' ').length) / min);
         }
         handleReadComplete(passed);
     });
-    container.appendChild(text); container.appendChild(mic);
-    screens.ACTIVITY.appendChild(container);
+    screens.ACTIVITY.appendChild(card); screens.ACTIVITY.appendChild(mic);
 }
 
 function renderMeaningTask() {
     let bank = currentSessionData.vocabBank || currentSessionData.comprehensionBank;
     let data = (bank && bank.length > 0) ? bank[Math.floor(Math.random() * bank.length)] : (currentSessionData.vocab || currentSessionData.comprehension);
-    
     speak(data.audioLabel);
     
     let rawCorrectValue = data.options[data.correctIndex];
     let isObjectOption = typeof rawCorrectValue === 'object';
     let correctIdentity = isObjectOption ? rawCorrectValue.value : rawCorrectValue;
-    
     let shuffledOptions = [...data.options].sort(() => Math.random() - 0.5);
     
-    const grid = document.createElement('div'); grid.className = 'grid-2x2';
+    const grid = document.createElement('div'); grid.className = 'meaning-grid';
     shuffledOptions.forEach((opt) => {
-        const card = document.createElement('div'); card.className = 'choice-card';
-        
+        const card = document.createElement('div'); card.className = 'meaning-card';
         let optValue = typeof opt === 'object' ? opt.value : opt;
         let optType = typeof opt === 'object' ? opt.type : 'image';
         
         if (optType === 'image') {
             const img = document.createElement('img'); img.src = optValue; card.appendChild(img);
         } else {
-            const txt = document.createElement('h3'); txt.innerText = optValue; txt.style.fontSize = '2rem'; card.appendChild(txt);
+            const txt = document.createElement('h3'); txt.innerText = optValue; card.appendChild(txt);
         }
         
         card.onclick = () => {
@@ -386,9 +387,9 @@ function renderMeaningTask() {
             if(optValue === correctIdentity) {
                 card.classList.add('selected'); playSuccess();
                 sessionStats.meaningPassed = true;
+                setMikoState('celebrating');
             } else { sessionStats.meaningPassed = false; }
             
-            // P0-5 auto advance
             setTimeout(() => {
                 if(!isSpeaking) autoAdvanceSession();
                 else window.addEventListener('miko-done-speaking', autoAdvanceSession, {once: true});
@@ -397,6 +398,24 @@ function renderMeaningTask() {
         grid.appendChild(card);
     });
     screens.ACTIVITY.appendChild(grid);
+}
+
+// Celebration Sequence
+function triggerCelebration() {
+    showScreen(screens.END);
+    playSuccess();
+    setMikoState('celebrating');
+    const container = document.getElementById('confetti-container');
+    container.innerHTML = '';
+    for(let i=0; i<50; i++) {
+        const c = document.createElement('div'); c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        c.style.animationDelay = Math.random() * 2 + 's';
+        c.style.backgroundColor = ['#7ED957', '#FFC857', '#5B7CFA'][Math.floor(Math.random()*3)];
+        container.appendChild(c);
+    }
+    setTimeout(() => { renderHome(); }, 4000);
 }
 
 // Init
