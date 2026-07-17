@@ -41,6 +41,15 @@ function updateStudentStatus(studentId, status) {
     }
 }
 
+function setStudentLevel(studentId, level) {
+  const students = getStudents();
+  const s = students.find(x => x.id === studentId);
+  if (s) { 
+      s.currentLevel = Math.max(1, Math.min(4, parseInt(level, 10) || 1)); 
+      saveStudents(students); 
+  }
+}
+
 function saveSession(studentId, sessionData, newLevel) {
     const students = getStudents();
     const student = students.find(s => s.id === studentId);

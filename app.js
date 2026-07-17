@@ -157,26 +157,37 @@ document.getElementById('btn-mark-absent').onclick = () => {
     if(currentStudent) { updateStudentStatus(currentStudent.id, 'absent'); renderHome(); }
 };
 
-// Teacher Dashboard (PIN Gated - P0-2)
+// Teacher Dashboard (PIN Gated)
+window.renderTeacherDashboard = function() {
+    document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
+    const content = document.getElementById('dashboard-content');
+    let html = '';
+    getStudents().forEach(s => {
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                    <h3>${s.name} - Currently L${s.currentLevel}</h3>
+                    <div style="display:flex; gap: 0.5rem; align-items:center;">
+                        <button onclick="setStudentLevel('${s.id}', ${s.currentLevel - 1}); renderTeacherDashboard();" style="padding:0.2rem 0.5rem;">-</button>
+                        <span> L${s.currentLevel} </span>
+                        <button onclick="setStudentLevel('${s.id}', ${s.currentLevel + 1}); renderTeacherDashboard();" style="padding:0.2rem 0.5rem;">+</button>
+                    </div>
+                 </div>`;
+        html += '<div style="font-size:0.9rem; color:#555; margin-bottom:1rem;">';
+        s.sessions.slice(-3).forEach(sess => {
+            const date = new Date(sess.timestamp).toLocaleDateString();
+            html += `<p>${date} | Read Pass: ${sess.readPassed} | Meaning Pass: ${sess.meaningPassed} | WCPM: ${sess.wcpm} | Result Lvl: ${sess.resultLevel}</p>`;
+        });
+        html += '</div><hr>';
+    });
+    content.innerHTML = html;
+};
+
 document.getElementById('btn-teacher-dashboard-trigger').onclick = () => {
     const pin = prompt("Enter Teacher PIN to view scores (hint: 1234):");
     if (pin !== '1234') {
         alert("Incorrect PIN.");
         return;
     }
-    
-    document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
-    const content = document.getElementById('dashboard-content');
-    let html = '';
-    getStudents().forEach(s => {
-        html += `<h3>${s.name} - Currently L${s.currentLevel}</h3>`;
-        s.sessions.forEach(sess => {
-            const date = new Date(sess.timestamp).toLocaleDateString();
-            html += `<p>${date} | Read Pass: ${sess.readPassed} | Meaning Pass: ${sess.meaningPassed} | WCPM: ${sess.wcpm} | Result Lvl: ${sess.resultLevel}</p>`;
-        });
-        html += '<hr>';
-    });
-    content.innerHTML = html;
+    renderTeacherDashboard();
 };
 document.getElementById('btn-close-dashboard').onclick = () => document.getElementById('teacher-dashboard-modal').classList.add('hidden');
 
@@ -345,23 +356,34 @@ function renderStoryTask() {
 }
 
 function renderMeaningTask() {
-    const data = currentSessionData.vocab || currentSessionData.comprehension;
+    let bank = currentSessionData.vocabBank || currentSessionData.comprehensionBank;
+    let data = (bank && bank.length > 0) ? bank[Math.floor(Math.random() * bank.length)] : (currentSessionData.vocab || currentSessionData.comprehension);
+    
     speak(data.audioLabel);
     
+    let rawCorrectValue = data.options[data.correctIndex];
+    let isObjectOption = typeof rawCorrectValue === 'object';
+    let correctIdentity = isObjectOption ? rawCorrectValue.value : rawCorrectValue;
+    
+    let shuffledOptions = [...data.options].sort(() => Math.random() - 0.5);
+    
     const grid = document.createElement('div'); grid.className = 'grid-2x2';
-    data.options.forEach((opt, idx) => {
+    shuffledOptions.forEach((opt) => {
         const card = document.createElement('div'); card.className = 'choice-card';
         
-        if (opt.type === 'image') {
-            const img = document.createElement('img'); img.src = opt.value; card.appendChild(img);
+        let optValue = typeof opt === 'object' ? opt.value : opt;
+        let optType = typeof opt === 'object' ? opt.type : 'image';
+        
+        if (optType === 'image') {
+            const img = document.createElement('img'); img.src = optValue; card.appendChild(img);
         } else {
-            const txt = document.createElement('h3'); txt.innerText = opt.value; txt.style.fontSize = '2rem'; card.appendChild(txt);
+            const txt = document.createElement('h3'); txt.innerText = optValue; txt.style.fontSize = '2rem'; card.appendChild(txt);
         }
         
         card.onclick = () => {
             if(isSpeaking) return;
             playChime();
-            if(idx === data.correctIndex) {
+            if(optValue === correctIdentity) {
                 card.classList.add('selected'); playSuccess();
                 sessionStats.meaningPassed = true;
             } else { sessionStats.meaningPassed = false; }
