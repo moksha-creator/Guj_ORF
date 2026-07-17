@@ -84,8 +84,7 @@ let activityPhase = 'READING'; // or 'MEANING'
 let lastSpokenText = "";
 function speak(text, callback) {
     if(text) lastSpokenText = text;
-    mikoBubble.innerText = lastSpokenText;
-    mikoBubble.classList.remove('hidden');
+    // P2-2: Removed visual bubble to reduce on-screen chrome and duplication
     isSpeaking = true;
     const finish = () => {
         isSpeaking = false;

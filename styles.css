@@ -1,9 +1,9 @@
 /* Adaptive Flow Styles */
 :root {
-    --primary: #FF6B6B;
-    --secondary: #4ECDC4;
-    --accent: #FFE66D;
-    --background: #F7FFF7;
+    --primary: #3F51B5; /* Miko Indigo */
+    --secondary: #00BCD4; /* Cyan */
+    --accent: #FFC107; /* Amber */
+    --background: #F8F9FA;
     --text-dark: #1A1A24;
     --text-light: #FFFFFF;
 }
@@ -11,7 +11,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; }
 
 body {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
     color: var(--text-dark);
     height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden;
 }
@@ -70,7 +70,7 @@ button { cursor: pointer; border: none; outline: none; font-weight: 900; transit
     background: var(--primary); width: 120px; height: 120px; border-radius: 50%;
     display: flex; justify-content: center; align-items: center; margin: 0 auto; font-size: 4rem; color: white;
 }
-.mic-btn.listening { background: #ff4757; box-shadow: 0 0 0 20px rgba(255,71,87,0.3); }
+.mic-btn.listening { background: var(--secondary); box-shadow: 0 0 0 20px rgba(0, 188, 212, 0.3); }
 
 .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem auto; max-width: 800px; }
 .choice-card { background: white; border-radius: 30px; padding: 1rem; cursor: pointer; border: 4px solid #eee; }
