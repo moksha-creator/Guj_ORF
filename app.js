@@ -12,7 +12,7 @@ const SpeechEngine = {
             console.warn("Speech API not supported");
         }
     },
-    listen(targetText, onResult) {
+    listen(targetText, onResult, onInterim) {
         if (!this.recognition) return onResult(true); // Fallback pass
         
         let finalResult = false;
@@ -34,6 +34,10 @@ const SpeechEngine = {
                     }
                 }
                 
+                // Visual feedback
+                let bestTranscript = results[i][0].transcript;
+                if(onInterim) onInterim(bestTranscript);
+                
                 // Fuzzy match: check if the spoken transcript contains the target words
                 // For words and sentences, this is an approximation.
                 let wordsSpoken = transcript.trim().split(/\s+/);
@@ -52,6 +56,11 @@ const SpeechEngine = {
                         hasMatched = true;
                         this.recognition.stop();
                     }
+                }
+
+                // If this is the final result of the utterance and we still haven't matched, stop and let it fail.
+                if (results[i].isFinal && !hasMatched) {
+                    this.recognition.stop();
                 }
             }
         };
@@ -356,31 +365,52 @@ function startActivity(type) {
 // --- Activity Renderers ---
 
 function createMicButton(targetText, onComplete) {
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'center';
+    
     const micBtn = document.createElement('div');
     micBtn.className = 'mic-btn';
     micBtn.innerHTML = '🎤';
+    
+    const feedbackText = document.createElement('div');
+    feedbackText.style.fontSize = '1.5rem';
+    feedbackText.style.color = '#666';
+    feedbackText.style.marginTop = '1rem';
+    feedbackText.style.minHeight = '2rem';
+    feedbackText.innerText = "Waiting for you to speak...";
+    
+    container.appendChild(micBtn);
+    container.appendChild(feedbackText);
     
     const startListening = () => {
         if(micBtn.classList.contains('listening')) return;
         micBtn.classList.add('listening');
         playChime();
+        feedbackText.innerText = "Listening...";
         
         SpeechEngine.listen(targetText, (passed) => {
             micBtn.classList.remove('listening');
             if(passed) {
+                feedbackText.innerText = "Great job!";
+                feedbackText.style.color = "var(--secondary)";
                 playSuccess();
                 onComplete(true);
             } else {
                 if(retryCount === 0) {
                     retryCount++;
+                    feedbackText.innerText = "Hmm, didn't catch that.";
                     speak("Let's try that one again.");
-                    // After speak finishes, it will restart listening
                 } else {
+                    feedbackText.innerText = "Missed it.";
                     playPop();
                     retryCount = 0;
                     onComplete(false); // Failed after retry
                 }
             }
+        }, (interim) => {
+            feedbackText.innerText = '"' + interim + '"';
         });
     };
 
@@ -394,7 +424,7 @@ function createMicButton(targetText, onComplete) {
         startListening();
     }
 
-    return micBtn;
+    return container;
 }
 
 function renderWords() {
