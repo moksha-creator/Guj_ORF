@@ -2,7 +2,16 @@
 
 function getStudents() {
     const data = localStorage.getItem('miko_students');
-    return data ? JSON.parse(data) : [];
+    let students = data ? JSON.parse(data) : [];
+    // Backwards compatibility for old records
+    students = students.map(s => {
+        if(!s.currentLevel) s.currentLevel = 1;
+        else s.currentLevel = parseInt(s.currentLevel, 10);
+        
+        if(!s.dailyStatus) s.dailyStatus = 'waiting';
+        return s;
+    });
+    return students;
 }
 
 function saveStudents(students) {
