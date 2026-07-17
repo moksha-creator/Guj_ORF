@@ -62,8 +62,6 @@ const screens = {
 };
 const mikoContainer = document.getElementById('miko-container');
 const mikoBubble = document.getElementById('miko-bubble');
-const btnNext = document.getElementById('btn-next');
-const controlsContainer = document.getElementById('controls-container');
 
 // Audio
 const sfxPop = document.getElementById('sfx-pop');
@@ -89,7 +87,6 @@ function speak(text, callback) {
     mikoBubble.innerText = lastSpokenText;
     mikoBubble.classList.remove('hidden');
     isSpeaking = true;
-    
     const finish = () => {
         isSpeaking = false;
         window.dispatchEvent(new Event('miko-done-speaking'));
@@ -214,7 +211,6 @@ document.getElementById('btn-start').onclick = () => {
 function startActivity() {
     showScreen(screens.ACTIVITY);
     mikoContainer.classList.remove('hidden');
-    controlsContainer.classList.add('hidden'); // P0-5: hide child next button
     screens.ACTIVITY.innerHTML = '';
     retryCount = 0;
     
