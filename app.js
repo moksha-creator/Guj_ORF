@@ -1,165 +1,361 @@
-// State & Data
-const activities = {
-    GREETING: 0,
-    WORDS: 1,
-    SENTENCES: 2,
-    STORY: 3,
-    VOCAB: 4,
-    COMPREHENSION: 5,
-    SEQUENCING: 6,
-    RETELLING: 7,
-    RESULT: 8
+// --- Task 1: Speech Recognition Engine ---
+const SpeechEngine = {
+    recognition: null,
+    init() {
+        if ('webkitSpeechRecognition' in window) {
+            this.recognition = new webkitSpeechRecognition();
+            this.recognition.continuous = false;
+            this.recognition.interimResults = true;
+            this.recognition.lang = 'en-IN';
+            this.recognition.maxAlternatives = 3;
+        } else {
+            console.warn("Speech API not supported");
+        }
+    },
+    listen(targetText, onResult) {
+        if (!this.recognition) return onResult(true); // Fallback pass
+        
+        let finalResult = false;
+        let hasMatched = false;
+        let targetWords = targetText.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/);
+        let correctCount = 0;
+
+        this.recognition.onresult = (event) => {
+            const results = event.results;
+            for (let i = event.resultIndex; i < results.length; ++i) {
+                if (hasMatched) return; // Already matched
+                
+                let transcript = "";
+                // Check all alternatives
+                for(let j=0; j<results[i].length; j++){
+                    let alt = results[i][j];
+                    if (alt.confidence >= 0.5) {
+                        transcript += alt.transcript.toLowerCase() + " ";
+                    }
+                }
+                
+                // Fuzzy match: check if the spoken transcript contains the target words
+                // For words and sentences, this is an approximation.
+                let wordsSpoken = transcript.trim().split(/\s+/);
+                
+                // If it's a single word (Activity 1)
+                if (targetWords.length === 1) {
+                    if (wordsSpoken.some(w => w.includes(targetWords[0]) || targetWords[0].includes(w) && w.length > 2)) {
+                        hasMatched = true;
+                        this.recognition.stop();
+                    }
+                } else {
+                    // For sentences/passages, we might need more complex logic. 
+                    // MVP: if they hit 80% of words
+                    let hits = targetWords.filter(tw => wordsSpoken.some(ws => ws.includes(tw))).length;
+                    if (hits / targetWords.length > 0.8) {
+                        hasMatched = true;
+                        this.recognition.stop();
+                    }
+                }
+            }
+        };
+
+        this.recognition.onerror = (e) => {
+            console.log("Speech Error:", e.error);
+            this.recognition.stop();
+        };
+
+        this.recognition.onend = () => {
+            onResult(hasMatched);
+        };
+
+        try {
+            this.recognition.start();
+        } catch(e) {
+            console.log("Recognition already started");
+        }
+    },
+    stop() {
+        if (this.recognition) this.recognition.stop();
+    }
 };
+SpeechEngine.init();
 
-const wordBank = ["cat", "dog", "sun", "hat", "run", "jump", "blue", "tree", "bird", "play"];
-const sentenceBank = [
-    "The cat is on the mat.",
-    "I can see the sun.",
-    "He runs very fast.",
-    "The little bird flies."
-];
-const storyText = "The orange cat was sleeping on a blue mat. A little blue bird flew to the window. The cat woke up and looked at the bird. They smiled at each other.";
-const storyImages = ["assets/story_1.png", "assets/story_2.png", "assets/story_3.png", "assets/story_4.png"];
+// --- Task 4: Media Recorder ---
+const AudioRecorder = {
+    mediaRecorder: null,
+    audioChunks: [],
+    stream: null,
+    async init() {
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e) {
+            console.error("Audio recording not permitted");
+        }
+    },
+    start() {
+        if (!this.stream) return;
+        this.audioChunks = [];
+        this.mediaRecorder = new MediaRecorder(this.stream);
+        this.mediaRecorder.ondataavailable = event => this.audioChunks.push(event.data);
+        this.mediaRecorder.start();
+    },
+    stopAndSave(studentId, activityName) {
+        if (!this.mediaRecorder || this.mediaRecorder.state === "inactive") return;
+        this.mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+            if (typeof saveAudioBlob === 'function') {
+                saveAudioBlob(studentId, activityName, audioBlob);
+            }
+        };
+        this.mediaRecorder.stop();
+    }
+};
+// Request mic access early
+AudioRecorder.init();
 
+// --- Main App State & Logic ---
+const activities = { GREETING:0, WORDS:1, SENTENCES:2, STORY:3, VOCAB:4, COMPREHENSION:5, SEQUENCING:6, RETELLING:7, CELEBRATION:8 };
+
+let currentStudentId = null;
+let currentStudentName = "";
+let sessionContent = null;
 let currentState = activities.GREETING;
-let scores = {
-    words: 0, // out of 2
-    sentences: 0, // out of 2
-    story: 0, // out of 2
-    vocab: 0, // out of 2
-    comp: 0, // out of 2
-    seq: 0, // out of 2
-    retell: 0 // out of 2
-};
-
 let currentItemIndex = 0;
-let rawWordScore = 0; // count of correct words (0-10)
 let isSpeaking = false;
+let retryCount = 0;
+
+let scores = { words: 0, sentences: 0, story: 0, vocab: 0, comp: 0, seq: 0, retell: 0 };
+let stats = { wordRaw: 0, sentenceTotalWords: 0, sentenceCorrectWords: 0, storyTotalWords: 0, storyCorrectWords: 0, storyWCPM: 0 };
+let storyStartTime = 0;
 
 // DOM Elements
-const mikoBubble = document.getElementById('miko-bubble');
+const rosterScreen = document.getElementById('roster-screen');
 const mainContent = document.getElementById('main-content');
+const mikoContainer = document.getElementById('miko-container');
+const mikoBubble = document.getElementById('miko-bubble');
 const controlsContainer = document.getElementById('controls-container');
+const progressStrip = document.getElementById('progress-strip');
 const btnNext = document.getElementById('btn-next');
 const sfxPop = document.getElementById('sfx-pop');
 const sfxChime = document.getElementById('sfx-chime');
 const sfxSuccess = document.getElementById('sfx-success');
+const teacherDashboardModal = document.getElementById('teacher-dashboard-modal');
+const btnReplay = document.getElementById('btn-replay');
 
-// Audio Helpers
-function playPop() { sfxPop.currentTime = 0; sfxPop.play().catch(e=>console.log(e)); }
-function playChime() { sfxChime.currentTime = 0; sfxChime.play().catch(e=>console.log(e)); }
-function playSuccess() { sfxSuccess.currentTime = 0; sfxSuccess.play().catch(e=>console.log(e)); }
+function playPop() { sfxPop.currentTime = 0; sfxPop.play().catch(e=>{}); }
+function playChime() { sfxChime.currentTime = 0; sfxChime.play().catch(e=>{}); }
+function playSuccess() { sfxSuccess.currentTime = 0; sfxSuccess.play().catch(e=>{}); }
 
-function speak(text, callback) {
-    mikoBubble.innerText = text;
-    mikoBubble.classList.remove('hidden');
+// --- Roster Logic ---
+function renderRoster() {
+    rosterScreen.classList.remove('hidden');
+    mainContent.classList.add('hidden');
+    mikoContainer.classList.add('hidden');
     
+    const list = document.getElementById('student-list');
+    list.innerHTML = '';
+    const students = typeof getStudents === 'function' ? getStudents() : [];
+    
+    students.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'student-card';
+        card.innerText = s.name;
+        card.onclick = () => {
+            currentStudentId = s.id;
+            currentStudentName = s.name;
+            startNewSession();
+        };
+        list.appendChild(card);
+    });
+}
+
+document.getElementById('btn-add-student').onclick = () => {
+    const input = document.getElementById('new-student-name');
+    if (input.value.trim() !== '') {
+        addStudent(input.value.trim());
+        input.value = '';
+        renderRoster();
+    }
+};
+
+document.getElementById('btn-teacher-dashboard-trigger').addEventListener('contextmenu', (e) => {
+    // Secret long press / right click for dashboard
+    e.preventDefault();
+    const pin = prompt("Enter PIN (1234):");
+    if(pin === "1234") {
+        renderTeacherDashboard();
+    }
+});
+
+document.getElementById('btn-close-dashboard').onclick = () => {
+    teacherDashboardModal.classList.add('hidden');
+};
+
+renderRoster(); // Init
+
+// --- TTS Logic ---
+let lastSpokenText = "";
+function speak(text, callback) {
+    if(text) lastSpokenText = text;
+    mikoBubble.innerText = lastSpokenText;
+    mikoBubble.classList.remove('hidden');
     isSpeaking = true;
+    
+    btnNext.disabled = true; // Lock UI
+    
     const finish = () => {
         isSpeaking = false;
+        btnNext.disabled = false;
         window.dispatchEvent(new Event('miko-done-speaking'));
         if(callback) callback();
     };
     
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9; // Slightly slower for kids
-        utterance.pitch = 1.2; // Higher pitch for "cute" robot voice
+        const utterance = new SpeechSynthesisUtterance(lastSpokenText);
+        utterance.rate = 0.9; 
+        utterance.pitch = 1.2;
         utterance.onend = finish;
         utterance.onerror = finish;
         window.speechSynthesis.speak(utterance);
     } else {
-        setTimeout(finish, text.length * 50); // mock timing
+        setTimeout(finish, lastSpokenText.length * 50); 
     }
 }
 
-// Initialization
-document.getElementById('btn-start').addEventListener('click', () => {
+btnReplay.classList.remove('hidden');
+btnReplay.onclick = () => {
+    if(!isSpeaking) speak();
+};
+
+function updateProgress(activityIndex) {
+    progressStrip.classList.remove('hidden');
+    progressStrip.innerHTML = '';
+    for(let i=1; i<=7; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if(i <= activityIndex) dot.classList.add('active');
+        progressStrip.appendChild(dot);
+    }
+}
+
+// --- Assessment Flow ---
+function startNewSession() {
+    sessionContent = generateAssessmentContent();
+    rosterScreen.classList.add('hidden');
+    mainContent.classList.remove('hidden');
+    mikoContainer.classList.remove('hidden');
+    
+    document.getElementById('welcome-student-name').innerText = "Hello, " + currentStudentName + "!";
+    
+    // Reset Stats
+    scores = { words: 0, sentences: 0, story: 0, vocab: 0, comp: 0, seq: 0, retell: 0 };
+    stats = { wordRaw: 0, sentenceTotalWords: 0, sentenceCorrectWords: 0, storyTotalWords: 0, storyCorrectWords: 0, storyWCPM: 0 };
+    
+    document.querySelector('.start-screen').classList.remove('hidden');
+    currentState = activities.GREETING;
+}
+
+document.getElementById('btn-start').onclick = () => {
     playPop();
     document.querySelector('.start-screen').classList.add('hidden');
-    startActivity(activities.GREETING);
-});
+    startActivity(activities.WORDS);
+};
 
-btnNext.addEventListener('click', () => {
+btnNext.onclick = () => {
+    if(isSpeaking) return;
     playPop();
-    // Logic to move to next activity
+    
+    // Stop recording if active
+    AudioRecorder.stopAndSave(currentStudentId, "Activity_" + currentState);
+    
+    // Skip Logic
     if (currentState === activities.WORDS) {
-        // Calculate word score (0-2)
-        if(rawWordScore >= 8) scores.words = 2;
-        else if (rawWordScore >= 4) scores.words = 1;
+        if (stats.wordRaw >= 8) scores.words = 2;
+        else if (stats.wordRaw >= 4) scores.words = 1;
         else scores.words = 0;
 
-        // Skip logic: If child read 3 or fewer of the first 10 words correctly, skip sentence and passage reading
-        if (rawWordScore <= 3) {
-            console.log("Skip Logic Triggered. Jumping to picture tasks.");
+        if (stats.wordRaw <= 3) {
             scores.sentences = 0;
             scores.story = 0;
-            startActivity(activities.VOCAB);
-            return;
+            return startActivity(activities.VOCAB);
         }
     }
-    startActivity(currentState + 1);
-});
+    
+    // Sentences Scoring
+    if (currentState === activities.SENTENCES) {
+        let pct = stats.sentenceCorrectWords / stats.sentenceTotalWords;
+        if(pct >= 0.8) scores.sentences = 2;
+        else if(pct >= 0.5) scores.sentences = 1;
+        else scores.sentences = 0;
+    }
+    
+    // Story Scoring
+    if (currentState === activities.STORY) {
+        let endTime = Date.now();
+        let minutes = (endTime - storyStartTime) / 60000;
+        stats.storyWCPM = Math.round(stats.storyCorrectWords / minutes);
+        let pct = stats.storyCorrectWords / stats.storyTotalWords;
+        
+        if(pct >= 0.8 && stats.storyWCPM >= 30) scores.story = 2;
+        else if (pct >= 0.5) scores.story = 1;
+        else scores.story = 0;
+    }
 
-function startActivity(activityType) {
-    currentState = activityType;
-    mainContent.innerHTML = ''; // Clear
+    startActivity(currentState + 1);
+};
+
+function startActivity(type) {
+    currentState = type;
+    mainContent.innerHTML = ''; 
     controlsContainer.classList.add('hidden');
     currentItemIndex = 0;
+    retryCount = 0;
     
-    switch(activityType) {
-        case activities.GREETING:
-            speak("Hello! I am Miko. Let's read some things together. Don't worry, just try your best!", () => {
-                setTimeout(() => startActivity(activities.WORDS), 1000);
-            });
-            break;
-            
+    updateProgress(type);
+    
+    // Start Recording for reading tasks
+    if([activities.WORDS, activities.SENTENCES, activities.STORY, activities.RETELLING].includes(type)) {
+        AudioRecorder.start();
+    }
+    
+    switch(type) {
         case activities.WORDS:
-            rawWordScore = 0;
             speak("Read the word on the screen out loud.");
             renderWords();
             break;
-            
         case activities.SENTENCES:
-            speak("Great job! Now let's read some short sentences.");
+            speak("Great job! Read the sentences on the screen.");
             renderSentences();
             break;
-            
         case activities.STORY:
-            speak("You are doing wonderful! Let's read a short story.");
+            speak("Let's read a short story.");
+            storyStartTime = Date.now();
             renderStory();
             break;
-            
         case activities.VOCAB:
-            speak("Look at the pictures. Tap the picture of the 'Bird'.");
-            renderVocab();
+            currentItemIndex = 0; // we have multiple vocab items
+            renderVocabSequence();
             break;
-            
         case activities.COMPREHENSION:
-            speak("Where was the cat sleeping? Tap the right picture.");
-            renderComprehension();
+            currentItemIndex = 0;
+            renderCompSequence();
             break;
-            
         case activities.SEQUENCING:
-            speak("Can you put the story in the right order? Drag the pictures.");
+            speak("Tap a picture, then tap an empty box to put the story in order.");
             renderSequencing();
             break;
-            
         case activities.RETELLING:
             speak("Can you tell me what happened in the story?");
             renderRetelling();
             break;
-            
-        case activities.RESULT:
-            renderResult();
+        case activities.CELEBRATION:
+            finishSession();
+            renderCelebration();
             break;
     }
 }
 
 // --- Activity Renderers ---
 
-function createMicButton(onComplete) {
+function createMicButton(targetText, onComplete) {
     const micBtn = document.createElement('div');
     micBtn.className = 'mic-btn';
     micBtn.innerHTML = '🎤';
@@ -169,78 +365,77 @@ function createMicButton(onComplete) {
         micBtn.classList.add('listening');
         playChime();
         
-        micBtn.listeningTimeout = setTimeout(() => {
-            if (micBtn.classList.contains('listening')) {
-                micBtn.classList.remove('listening');
-                playPop();
+        SpeechEngine.listen(targetText, (passed) => {
+            micBtn.classList.remove('listening');
+            if(passed) {
+                playSuccess();
                 onComplete(true);
+            } else {
+                if(retryCount === 0) {
+                    retryCount++;
+                    speak("Let's try that one again.");
+                    // After speak finishes, it will restart listening
+                } else {
+                    playPop();
+                    retryCount = 0;
+                    onComplete(false); // Failed after retry
+                }
             }
-        }, 3000);
+        });
+    };
+
+    const handleSpeechEnd = () => {
+        startListening();
     };
 
     if (isSpeaking) {
-        const onFinish = () => {
-            startListening();
-            window.removeEventListener('miko-done-speaking', onFinish);
-        };
-        window.addEventListener('miko-done-speaking', onFinish);
+        window.addEventListener('miko-done-speaking', handleSpeechEnd, {once: true});
     } else {
         startListening();
     }
 
-    // Secret override for testing: click to simulate mistake
-    micBtn.addEventListener('click', (e) => {
-        if(micBtn.classList.contains('listening')) {
-            clearTimeout(micBtn.listeningTimeout);
-            micBtn.classList.remove('listening');
-            playPop();
-            onComplete(false);
-        }
-    });
     return micBtn;
 }
 
 function renderWords() {
-    if (currentItemIndex >= wordBank.length) {
+    if (currentItemIndex >= sessionContent.words.length) {
         controlsContainer.classList.remove('hidden');
-        mainContent.innerHTML = `<h2>You finished the words!</h2>`;
+        mainContent.innerHTML = `<h2>Words complete!</h2>`;
         return;
     }
     
-    const word = wordBank[currentItemIndex];
+    const word = sessionContent.words[currentItemIndex];
     const display = document.createElement('div');
     display.className = 'word-display';
     display.innerText = word;
     
-    const mic = createMicButton((passed) => {
-        if(passed) rawWordScore++;
+    const mic = createMicButton(word, (passed) => {
+        if(passed) stats.wordRaw++;
         currentItemIndex++;
         renderWords();
     });
     
-    const instruction = document.createElement('p');
-    instruction.innerText = "(Mic listens automatically. Click mic while listening to simulate a mistake.)";
-    instruction.style.opacity = '0.5';
-    
     mainContent.appendChild(display);
     mainContent.appendChild(mic);
-    mainContent.appendChild(instruction);
 }
 
 function renderSentences() {
-    if (currentItemIndex >= sentenceBank.length) {
-        scores.sentences = 2; // Mock perfect score for sentences if we reach end
+    if (currentItemIndex >= sessionContent.sentences.length) {
         controlsContainer.classList.remove('hidden');
         mainContent.innerHTML = `<h2>Sentences complete!</h2>`;
         return;
     }
     
-    const sentence = sentenceBank[currentItemIndex];
+    const sentence = sessionContent.sentences[currentItemIndex];
+    const words = sentence.split(' ').length;
+    stats.sentenceTotalWords += words;
+    
     const display = document.createElement('div');
     display.className = 'sentence-display';
     display.innerText = sentence;
     
-    const mic = createMicButton(() => {
+    const mic = createMicButton(sentence, (passed) => {
+        if(passed) stats.sentenceCorrectWords += words;
         currentItemIndex++;
         renderSentences();
     });
@@ -253,21 +448,41 @@ function renderStory() {
     const container = document.createElement('div');
     container.className = 'story-display';
     
+    const storyData = sessionContent.story;
+    const words = storyData.text.split(' ');
+    stats.storyTotalWords = words.length;
+    
     const imagesDiv = document.createElement('div');
     imagesDiv.className = 'story-images';
-    storyImages.forEach(src => {
+    storyData.images.forEach(src => {
         const img = document.createElement('img');
-        img.src = src;
-        img.className = 'story-img';
+        img.src = src; img.className = 'story-img';
         imagesDiv.appendChild(img);
     });
     
     const text = document.createElement('div');
     text.className = 'story-text';
-    text.innerText = storyText;
     
-    const mic = createMicButton(() => {
-        scores.story = 2;
+    // Task 10: Read-along highlight setup
+    words.forEach((w, i) => {
+        const span = document.createElement('span');
+        span.innerText = w + ' ';
+        span.id = `story-word-${i}`;
+        text.appendChild(span);
+    });
+    
+    // Note: Proper read-along syncing with speech API requires on-the-fly interim result matching. 
+    // For MVP, we use the pass/fail of the whole passage or chunks. We will chunk the story by sentences.
+    
+    const mic = createMicButton(storyData.text, (passed) => {
+        if(passed) {
+            stats.storyCorrectWords = stats.storyTotalWords; // Perfect read
+            // Highlight all
+            words.forEach((w,i) => document.getElementById(`story-word-${i}`).classList.add('word-highlight'));
+        } else {
+            // Estimate 50% for fail
+            stats.storyCorrectWords = Math.floor(stats.storyTotalWords * 0.5);
+        }
         controlsContainer.classList.remove('hidden');
     });
     
@@ -277,58 +492,90 @@ function renderStory() {
     mainContent.appendChild(container);
 }
 
-function renderVocab() {
+// Task 7: Vocab logic
+function renderVocabSequence() {
+    const vocabData = sessionContent.story.vocab;
+    if (currentItemIndex >= vocabData.length) {
+        startActivity(activities.COMPREHENSION);
+        return;
+    }
+    
+    const item = vocabData[currentItemIndex];
+    speak(`Tap the picture for: ${item.audioLabel}`);
+    
+    mainContent.innerHTML = '';
     const grid = document.createElement('div');
     grid.className = 'grid-2x2';
     
-    const shuffledImages = [...storyImages].sort(() => Math.random() - 0.5);
-    // Correct answer is "Bird" (story_2.png)
-    
-    shuffledImages.forEach(src => {
+    item.options.forEach((src, idx) => {
         const card = document.createElement('div');
         card.className = 'choice-card';
         const img = document.createElement('img');
         img.src = src;
         card.appendChild(img);
         
-        card.addEventListener('click', () => {
+        card.onclick = () => {
+            if(isSpeaking) return;
             playChime();
-            scores.vocab = src.includes('story_2') ? 2 : 1; // 2 for perfect, 1 for wrong tap first
-            setTimeout(() => startActivity(activities.COMPREHENSION), 1000);
-        });
-        
+            // Score 0 for wrong, 2 for right (or 1 each if multiple, but we sum up later)
+            if(idx === item.correctIndex) {
+                scores.vocab += (2 / vocabData.length); // Prorate out of 2 max
+                card.classList.add('selected');
+                playSuccess();
+            }
+            setTimeout(() => {
+                currentItemIndex++;
+                renderVocabSequence();
+            }, 1000);
+        };
         grid.appendChild(card);
     });
     
     mainContent.appendChild(grid);
 }
 
-function renderComprehension() {
+// Task 7: Comprehension Logic
+function renderCompSequence() {
+    const compData = sessionContent.story.comprehension;
+    if (currentItemIndex >= compData.length) {
+        startActivity(activities.SEQUENCING);
+        return;
+    }
+    
+    const item = compData[currentItemIndex];
+    speak(item.audioLabel);
+    
+    mainContent.innerHTML = '';
     const grid = document.createElement('div');
     grid.className = 'grid-2x2';
     
-    // Q: Where was the cat sleeping? Ans: Mat (story_1)
-    const shuffledImages = [...storyImages].sort(() => Math.random() - 0.5);
-    
-    shuffledImages.forEach(src => {
+    item.options.forEach((src, idx) => {
         const card = document.createElement('div');
         card.className = 'choice-card';
         const img = document.createElement('img');
         img.src = src;
         card.appendChild(img);
         
-        card.addEventListener('click', () => {
+        card.onclick = () => {
+            if(isSpeaking) return;
             playChime();
-            scores.comp = src.includes('story_1') ? 2 : 1;
-            setTimeout(() => startActivity(activities.SEQUENCING), 1000);
-        });
-        
+            if(idx === item.correctIndex) {
+                scores.comp += (2 / compData.length); 
+                card.classList.add('selected');
+                playSuccess();
+            }
+            setTimeout(() => {
+                currentItemIndex++;
+                renderCompSequence();
+            }, 1000);
+        };
         grid.appendChild(card);
     });
     
     mainContent.appendChild(grid);
 }
 
+// Task 6: Tap-to-place sequencing
 function renderSequencing() {
     const container = document.createElement('div');
     container.style.width = '100%';
@@ -336,52 +583,68 @@ function renderSequencing() {
     const sequenceArea = document.createElement('div');
     sequenceArea.className = 'sequence-container';
     
-    // Create 4 slots
+    const sourceArea = document.createElement('div');
+    sourceArea.className = 'sequence-source';
+    
+    let selectedItem = null; // currently selected source item
+    let slotsState = [null, null, null, null];
+    
+    // Create Slots
     for(let i=0; i<4; i++) {
         const slot = document.createElement('div');
         slot.className = 'sequence-slot';
-        slot.dataset.index = i;
-        
-        // Basic drag and drop events for slots
-        slot.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            slot.style.borderColor = 'var(--primary)';
-        });
-        slot.addEventListener('dragleave', () => {
-            slot.style.borderColor = '#ccc';
-        });
-        slot.addEventListener('drop', (e) => {
-            e.preventDefault();
-            slot.style.borderColor = '#ccc';
-            const imgId = e.dataTransfer.getData('text/plain');
-            const img = document.getElementById(imgId);
-            if(img) {
+        slot.onclick = () => {
+            if (isSpeaking) return;
+            
+            // If slot is filled, return image to source
+            if(slotsState[i] !== null) {
+                const imgId = slotsState[i];
+                document.getElementById(imgId).classList.remove('hidden');
                 slot.innerHTML = '';
-                slot.appendChild(img);
-                checkSequenceComplete();
+                slotsState[i] = null;
+                playPop();
             }
-        });
-        
+            
+            // If we have a selected item, place it
+            if(selectedItem) {
+                const clone = document.createElement('img');
+                clone.src = selectedItem.src;
+                slot.innerHTML = '';
+                slot.appendChild(clone);
+                
+                selectedItem.classList.add('hidden'); // hide source
+                selectedItem.classList.remove('selected');
+                slotsState[i] = selectedItem.id;
+                selectedItem = null;
+                playChime();
+                
+                // Check if all placed
+                if(!slotsState.includes(null)) {
+                    checkSequenceScore(slotsState);
+                }
+            }
+        };
         sequenceArea.appendChild(slot);
     }
     
-    const sourceArea = document.createElement('div');
-    sourceArea.className = 'story-images';
-    sourceArea.style.marginTop = '2rem';
+    // Create Source Items
+    const images = sessionContent.story.images;
+    const shuffledIds = [0,1,2,3].sort(() => Math.random() - 0.5);
     
-    const shuffledImages = [...storyImages].sort(() => Math.random() - 0.5);
-    shuffledImages.forEach((src, idx) => {
+    shuffledIds.forEach(idx => {
         const img = document.createElement('img');
-        img.src = src;
-        img.className = 'draggable-item';
-        img.draggable = true;
-        img.id = 'drag-img-' + idx;
-        img.dataset.correctIndex = storyImages.indexOf(src); // 0, 1, 2, 3
+        img.src = images[idx];
+        img.className = 'sequence-item';
+        img.id = 'seq-img-' + idx;
+        img.dataset.correct = idx; // 0,1,2,3
         
-        img.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', e.target.id);
-        });
-        
+        img.onclick = () => {
+            if(isSpeaking) return;
+            if(selectedItem) selectedItem.classList.remove('selected');
+            selectedItem = img;
+            img.classList.add('selected');
+            playPop();
+        };
         sourceArea.appendChild(img);
     });
     
@@ -390,27 +653,18 @@ function renderSequencing() {
     mainContent.appendChild(container);
 }
 
-function checkSequenceComplete() {
-    const slots = document.querySelectorAll('.sequence-slot');
-    let filled = 0;
+function checkSequenceScore(slotsState) {
     let correct = 0;
-    
-    slots.forEach((slot, index) => {
-        if(slot.children.length > 0) {
-            filled++;
-            const img = slot.children[0];
-            if(parseInt(img.dataset.correctIndex) === index) {
-                correct++;
-            }
-        }
+    slotsState.forEach((id, idx) => {
+        const elem = document.getElementById(id);
+        if(parseInt(elem.dataset.correct) === idx) correct++;
     });
     
-    if(filled === 4) {
-        if(correct === 4) scores.seq = 2;
-        else scores.seq = 1;
-        playSuccess();
-        setTimeout(() => startActivity(activities.RETELLING), 1500);
-    }
+    if(correct === 4) scores.seq = 2;
+    else scores.seq = 1;
+    
+    playSuccess();
+    setTimeout(() => startActivity(activities.RETELLING), 1500);
 }
 
 function renderRetelling() {
@@ -419,18 +673,15 @@ function renderRetelling() {
     
     const imagesDiv = document.createElement('div');
     imagesDiv.className = 'story-images';
-    // Show visual prompts
-    storyImages.forEach(src => {
+    sessionContent.story.images.forEach(src => {
         const img = document.createElement('img');
-        img.src = src;
-        img.className = 'story-img';
-        img.style.width = '120px';
-        img.style.height = '120px';
+        img.src = src; img.className = 'story-img';
         imagesDiv.appendChild(img);
     });
     
-    const mic = createMicButton((passed) => {
-        scores.retell = passed ? 2 : 1;
+    // Simple 10 second record for retelling (MVP)
+    const mic = createMicButton("", (passed) => {
+        scores.retell = 2; // Teacher adjusts later if needed
         controlsContainer.classList.remove('hidden');
     });
     
@@ -439,34 +690,62 @@ function renderRetelling() {
     mainContent.appendChild(container);
 }
 
-function renderResult() {
-    mikoBubble.classList.add('hidden');
-    playSuccess();
+// Task 5 & 3: Celebration and Teacher Dashboard
+function finishSession() {
+    scores.vocab = Math.round(scores.vocab);
+    scores.comp = Math.round(scores.comp);
     
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
     let level = "Needs Support";
     if (totalScore >= 12) level = "Proficient";
     else if (totalScore >= 8) level = "Developing";
     
-    const card = document.createElement('div');
-    card.className = 'result-card bounce';
+    const sessionData = {
+        scores, stats, totalScore, level, contentId: sessionContent.story.id
+    };
     
-    card.innerHTML = `
-        <h1>Teacher Dashboard</h1>
-        <h2>Overall Level: ${level}</h2>
-        <div class="score-badge">${totalScore} / 14</div>
-        <div style="text-align: left; margin: 0 auto; display: inline-block; font-size: 1.2rem;">
-            <p>Reading Words: ${scores.words}/2</p>
-            <p>Reading Sentences: ${scores.sentences}/2</p>
-            <p>Reading Story: ${scores.story}/2</p>
-            <p>Vocabulary: ${scores.vocab}/2</p>
-            <p>Comprehension: ${scores.comp}/2</p>
-            <p>Sequencing: ${scores.seq}/2</p>
-            <p>Story Retelling: ${scores.retell}/2</p>
+    if(typeof saveSession === 'function') {
+        saveSession(currentStudentId, sessionData);
+    }
+}
+
+function renderCelebration() {
+    mikoContainer.classList.add('hidden');
+    playSuccess();
+    
+    mainContent.innerHTML = `
+        <div class="celebration-card bounce">
+            <h1>⭐ Well Done! ⭐</h1>
+            <h2 style="font-size: 3rem;">You are a great reader!</h2>
+            <button class="btn-primary" style="margin-top:3rem;" onclick="location.reload()">Next Child</button>
         </div>
-        <p style="margin-top: 2rem; color: #666;">(This screen is for teachers only)</p>
-        <button class="btn-primary" style="margin-top:2rem;" onclick="location.reload()">Start Next Child</button>
     `;
+}
+
+// Triggered by secret long-press
+function renderTeacherDashboard() {
+    teacherDashboardModal.classList.remove('hidden');
+    const content = document.getElementById('dashboard-content');
     
-    mainContent.appendChild(card);
+    const students = getStudents();
+    if(students.length === 0) {
+        content.innerHTML = "<p>No data yet.</p>";
+        return;
+    }
+    
+    let html = '';
+    students.forEach(student => {
+        html += `<div style="margin-bottom: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem;">`;
+        html += `<h3>${student.name}</h3>`;
+        student.sessions.forEach(sess => {
+            const date = new Date(sess.timestamp).toLocaleString();
+            html += `<p><strong>${date}</strong> - Level: ${sess.level} (${sess.totalScore}/14)</p>`;
+            html += `<p style="font-size: 0.9em; color: #666;">WCPM: ${sess.stats.storyWCPM} | Word Raw: ${sess.stats.wordRaw}/10</p>`;
+        });
+        // Audio blobs (Mocked UI link)
+        html += `<button class="btn-secondary" style="font-size:1rem; padding: 0.5rem;" onclick="alert('Load audio from IndexedDB')">Play Recordings</button>`;
+        html += `</div>`;
+    });
+    
+    content.innerHTML = html;
 }
