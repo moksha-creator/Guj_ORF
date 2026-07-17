@@ -1,221 +1,83 @@
+/* Adaptive Flow Styles */
 :root {
     --primary: #FF6B6B;
     --secondary: #4ECDC4;
     --accent: #FFE66D;
     --background: #F7FFF7;
-    --text-dark: #1A1A24; /* Increased contrast for readability */
+    --text-dark: #1A1A24;
     --text-light: #FFFFFF;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Nunito', sans-serif;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; }
 
 body {
     background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
     color: var(--text-dark);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+    height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden;
 }
 
 #app-container {
-    width: 95vw;
-    height: 95vh;
-    max-width: 1400px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 40px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    padding: 2rem;
-    overflow-y: auto; /* Fix overflow clipping */
+    width: 95vw; height: 95vh; max-width: 1400px; background: rgba(255, 255, 255, 0.95);
+    border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column; position: relative; padding: 2rem; overflow-y: auto;
 }
 
-.screen {
-    width: 100%;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Roster UI */
-#roster-screen {
-    align-items: center;
-    justify-content: center;
-}
-
-#student-list {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 2rem;
-}
-
-.student-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 20px;
-    border: 4px solid var(--secondary);
-    font-size: 2rem;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-.student-card:hover { transform: scale(1.05); }
-
-.btn-invisible {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 50px;
-    height: 50px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-/* Miko overlay */
-#miko-container {
-    display: flex;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-#miko-avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 4px solid var(--secondary);
-    background: white;
-}
-
-#miko-bubble {
-    background: var(--text-light);
-    padding: 1rem 2rem;
-    border-radius: 30px;
-    border-top-left-radius: 0;
-    margin-left: 1.5rem;
-    font-size: 2rem;
-    font-weight: 900;
-    color: var(--secondary);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-    position: relative;
-    max-width: 60%;
-    border: 3px solid var(--secondary);
-}
-
-#miko-bubble::before {
-    content: '';
-    position: absolute;
-    left: -15px;
-    top: 0;
-    border-width: 15px 15px 0 0;
-    border-style: solid;
-    border-color: var(--secondary) transparent transparent transparent;
-}
-
-#btn-replay {
-    margin-left: 1rem;
-    padding: 0.5rem 1rem;
-    font-size: 1.5rem;
-    border-radius: 15px;
-    background: #FFD166;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* Main Content */
-#main-content {
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-
-.start-screen h1 { font-size: 4rem; color: var(--primary); margin-bottom: 1rem; }
-.start-screen h2 { font-size: 2.5rem; color: var(--secondary); margin-bottom: 3rem; }
-
-button {
-    cursor: pointer;
-    border: none;
-    outline: none;
-    font-weight: 900;
-    transition: transform 0.2s;
-}
-
-.btn-primary {
-    background: var(--primary); color: white; font-size: 2rem; padding: 1.5rem 4rem; border-radius: 50px;
-}
-.btn-secondary {
-    background: var(--secondary); color: white; font-size: 1.5rem; padding: 1rem 3rem; border-radius: 50px;
-}
-
-#controls-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 1rem;
-}
-
-#progress-strip {
-    display: flex;
-    gap: 0.5rem;
-}
-.dot { width: 20px; height: 20px; background: #ccc; border-radius: 50%; }
-.dot.active { background: var(--secondary); }
-
+.screen { width: 100%; flex-grow: 1; display: flex; flex-direction: column; }
 .hidden { display: none !important; }
 
-/* Word and Sentence display (High contrast, large fonts) */
-.word-display { font-size: 8rem; font-weight: 900; color: var(--text-dark); margin: 2rem 0; letter-spacing: 2px; }
+/* Buttons & Inputs */
+button { cursor: pointer; border: none; outline: none; font-weight: 900; transition: transform 0.2s; }
+.btn-primary { background: var(--primary); color: white; font-size: 2rem; padding: 1.5rem 4rem; border-radius: 50px; }
+.btn-secondary { background: var(--secondary); color: white; font-size: 1.2rem; padding: 1rem 2rem; border-radius: 30px; }
+.btn-toggle { background: #eee; border: 2px solid #ccc; font-size: 1.2rem; padding: 0.5rem 1rem; border-radius: 10px; }
+.input-text { font-size: 1.2rem; padding: 0.5rem; border-radius: 10px; border: 2px solid #ccc; }
+.dropdown { font-size: 1.2rem; padding: 0.5rem; border-radius: 10px; border: 2px solid #ccc; background: white; }
+
+/* Screen 01: Home */
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.roster-grid { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
+.student-card {
+    background: white; padding: 1rem 2rem; border-radius: 15px; border: 3px solid #ccc;
+    font-size: 1.5rem; font-weight: bold; cursor: pointer;
+}
+.student-card.status-waiting { border-color: var(--secondary); }
+.student-card.status-done { border-color: #eee; color: #999; background: #f9f9f9; }
+.student-card.status-absent { border-color: #ffcccc; color: #ff9999; }
+.student-card:hover { transform: scale(1.05); }
+
+#up-next-banner { background: var(--accent); padding: 2rem; border-radius: 20px; text-align: center; border: 4px solid #F4D03F; }
+
+/* Miko */
+#miko-container { display: flex; align-items: center; margin-bottom: 2rem; }
+#miko-avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--secondary); background: white; }
+#miko-bubble {
+    background: var(--text-light); padding: 1rem 2rem; border-radius: 30px; border-top-left-radius: 0;
+    margin-left: 1.5rem; font-size: 2rem; font-weight: 900; color: var(--secondary);
+    border: 3px solid var(--secondary); position: relative;
+}
+#btn-replay { margin-left: 1rem; padding: 0.5rem 1rem; font-size: 1.5rem; border-radius: 15px; background: #FFD166; font-weight: bold; }
+
+/* Screen 03: Activity Content */
+#screen-03-activity { text-align: center; }
+.word-display { font-size: 8rem; font-weight: 900; color: var(--text-dark); margin: 2rem 0; }
 .sentence-display { font-size: 5rem; font-weight: 900; color: var(--text-dark); margin: 2rem 0; line-height: 1.4; }
-
-.story-display { display: flex; flex-direction: column; align-items: center; gap: 2rem; width: 100%; }
-.story-text { font-size: 3.5rem; font-weight: 900; color: var(--text-dark); background: white; padding: 2rem; border-radius: 20px; line-height: 1.5;}
-.story-images { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-.story-img { width: 200px; height: 200px; object-fit: contain; border-radius: 20px; border: 4px solid #ccc; background: white;}
-
-.word-highlight { background-color: var(--accent); border-radius: 5px; padding: 0 5px; transition: background-color 0.2s;}
+.story-display { display: flex; flex-direction: column; align-items: center; gap: 2rem; }
+.story-text { font-size: 3.5rem; font-weight: 900; background: white; padding: 2rem; border-radius: 20px; line-height: 1.5;}
+.word-highlight { background-color: var(--accent); border-radius: 5px; padding: 0 5px; }
 
 .mic-btn {
     background: var(--primary); width: 120px; height: 120px; border-radius: 50%;
-    display: flex; justify-content: center; align-items: center; margin: 2rem auto; font-size: 4rem; color: white;
+    display: flex; justify-content: center; align-items: center; margin: 0 auto; font-size: 4rem; color: white;
 }
 .mic-btn.listening { background: #ff4757; box-shadow: 0 0 0 20px rgba(255,71,87,0.3); }
 
-/* Grid */
 .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem auto; max-width: 800px; }
-.choice-card {
-    background: white; border-radius: 30px; padding: 1rem; cursor: pointer; border: 4px solid #eee; transition: transform 0.2s;
-}
+.choice-card { background: white; border-radius: 30px; padding: 1rem; cursor: pointer; border: 4px solid #eee; }
 .choice-card.selected { border-color: var(--secondary); transform: scale(1.05); }
-.choice-card img { width: 100%; height: 250px; object-fit: contain; border-radius: 20px; }
+.choice-card img { width: 100%; height: 250px; object-fit: contain; }
 
-/* Sequencing (Tap to place) */
-.sequence-container { display: flex; gap: 1rem; justify-content: center; margin: 2rem 0; min-height: 250px; }
-.sequence-slot { width: 220px; height: 220px; background: rgba(0,0,0,0.05); border-radius: 20px; border: 4px dashed #ccc; display: flex; justify-content: center; align-items: center; cursor: pointer;}
-.sequence-slot img { width: 100%; height: 100%; object-fit: contain; border-radius: 15px;}
-.sequence-source { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;}
-.sequence-item { width: 200px; height: 200px; border-radius: 15px; cursor: pointer; border: 4px solid transparent;}
-.sequence-item.selected { border-color: var(--primary); transform: scale(1.1); }
+#controls-container { display: flex; justify-content: flex-end; padding-top: 1rem; }
 
-/* Result and Modal */
-.celebration-card { text-align: center; }
-.celebration-card h1 { font-size: 6rem; color: var(--primary); }
-
-.modal {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;
-}
-.modal-content {
-    background: white; padding: 4rem; border-radius: 40px; width: 80%; max-height: 90%; overflow-y: auto; text-align: left;
-}
-.modal-content h2 { font-size: 3rem; margin-bottom: 2rem; color: var(--primary);}
+/* Dashboard Modal */
+.modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: white; padding: 4rem; border-radius: 40px; width: 80%; max-height: 90%; overflow-y: auto; }

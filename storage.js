@@ -1,21 +1,38 @@
-// Task 3: Class Roster, Student Identity, Saving/Reporting
-// Task 4: MediaRecorder / IndexedDB storage
+// Task: Storage & Roster Logic (Adaptive Framework)
 
-// --- LocalStorage for Roster and Scores ---
 function getStudents() {
     const data = localStorage.getItem('miko_students');
     return data ? JSON.parse(data) : [];
 }
 
+function saveStudents(students) {
+    localStorage.setItem('miko_students', JSON.stringify(students));
+}
+
 function addStudent(name) {
     const students = getStudents();
-    const newStudent = { id: Date.now().toString(), name: name, sessions: [] };
+    const newStudent = { 
+        id: Date.now().toString(), 
+        name: name, 
+        currentLevel: 1, // Default L1
+        dailyStatus: 'waiting', 
+        sessions: [] 
+    };
     students.push(newStudent);
-    localStorage.setItem('miko_students', JSON.stringify(students));
+    saveStudents(students);
     return newStudent;
 }
 
-function saveSession(studentId, sessionData) {
+function updateStudentStatus(studentId, status) {
+    const students = getStudents();
+    const student = students.find(s => s.id === studentId);
+    if (student) {
+        student.dailyStatus = status; // 'waiting', 'done', 'absent'
+        saveStudents(students);
+    }
+}
+
+function saveSession(studentId, sessionData, newLevel) {
     const students = getStudents();
     const student = students.find(s => s.id === studentId);
     if (student) {
@@ -23,8 +40,16 @@ function saveSession(studentId, sessionData) {
             timestamp: Date.now(),
             ...sessionData
         });
-        localStorage.setItem('miko_students', JSON.stringify(students));
+        student.currentLevel = newLevel; // Update level from Nudge
+        student.dailyStatus = 'done';
+        saveStudents(students);
     }
+}
+
+function resetDailyQueue() {
+    const students = getStudents();
+    students.forEach(s => s.dailyStatus = 'waiting');
+    saveStudents(students);
 }
 
 // --- IndexedDB for Audio Blobs ---
@@ -35,21 +60,17 @@ let db;
 function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
-        
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
             if (!db.objectStoreNames.contains('recordings')) {
                 db.createObjectStore('recordings', { keyPath: 'id' });
             }
         };
-        
         request.onsuccess = (event) => {
             db = event.target.result;
             resolve(db);
         };
-        
         request.onerror = (event) => {
-            console.error("IndexedDB error:", event.target.error);
             reject(event.target.error);
         };
     });
@@ -61,21 +82,6 @@ function saveAudioBlob(studentId, activityType, blob) {
     const store = transaction.objectStore('recordings');
     const id = `${studentId}_${activityType}_${Date.now()}`;
     store.put({ id, studentId, activityType, blob, timestamp: Date.now() });
-}
-
-function getAudioBlobsForStudent(studentId) {
-    return new Promise((resolve, reject) => {
-        if (!db) return resolve([]);
-        const transaction = db.transaction(['recordings'], 'readonly');
-        const store = transaction.objectStore('recordings');
-        const request = store.getAll();
-        
-        request.onsuccess = () => {
-            const all = request.result;
-            resolve(all.filter(item => item.studentId === studentId));
-        };
-        request.onerror = (e) => reject(e);
-    });
 }
 
 initDB();

@@ -3,53 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Miko Reading Check - Grade 1</title>
-    <!-- Offline manifest and font to be handled in Task 9 -->
+    <title>Miko Reading Check</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app-container">
-        <!-- Roster Screen -->
-        <div id="roster-screen" class="screen">
-            <h1>Class Roster</h1>
-            <div id="student-list"></div>
-            <div style="margin-top:2rem;">
-                <input type="text" id="new-student-name" placeholder="Student Name" style="font-size: 1.5rem; padding: 0.5rem; border-radius: 10px; border: 2px solid #ccc;">
-                <button id="btn-add-student" class="btn-secondary">Add Child</button>
+        
+        <!-- Screen 01: Home / Roster -->
+        <div id="screen-01-home" class="screen">
+            <div class="header-row">
+                <h1>Class Roster</h1>
+                <div>
+                    <select id="grade-select" class="dropdown"><option>Grade 1</option><option>Grade 2</option></select>
+                    <button class="btn-toggle" onclick="alert('Gujarati mode toggled')">🌐 EN / GJ</button>
+                    <button id="btn-teacher-dashboard-trigger" class="btn-invisible">⚙️</button>
+                </div>
             </div>
             
-            <button id="btn-teacher-dashboard-trigger" class="btn-invisible"></button>
+            <div id="up-next-banner" class="hidden">
+                <h2>Up Next: <span id="up-next-name"></span> (L<span id="up-next-level"></span>)</h2>
+                <div style="display:flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                    <button id="btn-start" class="btn-primary">Start Session</button>
+                    <button id="btn-mark-absent" class="btn-secondary">Mark Absent</button>
+                </div>
+            </div>
+
+            <div id="student-list" class="roster-grid"></div>
+            
+            <div style="margin-top:2rem;">
+                <input type="text" id="new-student-name" placeholder="Student Name" class="input-text">
+                <button id="btn-add-student" class="btn-secondary">Add Child</button>
+                <button id="btn-reset-queue" class="btn-secondary" style="margin-left: 1rem;">Reset Daily Queue</button>
+            </div>
         </div>
 
-        <!-- Miko character overlay -->
+        <!-- Screen 02: Transition -->
+        <div id="screen-02-transition" class="screen hidden" style="justify-content: center; align-items: center;">
+            <h1 id="transition-name" style="font-size: 5rem; color: var(--primary);"></h1>
+            <h2 style="font-size: 3rem;">Please come to the board!</h2>
+            <div id="countdown" style="font-size: 8rem; font-weight: 900; color: var(--secondary); margin-top: 2rem;">3</div>
+        </div>
+
+        <!-- Miko character overlay (Visible on Screen 03) -->
         <div id="miko-container" class="hidden">
             <img src="assets/miko.png" alt="Miko" id="miko-avatar">
-            <div id="miko-bubble" class="hidden">Hello! I am Miko.</div>
+            <div id="miko-bubble" class="hidden">Hello!</div>
             <button id="btn-replay" class="hidden">🔄 Replay</button>
         </div>
         
-        <div id="main-content" class="screen hidden">
-            <!-- Dynamic Content -->
-            <div class="start-screen">
-                <h1 id="welcome-student-name">English Reading Check</h1>
-                <h2>Grade 1</h2>
-                <button id="btn-start" class="btn-primary bounce">Start Assessment</button>
-            </div>
+        <!-- Screen 03: Activity -->
+        <div id="screen-03-activity" class="screen hidden">
+            <!-- Dynamic Content Injected Here -->
         </div>
 
+        <!-- Screen 04: Session End -->
+        <div id="screen-04-end" class="screen hidden" style="justify-content: center; align-items: center;">
+            <h1 style="font-size: 6rem; color: var(--primary);">⭐ Great reading! ⭐</h1>
+            <h2 style="font-size: 3rem;">You are all done.</h2>
+        </div>
+
+        <!-- Controls (Visible on Screen 03) -->
         <div id="controls-container" class="hidden">
-            <div id="progress-strip" class="hidden">
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-            </div>
             <button id="btn-next" class="btn-secondary">Next</button>
         </div>
         
         <!-- Teacher Dashboard Modal -->
         <div id="teacher-dashboard-modal" class="modal hidden">
             <div class="modal-content">
-                <h2>Teacher Dashboard</h2>
+                <h2>Teacher Dashboard (Data & Privacy Gated)</h2>
                 <div id="dashboard-content"></div>
                 <button id="btn-close-dashboard" class="btn-secondary">Close</button>
             </div>
@@ -61,13 +83,6 @@
     <audio id="sfx-pop" src="assets/sfx-pop.mp3"></audio>
     <audio id="sfx-chime" src="assets/sfx-chime.mp3"></audio>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
-            });
-        }
-    </script>
     <script src="data.js"></script>
     <script src="storage.js"></script>
     <script src="app.js"></script>
