@@ -6,8 +6,13 @@ const L1_DATA = {
     words: ["cat", "dog", "sun", "hat", "run", "jump", "blue", "tree", "bird", "play"],
     vocab: {
         word: "Bird",
-        audioLabel: "Bird",
-        options: ["assets/story_2.png", "assets/story_1.png", "assets/story_3.png", "assets/story_4.png"],
+        audioLabel: "Tap the bird.",
+        options: [
+            { type: 'image', value: "assets/distractor_bird_1784292846271.png" },
+            { type: 'image', value: "assets/distractor_dog_1784292800403.png" },
+            { type: 'image', value: "assets/distractor_cat_1784292819700.png" },
+            { type: 'image', value: "assets/distractor_fish_1784292809605.png" }
+        ],
         correctIndex: 0
     }
 };
@@ -23,8 +28,13 @@ const L2_DATA = {
     ],
     vocab: {
         word: "Mat",
-        audioLabel: "Mat",
-        options: ["assets/story_1.png", "assets/story_4.png", "assets/story_2.png", "assets/story_3.png"],
+        audioLabel: "Tap the mat.",
+        options: [
+            { type: 'image', value: "assets/distractor_mat_1784292870234.png" },
+            { type: 'image', value: "assets/distractor_chair_1784292836710.png" },
+            { type: 'image', value: "assets/distractor_cat_1784292819700.png" },
+            { type: 'image', value: "assets/distractor_dog_1784292800403.png" }
+        ],
         correctIndex: 0
     }
 };
@@ -38,9 +48,14 @@ const L3_DATA = {
         images: ["assets/story_1.png", "assets/story_2.png"]
     },
     comprehension: {
-        question: "Where was the cat sleeping?",
-        audioLabel: "Where was the cat sleeping?",
-        options: ["assets/story_1.png", "assets/story_3.png", "assets/story_4.png", "assets/story_2.png"],
+        question: "Where did the bird fly to?",
+        audioLabel: "Where did the bird fly to?",
+        options: [
+            { type: 'text', value: "To the window" },
+            { type: 'text', value: "In a box" },
+            { type: 'text', value: "On a chair" },
+            { type: 'text', value: "Under a tree" }
+        ],
         correctIndex: 0
     }
 };
@@ -56,7 +71,12 @@ const L4_DATA = {
     comprehension: {
         question: "What did the cat do when it woke up?",
         audioLabel: "What did the cat do when it woke up?",
-        options: ["assets/story_3.png", "assets/story_1.png", "assets/story_2.png", "assets/story_4.png"],
+        options: [
+            { type: 'text', value: "Looked at the bird" },
+            { type: 'text', value: "Ran away fast" },
+            { type: 'text', value: "Went back to sleep" },
+            { type: 'text', value: "Ate some food" }
+        ],
         correctIndex: 0
     }
 };

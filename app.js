@@ -1,4 +1,4 @@
-// --- Task 1: Speech Engine (Same as before) ---
+// --- Task 1: Speech Engine ---
 const SpeechEngine = {
     recognition: null,
     init() {
@@ -11,7 +11,9 @@ const SpeechEngine = {
         }
     },
     listen(targetText, onResult, onInterim) {
-        if (!this.recognition) return onResult(true);
+        if (!this.recognition) {
+            return onResult('NO_STT'); // Expose failure state for manual override
+        }
         let hasMatched = false;
         let targetWords = targetText.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/);
         
@@ -30,12 +32,13 @@ const SpeechEngine = {
                 let wordsSpoken = transcript.trim().split(/\s+/);
                 
                 if (targetWords.length === 1) {
-                    if (wordsSpoken.some(w => w.includes(targetWords[0]) || targetWords[0].includes(w) && w.length > 2)) {
+                    if (wordsSpoken.some(w => (w === targetWords[0]) || (targetWords[0].includes(w) && w.length > 3))) {
                         hasMatched = true; this.recognition.stop();
                     }
                 } else {
-                    let hits = targetWords.filter(tw => wordsSpoken.some(ws => ws.includes(tw))).length;
-                    if (hits / targetWords.length > 0.8) {
+                    let hits = targetWords.filter(tw => wordsSpoken.some(w => (w === tw) || (tw.includes(w) && w.length > 3))).length;
+                    let accuracy = (hits / targetWords.length) * 100;
+                    if (accuracy > 80) {
                         hasMatched = true; this.recognition.stop();
                     }
                 }
@@ -87,10 +90,8 @@ function speak(text, callback) {
     mikoBubble.classList.remove('hidden');
     isSpeaking = true;
     
-    if(btnNext) btnNext.disabled = true;
     const finish = () => {
         isSpeaking = false;
-        if(btnNext) btnNext.disabled = false;
         window.dispatchEvent(new Event('miko-done-speaking'));
         if(callback) callback();
     };
@@ -123,13 +124,12 @@ function renderHome() {
     const list = document.getElementById('student-list');
     list.innerHTML = '';
     
-    // Find next waiting student
     const nextStudent = students.find(s => s.dailyStatus === 'waiting');
     
     if (nextStudent) {
         document.getElementById('up-next-banner').classList.remove('hidden');
         document.getElementById('up-next-name').innerText = nextStudent.name;
-        document.getElementById('up-next-level').innerText = nextStudent.currentLevel;
+        // P0-3: Level removed from front end banner
         currentStudent = nextStudent;
     } else {
         document.getElementById('up-next-banner').classList.add('hidden');
@@ -139,8 +139,8 @@ function renderHome() {
     students.forEach(s => {
         const card = document.createElement('div');
         card.className = `student-card status-${s.dailyStatus}`;
-        card.innerText = `${s.name} (L${s.currentLevel})`;
-        // Optional override: click card to force them next
+        // P0-3: Level removed from public roster card
+        card.innerText = `${s.name}`;
         card.onclick = () => {
             if (s.dailyStatus !== 'waiting') {
                 updateStudentStatus(s.id, 'waiting');
@@ -161,8 +161,14 @@ document.getElementById('btn-mark-absent').onclick = () => {
     if(currentStudent) { updateStudentStatus(currentStudent.id, 'absent'); renderHome(); }
 };
 
-// Teacher Dashboard
+// Teacher Dashboard (PIN Gated - P0-2)
 document.getElementById('btn-teacher-dashboard-trigger').onclick = () => {
+    const pin = prompt("Enter Teacher PIN to view scores (hint: 1234):");
+    if (pin !== '1234') {
+        alert("Incorrect PIN.");
+        return;
+    }
+    
     document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
     const content = document.getElementById('dashboard-content');
     let html = '';
@@ -184,7 +190,6 @@ document.getElementById('btn-start').onclick = () => {
     playPop();
     showScreen(screens.TRANSITION);
     
-    // Load appropriate content
     currentSessionData = getContentForLevel(currentStudent.currentLevel);
     sessionStats = { readPassed: false, meaningPassed: false, wcpm: 0 };
     activityPhase = 'READING';
@@ -209,7 +214,7 @@ document.getElementById('btn-start').onclick = () => {
 function startActivity() {
     showScreen(screens.ACTIVITY);
     mikoContainer.classList.remove('hidden');
-    controlsContainer.classList.add('hidden');
+    controlsContainer.classList.add('hidden'); // P0-5: hide child next button
     screens.ACTIVITY.innerHTML = '';
     retryCount = 0;
     
@@ -219,19 +224,17 @@ function startActivity() {
         else if(lvl === 2) { speak("Read the sentence out loud."); renderSentenceTask(); }
         else { speak("Let's read this story."); storyStartTime = Date.now(); renderStoryTask(); }
     } else {
-        speak("Tap the correct picture.");
+        speak("Tap the correct answer.");
         renderMeaningTask();
     }
 }
 
-btnNext.onclick = () => {
-    if(isSpeaking) return;
-    playPop();
+// P0-5: Auto-advance (Replacing btn-next)
+function autoAdvanceSession() {
     if(activityPhase === 'READING') {
         activityPhase = 'MEANING';
         startActivity();
     } else {
-        // Evaluate Nudge
         let passedBoth = sessionStats.readPassed && sessionStats.meaningPassed;
         let newLevel = currentStudent.currentLevel;
         if (passedBoth && newLevel < 4) newLevel++;
@@ -244,20 +247,31 @@ btnNext.onclick = () => {
         playSuccess();
         setTimeout(() => { renderHome(); }, 4000);
     }
-};
+}
 
 // --- Task Renderers ---
-
 function createMicButton(targetText, onComplete) {
     const container = document.createElement('div');
     container.style.display = 'flex'; container.style.flexDirection = 'column'; container.style.alignItems = 'center';
+    
     const micBtn = document.createElement('div');
     micBtn.className = 'mic-btn'; micBtn.innerHTML = '🎤';
     
     const feedback = document.createElement('div');
     feedback.style.fontSize = '1.5rem'; feedback.style.color = '#666'; feedback.style.marginTop = '1rem';
     feedback.innerText = "Waiting for Miko...";
-    container.appendChild(micBtn); container.appendChild(feedback);
+    
+    // Manual Override container
+    const overrideContainer = document.createElement('div');
+    overrideContainer.style.display = 'none'; overrideContainer.style.marginTop = '1rem';
+    overrideContainer.innerHTML = `
+        <button id="override-pass" style="background:#4ECDC4; padding:0.5rem 1rem; border-radius:10px; color:white; border:none; margin-right:1rem;">Manual Pass</button>
+        <button id="override-fail" style="background:#FF6B6B; padding:0.5rem 1rem; border-radius:10px; color:white; border:none;">Manual Fail</button>
+    `;
+    
+    container.appendChild(micBtn); 
+    container.appendChild(feedback);
+    container.appendChild(overrideContainer);
     
     const startListening = () => {
         micBtn.classList.add('listening');
@@ -265,6 +279,16 @@ function createMicButton(targetText, onComplete) {
         
         SpeechEngine.listen(targetText, (passed) => {
             micBtn.classList.remove('listening');
+            
+            // P0-4: Handle STT unavailability
+            if (passed === 'NO_STT') {
+                feedback.innerText = "Recognition Unavailable - Teacher Override";
+                overrideContainer.style.display = 'block';
+                document.getElementById('override-pass').onclick = () => onComplete(true);
+                document.getElementById('override-fail').onclick = () => onComplete(false);
+                return;
+            }
+            
             if(passed) {
                 feedback.innerText = "Great job!"; feedback.style.color = "var(--secondary)";
                 playSuccess(); onComplete(true);
@@ -286,23 +310,26 @@ function createMicButton(targetText, onComplete) {
     return container;
 }
 
+function handleReadComplete(passed) {
+    sessionStats.readPassed = passed;
+    // P0-5 auto advance after 2 seconds
+    setTimeout(() => {
+        if(!isSpeaking) autoAdvanceSession();
+        else window.addEventListener('miko-done-speaking', autoAdvanceSession, {once: true});
+    }, 1500);
+}
+
 function renderWordTask() {
     const word = currentSessionData.words[Math.floor(Math.random() * currentSessionData.words.length)];
     const div = document.createElement('div'); div.className = 'word-display'; div.innerText = word;
-    const mic = createMicButton(word, (passed) => {
-        sessionStats.readPassed = passed;
-        controlsContainer.classList.remove('hidden');
-    });
+    const mic = createMicButton(word, handleReadComplete);
     screens.ACTIVITY.appendChild(div); screens.ACTIVITY.appendChild(mic);
 }
 
 function renderSentenceTask() {
     const sent = currentSessionData.sentences[Math.floor(Math.random() * currentSessionData.sentences.length)];
     const div = document.createElement('div'); div.className = 'sentence-display'; div.innerText = sent;
-    const mic = createMicButton(sent, (passed) => {
-        sessionStats.readPassed = passed;
-        controlsContainer.classList.remove('hidden');
-    });
+    const mic = createMicButton(sent, handleReadComplete);
     screens.ACTIVITY.appendChild(div); screens.ACTIVITY.appendChild(mic);
 }
 
@@ -312,26 +339,30 @@ function renderStoryTask() {
     text.innerText = currentSessionData.story.text;
     
     const mic = createMicButton(currentSessionData.story.text, (passed) => {
-        sessionStats.readPassed = passed;
         if(currentSessionData.level === 4) { // Compute WCPM
             let min = (Date.now() - storyStartTime) / 60000;
             if(passed) sessionStats.wcpm = Math.round((currentSessionData.story.text.split(' ').length) / min);
         }
-        controlsContainer.classList.remove('hidden');
+        handleReadComplete(passed);
     });
     container.appendChild(text); container.appendChild(mic);
     screens.ACTIVITY.appendChild(container);
 }
 
 function renderMeaningTask() {
-    // Both Vocab and Comp are treated as a single tap choice
     const data = currentSessionData.vocab || currentSessionData.comprehension;
     speak(data.audioLabel);
     
     const grid = document.createElement('div'); grid.className = 'grid-2x2';
-    data.options.forEach((src, idx) => {
+    data.options.forEach((opt, idx) => {
         const card = document.createElement('div'); card.className = 'choice-card';
-        const img = document.createElement('img'); img.src = src; card.appendChild(img);
+        
+        if (opt.type === 'image') {
+            const img = document.createElement('img'); img.src = opt.value; card.appendChild(img);
+        } else {
+            const txt = document.createElement('h3'); txt.innerText = opt.value; txt.style.fontSize = '2rem'; card.appendChild(txt);
+        }
+        
         card.onclick = () => {
             if(isSpeaking) return;
             playChime();
@@ -339,8 +370,12 @@ function renderMeaningTask() {
                 card.classList.add('selected'); playSuccess();
                 sessionStats.meaningPassed = true;
             } else { sessionStats.meaningPassed = false; }
-            // Move on immediately after selection
-            setTimeout(() => { btnNext.onclick(); }, 1500);
+            
+            // P0-5 auto advance
+            setTimeout(() => {
+                if(!isSpeaking) autoAdvanceSession();
+                else window.addEventListener('miko-done-speaking', autoAdvanceSession, {once: true});
+            }, 1500);
         };
         grid.appendChild(card);
     });
