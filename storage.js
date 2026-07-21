@@ -1,5 +1,32 @@
 // Task: Storage & Roster Logic (Adaptive Framework)
 
+function getConfig() {
+    const data = localStorage.getItem('miko_config');
+    return data ? JSON.parse(data) : null;
+}
+
+function saveConfig(config) {
+    localStorage.setItem('miko_config', JSON.stringify(config));
+}
+
+function importRoster(namesString) {
+    const names = namesString.split('\n').map(n => n.trim()).filter(n => n);
+    const students = getStudents();
+    names.forEach(name => {
+        // Prevent duplicate names in simple import
+        if (!students.find(s => s.name === name)) {
+            students.push({ 
+                id: Date.now().toString() + Math.floor(Math.random()*1000), 
+                name: name, 
+                currentLevel: 1, 
+                dailyStatus: 'waiting', 
+                sessions: [] 
+            });
+        }
+    });
+    saveStudents(students);
+}
+
 function getStudents() {
     const data = localStorage.getItem('miko_students');
     let students = data ? JSON.parse(data) : [];

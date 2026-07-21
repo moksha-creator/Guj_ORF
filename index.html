@@ -10,6 +10,51 @@
 <body>
     <div id="app-container" style="width: 100%; height: 100%;">
         
+        <!-- Screen 00: Configuration -->
+        <div id="screen-00-config" class="screen">
+            <h1 style="margin-bottom: 24px;">ORF Setup</h1>
+            <p style="margin-bottom: 32px; color: var(--text-muted);">One-time class configuration.</p>
+            
+            <div style="display:flex; gap: 32px; flex-wrap: wrap;">
+                <div class="card" style="flex:1; min-width: 300px;">
+                    <h3>Class Details</h3>
+                    <label style="display:block; margin-top:16px;">Grade</label>
+                    <select id="config-grade" style="width:100%; padding:8px; font-size:1.2rem;"><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option></select>
+                    
+                    <label style="display:block; margin-top:16px;">Division</label>
+                    <input type="text" id="config-division" placeholder="e.g. A" style="width:100%; padding:8px; font-size:1.2rem;">
+                    
+                    <label style="display:block; margin-top:16px;">Roster Import (One name per line)</label>
+                    <textarea id="config-roster" rows="5" style="width:100%; padding:8px; font-size:1.2rem;" placeholder="Aarav\nDiya\nRiya"></textarea>
+                </div>
+                
+                <div class="card" style="flex:1; min-width: 300px;">
+                    <h3>Assessment Rules</h3>
+                    <label style="display:block; margin-top:16px;">Language Tracks</label>
+                    <div><input type="checkbox" id="track-en" checked> English</div>
+                    <div><input type="checkbox" id="track-gj"> Gujarati</div>
+                    
+                    <label style="display:block; margin-top:16px;">Cadence</label>
+                    <select id="config-cadence" style="width:100%; padding:8px; font-size:1.2rem;">
+                        <option value="rolling">Rolling across the month (20 days)</option>
+                        <option value="designated">One designated week a month (5 days)</option>
+                    </select>
+                    
+                    <label style="display:block; margin-top:16px;">Assessment Slot</label>
+                    <select id="config-slot" style="width:100%; padding:8px; font-size:1.2rem;">
+                        <option value="lecture">Within a lecture (2 per day)</option>
+                        <option value="dedicated">Dedicated slot (5 per day)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 32px; background: #E5E7EB;" id="coverage-box">
+                <h3 id="coverage-verdict">Coverage Status</h3>
+                <p id="coverage-details" style="font-size: 1.2rem; margin-top: 8px;">Waiting for roster...</p>
+                <button id="btn-confirm-config" class="btn-primary" style="margin-top: 16px;" disabled>Confirm Setup</button>
+            </div>
+        </div>
+
         <!-- Screen 01: Home / Roster Redesign -->
         <div id="screen-01-home" class="screen">
             <div class="top-bar">

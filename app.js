@@ -54,6 +54,7 @@ SpeechEngine.init();
 
 // --- Main App Logic for Adaptive Framework ---
 const screens = {
+    CONFIG: document.getElementById('screen-00-config'),
     HOME: document.getElementById('screen-01-home'),
     TRANSITION: document.getElementById('screen-02-transition'),
     ACTIVITY: document.getElementById('screen-03-activity'),
@@ -112,6 +113,78 @@ function showScreen(screenElem) {
     screenElem.classList.add('active');
     setMikoState('encouraging'); // Always visible global Miko
 }
+
+// ==========================================
+// SCREEN 00: CONFIGURATION (ONE-TIME)
+// ==========================================
+function updateCoverage() {
+    const rosterText = document.getElementById('config-roster').value.trim();
+    const names = rosterText ? rosterText.split('\n').filter(n => n.trim()) : [];
+    const rosterSize = names.length;
+    
+    const trackEn = document.getElementById('track-en').checked;
+    const trackGj = document.getElementById('track-gj').checked;
+    const numTracks = (trackEn ? 1 : 0) + (trackGj ? 1 : 0);
+    
+    const cadence = document.getElementById('config-cadence').value; // 'rolling' (20) or 'designated' (5)
+    const slot = document.getElementById('config-slot').value; // 'lecture' (2) or 'dedicated' (5)
+    
+    const days = cadence === 'rolling' ? 20 : 5;
+    const sessionsPerDay = slot === 'dedicated' ? 5 : 2;
+    
+    const sessionsNeeded = rosterSize * numTracks;
+    const sessionsAvailable = days * sessionsPerDay;
+    
+    const box = document.getElementById('coverage-box');
+    const verdict = document.getElementById('coverage-verdict');
+    const details = document.getElementById('coverage-details');
+    const btn = document.getElementById('btn-confirm-config');
+    
+    if (rosterSize === 0 || numTracks === 0) {
+        box.style.background = '#E5E7EB';
+        verdict.innerText = 'Coverage Status';
+        details.innerText = 'Waiting for roster and language selection...';
+        btn.disabled = true;
+        return;
+    }
+    
+    if (sessionsAvailable >= sessionsNeeded) {
+        box.style.background = '#f0fdf4'; // Light green
+        verdict.innerText = '✅ Covered';
+        details.innerText = `You need ${sessionsNeeded} sessions this month. Your chosen slot provides ${sessionsAvailable} sessions.`;
+        btn.disabled = false;
+    } else {
+        box.style.background = '#fef2f2'; // Light red
+        verdict.innerText = '❌ Not Covered';
+        details.innerText = `You need ${sessionsNeeded} sessions, but only have ${sessionsAvailable} available. Try widening the slot or staggering tracks.`;
+        btn.disabled = true; // Force adjustment
+    }
+}
+
+// Bind live updates
+['config-roster', 'config-cadence', 'config-slot'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateCoverage);
+    document.getElementById(id).addEventListener('change', updateCoverage);
+});
+['track-en', 'track-gj'].forEach(id => {
+    document.getElementById(id).addEventListener('change', updateCoverage);
+});
+
+document.getElementById('btn-confirm-config').onclick = () => {
+    const config = {
+        grade: document.getElementById('config-grade').value,
+        division: document.getElementById('config-division').value,
+        tracks: {
+            en: document.getElementById('track-en').checked,
+            gj: document.getElementById('track-gj').checked
+        },
+        cadence: document.getElementById('config-cadence').value,
+        slot: document.getElementById('config-slot').value
+    };
+    saveConfig(config);
+    importRoster(document.getElementById('config-roster').value);
+    renderHome();
+};
 
 // ==========================================
 // SCREEN 01: HOME (ROSTER)
@@ -418,5 +491,11 @@ function triggerCelebration() {
     setTimeout(() => { renderHome(); }, 4000);
 }
 
-// Init
-renderHome();
+// Init App
+const savedConfig = getConfig();
+if (!savedConfig) {
+    showScreen(screens.CONFIG);
+    updateCoverage();
+} else {
+    renderHome();
+}
