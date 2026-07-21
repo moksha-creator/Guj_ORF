@@ -305,10 +305,64 @@ function startActivity() {
     screens.ACTIVITY.innerHTML = '';
     retryCount = 0;
     
+    // Teacher Controls Overlay
+    const overlay = document.createElement('div');
+    overlay.style.position = 'absolute'; overlay.style.top = '16px'; overlay.style.left = '16px';
+    overlay.innerHTML = `<button class="btn-secondary" onclick="alert('Session Paused')">Pause</button>
+                         <button class="btn-secondary" onclick="renderHome()">End Session</button>`;
+    screens.ACTIVITY.appendChild(overlay);
+    
     if (activityPhase === 'READING') {
         const lvl = currentSessionData.level;
-        if(lvl === 1) { speak("Read the word out loud."); renderWordTask(); }
-        else if(lvl === 2) { speak("Read the sentence out loud."); renderSentenceTask(); }
+        if (lvl === 1) { 
+            const types = ['WORD_READ_TEXT', 'WORD_READ_NONWORD', 'WORD_READ_MINIMAL_PAIR', 'WORD_READ_SET'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            if (type === 'WORD_READ_NONWORD') {
+                speak("Read this made up word.");
+                renderTextTask('word-text', currentSessionData.nonwords);
+            } else if (type === 'WORD_READ_MINIMAL_PAIR') {
+                const pair = currentSessionData.minimalPairs[Math.floor(Math.random() * currentSessionData.minimalPairs.length)];
+                speak(`Read the word: ${pair.target}`);
+                
+                const card = document.createElement('div'); card.className = 'reading-card';
+                card.style.display = 'flex'; card.style.justifyContent = 'space-around';
+                pair.options.forEach(opt => {
+                    const div = document.createElement('div'); div.className = 'word-text'; div.innerText = opt;
+                    card.appendChild(div);
+                });
+                const mic = createMicButton(pair.target, handleReadComplete);
+                screens.ACTIVITY.appendChild(card); screens.ACTIVITY.appendChild(mic);
+                
+            } else if (type === 'WORD_READ_SET') {
+                speak("Read these words out loud.");
+                renderTextTask('sentence-text', currentSessionData.wordSets);
+            } else {
+                speak("Read the word out loud."); 
+                renderTextTask('word-text', currentSessionData.words); 
+            }
+        }
+        else if (lvl === 2) { 
+            const types = ['SENTENCE_READ_TEXT', 'SENTENCE_READ_SET', 'SENTENCE_READ_CLOZE'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            if (type === 'SENTENCE_READ_SET') {
+                speak("Read these sentences out loud.");
+                renderTextTask('passage-text', currentSessionData.sentenceSets);
+            } else if (type === 'SENTENCE_READ_CLOZE') {
+                const cloze = currentSessionData.clozeSentences[Math.floor(Math.random() * currentSessionData.clozeSentences.length)];
+                speak("Read the sentence and fill in the blank.");
+                const card = document.createElement('div'); card.className = 'reading-card';
+                const div = document.createElement('div'); div.id = 'text-display'; div.className = 'sentence-text'; 
+                div.innerHTML = `${cloze.sentence} <span style="border-bottom: 4px solid var(--text-color); width: 80px; display: inline-block;"></span>`;
+                card.appendChild(div);
+                const mic = createMicButton(`${cloze.sentence} ${cloze.target}`, handleReadComplete);
+                screens.ACTIVITY.appendChild(card); screens.ACTIVITY.appendChild(mic);
+            } else {
+                speak("Read the sentence out loud."); 
+                renderTextTask('sentence-text', currentSessionData.sentences); 
+            }
+        }
         else { speak("Let's read this story."); storyStartTime = Date.now(); renderStoryTask(); }
     } else {
         speak("Tap the correct picture.");
@@ -415,9 +469,6 @@ function renderTextTask(textClass, dataArray) {
     const mic = createMicButton(text, handleReadComplete);
     screens.ACTIVITY.appendChild(card); screens.ACTIVITY.appendChild(mic);
 }
-
-function renderWordTask() { renderTextTask('word-text', currentSessionData.words); }
-function renderSentenceTask() { renderTextTask('sentence-text', currentSessionData.sentences); }
 
 function renderStoryTask() {
     const card = document.createElement('div'); card.className = 'reading-card';

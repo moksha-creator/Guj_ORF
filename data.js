@@ -8,6 +8,16 @@ const L1_DATA = {
     "box","bed","bag","fan","net","pig","top","mat","log","jam",
     "ten","sit","hop","cut","map","hen","cow","fish","tree","star"
   ],
+  nonwords: ["flim", "blop", "crat", "smeb", "plig"],
+  minimalPairs: [
+    { target: "cat", options: ["cat", "bat"] },
+    { target: "pin", options: ["pin", "pan"] },
+    { target: "dog", options: ["dog", "log"] }
+  ],
+  wordSets: [
+    "cat dog sun hat run",
+    "pen cup bus big red"
+  ],
   vocabBank: [
     { word:"Cat",   audioLabel:"Tap the picture of the cat.", options:["assets/cat.png","assets/dog.png","assets/bird.png","assets/fish.png"], correctIndex:0 },
     { word:"Sun",   audioLabel:"Tap the sun.",   options:["assets/moon.png","assets/sun.png","assets/star.png","assets/cloud.png"], correctIndex:1 },
@@ -38,6 +48,14 @@ const L2_DATA = {
     "She can hop on the log.",
     "I have a pen and a bag.",
     "The cow is in the grass."
+  ],
+  clozeSentences: [
+    { sentence: "The cat is on the", target: "mat" },
+    { sentence: "I can see the", target: "sun" },
+    { sentence: "The pig is", target: "big" }
+  ],
+  sentenceSets: [
+    "The cat is on the mat. I can see the sun. The dog can run."
   ],
   vocabBank: [
     { word:"Mat",  audioLabel:"Tap the mat.",  options:["assets/box.png","assets/mat.png","assets/cup.png","assets/pen.png"], correctIndex:1 },
