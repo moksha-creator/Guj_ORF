@@ -130,7 +130,10 @@ function updateCoverage() {
     const slot = document.getElementById('config-slot').value; // 'lecture' (2) or 'dedicated' (5)
     
     const days = cadence === 'rolling' ? 20 : 5;
-    const sessionsPerDay = slot === 'dedicated' ? 5 : 2;
+    let sessionsPerDay = 2;
+    if(slot === 'dedicated') sessionsPerDay = 5;
+    if(slot === 'extended') sessionsPerDay = 15;
+    if(slot === 'full') sessionsPerDay = 30;
     
     const sessionsNeeded = rosterSize * numTracks;
     const sessionsAvailable = days * sessionsPerDay;
