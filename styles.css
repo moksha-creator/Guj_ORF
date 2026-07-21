@@ -18,12 +18,12 @@
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    height: 100vh; overflow: hidden;
+    height: 100vh;
     display: flex; flex-direction: column;
 }
 
 /* --- Layouts & Screens --- */
-.screen { display: none; height: 100%; width: 100%; position: absolute; top:0; left:0; flex-direction: column; padding: var(--spacing-base); }
+.screen { display: none; height: 100%; width: 100%; position: absolute; top:0; left:0; flex-direction: column; padding: var(--spacing-base); overflow-y: auto; }
 .screen.active { display: flex; }
 
 /* --- Typography --- */
