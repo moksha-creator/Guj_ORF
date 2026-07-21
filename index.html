@@ -99,17 +99,39 @@
         <!-- Teacher Dashboard Modal Redesign -->
         <div id="teacher-dashboard-modal" class="modal hidden">
             <div class="modal-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 48px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
                     <h2>Teacher Dashboard</h2>
                     <button id="btn-close-dashboard" class="btn-secondary">Close</button>
                 </div>
                 
-                <div class="dashboard-stats" id="dashboard-stats">
-                    <!-- Stats injected via JS -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchDashboardTab('class')">Class Report</button>
+                    <button class="tab-btn" onclick="switchDashboardTab('student')">Student Report</button>
+                    <button class="tab-btn" onclick="switchDashboardTab('log')">Response Log</button>
                 </div>
 
-                <div id="dashboard-content">
-                    <!-- Student Cards injected via JS -->
+                <div id="tab-class" class="tab-pane active">
+                    <!-- Class stats and distribution injected via JS -->
+                </div>
+                
+                <div id="tab-student" class="tab-pane hidden">
+                    <select id="student-select" style="width:100%; padding:16px; font-size:1.5rem; margin-bottom: 24px;">
+                        <option>Select a student...</option>
+                    </select>
+                    <div id="student-details"></div>
+                </div>
+
+                <div id="tab-log" class="tab-pane hidden">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+                        <h3>All Sessions</h3>
+                        <button class="btn-primary" style="font-size:1rem; padding:8px 16px;" onclick="exportToCSV()">Export CSV</button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table id="log-table" class="data-table">
+                            <thead><tr><th>Date</th><th>Student</th><th>Level</th><th>Accuracy</th><th>Meaning</th><th>Result Lvl</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

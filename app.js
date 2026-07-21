@@ -236,34 +236,96 @@ function renderHome() {
 }
 
 // Teacher Dashboard (PIN Gated)
+window.switchDashboardTab = function(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+};
+
 window.renderTeacherDashboard = function() {
     document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
     const students = getStudents();
-    const completed = students.filter(s => s.dailyStatus === 'done').length;
     
-    document.getElementById('dashboard-stats').innerHTML = `
-        <div class="stat-card"><h3>${completed}</h3><p>Completed</p></div>
-        <div class="stat-card"><h3>${students.length - completed}</h3><p>Remaining</p></div>
-    `;
-    
-    const content = document.getElementById('dashboard-content');
-    let html = '';
+    // Tab C: Log
+    const tbody = document.querySelector('#log-table tbody');
+    tbody.innerHTML = '';
     students.forEach(s => {
-        html += `<div class="dash-student-card">
-                    <div>
-                        <h2>${s.name}</h2>
-                        <div style="color:var(--text-muted); font-size:1.2rem;">
-                            ${s.sessions.slice(-3).map(sess => `${new Date(sess.timestamp).toLocaleDateString()} | Read: ${sess.readPassed?'Yes':'No'} | Result Lvl: ${sess.resultLevel}`).join('<br>')}
-                        </div>
-                    </div>
-                    <div style="display:flex; align-items:center; background:#E5E7EB; border-radius:50px; padding:8px;">
-                        <button class="btn-secondary lvl-btn" onclick="setStudentLevel('${s.id}', ${s.currentLevel - 1}); renderTeacherDashboard();">-</button>
-                        <span style="font-size:24px; font-weight:900; margin:0 16px;">L${s.currentLevel}</span>
-                        <button class="btn-secondary lvl-btn" onclick="setStudentLevel('${s.id}', ${s.currentLevel + 1}); renderTeacherDashboard();">+</button>
-                    </div>
-                 </div>`;
+        s.sessions.forEach(sess => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${new Date(sess.timestamp).toLocaleDateString()}</td>
+                            <td>${s.name}</td>
+                            <td>L${sess.resultLevel}</td>
+                            <td>${sess.readPassed ? 'Pass' : 'Fail'}</td>
+                            <td>${sess.meaningPassed ? 'Pass' : 'Fail'}</td>
+                            <td>L${sess.resultLevel}</td>`;
+            tbody.appendChild(tr);
+        });
     });
-    content.innerHTML = html;
+
+    // Tab B: Class Report
+    const completed = students.filter(s => s.dailyStatus === 'done').length;
+    let classHtml = `<div class="dashboard-stats">
+                        <div class="stat-card"><h3>${completed}</h3><p>Assessed this window</p></div>
+                        <div class="stat-card" style="background:var(--accent);"><h3>${students.length - completed}</h3><p>Pending / Absent</p></div>
+                     </div>
+                     <h3 style="margin-bottom:16px;">Level Distribution</h3>`;
+    students.forEach(s => {
+        classHtml += `<div class="dash-student-card">
+                        <div>
+                            <h2>${s.name}</h2>
+                        </div>
+                        <div style="display:flex; align-items:center; background:#E5E7EB; border-radius:50px; padding:8px;">
+                            <button class="btn-secondary lvl-btn" onclick="setStudentLevel('${s.id}', ${s.currentLevel - 1}); renderTeacherDashboard();">-</button>
+                            <span style="font-size:24px; font-weight:900; margin:0 16px;">L${s.currentLevel}</span>
+                            <button class="btn-secondary lvl-btn" onclick="setStudentLevel('${s.id}', ${s.currentLevel + 1}); renderTeacherDashboard();">+</button>
+                        </div>
+                     </div>`;
+    });
+    document.getElementById('tab-class').innerHTML = classHtml;
+    
+    // Tab A: Student Report
+    const select = document.getElementById('student-select');
+    select.innerHTML = '<option>Select a student...</option>';
+    students.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id; opt.innerText = s.name;
+        select.appendChild(opt);
+    });
+    
+    select.onchange = () => {
+        const student = students.find(s => s.id === select.value);
+        if(!student) return;
+        
+        let detHtml = `<h2>${student.name} - Currently L${student.currentLevel}</h2>
+                       <h3 style="margin-top:24px; margin-bottom:16px;">Recent Trajectory</h3>`;
+        if (student.sessions.length === 0) detHtml += `<p>No sessions yet.</p>`;
+        student.sessions.slice(-5).forEach(sess => {
+            detHtml += `<div class="card" style="margin-bottom:8px;">
+                            <p>${new Date(sess.timestamp).toLocaleDateString()} | Read: ${sess.readPassed?'✅':'❌'} | Meaning: ${sess.meaningPassed?'✅':'❌'} | ➡️ L${sess.resultLevel}</p>
+                        </div>`;
+        });
+        document.getElementById('student-details').innerHTML = detHtml;
+    };
+};
+
+window.exportToCSV = function() {
+    let csv = "Date,Student,Level,Accuracy,Meaning,Result Lvl\n";
+    const students = getStudents();
+    students.forEach(s => {
+        s.sessions.forEach(sess => {
+            csv += `${new Date(sess.timestamp).toLocaleDateString()},${s.name},L${sess.resultLevel},${sess.readPassed ? 'Pass' : 'Fail'},${sess.meaningPassed ? 'Pass' : 'Fail'},L${sess.resultLevel}\n`;
+        });
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'miko_orf_log.csv');
+    a.click();
 };
 
 document.getElementById('btn-teacher-dashboard-trigger').onclick = () => {
