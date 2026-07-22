@@ -158,12 +158,123 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
 .countdown-circle { position: absolute; top: 0; left: 0; width: 180px; height: 180px; transform: rotate(-90deg); }
 .countdown-circle circle { width: 100%; height: 100%; fill: transparent; stroke: var(--md-sys-color-surface-variant); stroke-width: 12; }
 
-/* --- Miko Global Avatar --- */
-#miko-global {
-    position: fixed; bottom: 32px; left: 32px;
-    height: 20%; z-index: 1000;
+/* --- M3 Form Controls & Custom Setup UI --- */
+.m3-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1.1rem;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--radius-sm);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-family: var(--md-typeface-plain);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-#miko-global img { height: 100%; transition: transform 0.3s ease; }
+.m3-input:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
+}
+
+.m3-chip-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface);
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+.m3-chip-label:hover {
+    background: var(--md-sys-color-surface-variant);
+}
+.m3-chip-label input:checked + span {
+    color: var(--md-sys-color-primary);
+    font-weight: 700;
+}
+
+.m3-radio-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.m3-radio-card:hover {
+    background: var(--md-sys-color-surface-variant);
+}
+.m3-radio-card.active {
+    border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary-container);
+}
+
+.badge-pill {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+}
+
+.badge-status {
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.badge-status.status-ready {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
+}
+.badge-status.status-warning {
+    background: #FFF8E1;
+    color: #F57F17;
+    border: 1px solid #FFE082;
+}
+
+.roster-chip-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--md-sys-color-outline);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+.roster-chip-item button {
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 14px;
+    background: transparent;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+}
+.roster-chip-item button:hover {
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-error);
+}
+
+.sticky-panel {
+    position: sticky;
+    top: 24px;
+}
 .miko-speaking img { animation: bounce 0.8s infinite; }
 .miko-listening img { filter: drop-shadow(0 0 20px var(--accent)); transform: scale(1.05); }
 .miko-thinking img { transform: rotate(10deg); }

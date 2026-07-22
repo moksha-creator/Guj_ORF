@@ -10,50 +10,212 @@
 <body>
     <div id="app-container" style="width: 100%; height: 100%;">
         
-        <!-- Screen 00: Configuration -->
+        <!-- Screen 00: Configuration (ORF Setup) -->
         <div id="screen-00-config" class="screen">
-            <h1 class="fredoka-text" style="margin-bottom: 24px;">ORF Setup</h1>
-            <p class="subtitle text-muted" style="margin-bottom: 32px;">One-time class configuration.</p>
-            
-            <div style="display:flex; gap: 32px; flex-wrap: wrap;">
-                <div class="card" style="flex:1; min-width: 300px;">
-                    <h3>Class Details</h3>
-                    <label style="display:block; margin-top:16px;">Grade</label>
-                    <select id="config-grade" style="width:100%; padding:8px; font-size:1.2rem;"><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option></select>
-                    
-                    <label style="display:block; margin-top:16px;">Division</label>
-                    <input type="text" id="config-division" placeholder="e.g. A" style="width:100%; padding:8px; font-size:1.2rem;">
-                    
-                    <label style="display:block; margin-top:16px;">Roster Import (One name per line)</label>
-                    <textarea id="config-roster" rows="5" style="width:100%; padding:8px; font-size:1.2rem;" placeholder="Aarav\nDiya\nRiya"></textarea>
+            <header class="top-bar-simple" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 16px;">
+                <div>
+                    <h1 class="fredoka-text text-primary" style="font-size: 2.2rem;">ORF Setup</h1>
+                    <p class="subtitle text-muted">Configure this class once. Everything else will be managed automatically.</p>
                 </div>
-                
-                <div class="card" style="flex:1; min-width: 300px;">
-                    <h3>Assessment Rules</h3>
-                    <label style="display:block; margin-top:16px;">Language Tracks</label>
-                    <div><input type="checkbox" id="track-en" checked> English</div>
-                    <div><input type="checkbox" id="track-gj"> Gujarati</div>
-                    
-                    <label style="display:block; margin-top:16px;">Cadence</label>
-                    <select id="config-cadence" style="width:100%; padding:8px; font-size:1.2rem;">
-                        <option value="rolling">Rolling across the month (20 days)</option>
-                        <option value="designated">One designated week a month (5 days)</option>
-                    </select>
-                    
-                    <label style="display:block; margin-top:16px;">Assessment Slot</label>
-                    <select id="config-slot" style="width:100%; padding:8px; font-size:1.2rem;">
-                        <option value="lecture">Within a lecture (2 per day)</option>
-                        <option value="dedicated">Dedicated slot (5 per day)</option>
-                        <option value="extended">Extended block (15 per day)</option>
-                        <option value="full">Full day testing (30 per day)</option>
-                    </select>
+            </header>
+
+            <!-- Nice-to-Have: Top Progress Summary Card (Visual Checklist) -->
+            <div class="card summary-checklist-card" style="margin-bottom: 24px; background: var(--md-sys-color-primary-container); border-color: #C5CAE9;">
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: center;">
+                        <div>
+                            <span class="text-muted" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Class</span>
+                            <div id="summary-class" style="font-size: 1.1rem; font-weight: 700;">Grade 1 - A</div>
+                        </div>
+                        <div style="border-left: 1px solid var(--md-sys-color-outline); padding-left: 20px;">
+                            <span class="text-muted" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Students</span>
+                            <div id="summary-students" style="font-size: 1.1rem; font-weight: 700;">0 Students</div>
+                        </div>
+                        <div style="border-left: 1px solid var(--md-sys-color-outline); padding-left: 20px;">
+                            <span class="text-muted" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Languages</span>
+                            <div id="summary-languages" style="font-size: 1.1rem; font-weight: 700;">English</div>
+                        </div>
+                        <div style="border-left: 1px solid var(--md-sys-color-outline); padding-left: 20px;">
+                            <span class="text-muted" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Cadence</span>
+                            <div id="summary-cadence" style="font-size: 1.1rem; font-weight: 700;">1 Week / Month</div>
+                        </div>
+                    </div>
+                    <div>
+                        <span id="summary-coverage-badge" class="badge-status status-ready">✅ Ready</span>
+                    </div>
                 </div>
             </div>
-            
-            <div class="card" style="margin-top: 32px; background: #E5E7EB;" id="coverage-box">
-                <h3 id="coverage-verdict">Coverage Status</h3>
-                <p id="coverage-details" style="font-size: 1.2rem; margin-top: 8px;">Waiting for roster...</p>
-                <button id="btn-confirm-config" class="btn-primary" style="margin-top: 16px;" disabled>Confirm Setup</button>
+
+            <!-- Two-Column Layout for Smartboard -->
+            <div class="setup-grid" style="display: flex; gap: 24px; flex-wrap: wrap; padding-bottom: 100px;">
+                <!-- Main Form Column -->
+                <div style="flex: 1.5; min-width: 320px; display: flex; flex-direction: column; gap: 24px;">
+                    
+                    <!-- Section 1: Class -->
+                    <div class="card">
+                        <h3 class="fredoka-text" style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round text-primary">school</span> Section 1: Class
+                        </h3>
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 140px;">
+                                <label style="display:block; margin-bottom: 6px; font-weight: 600;">Standard *</label>
+                                <select id="config-grade" class="m3-input">
+                                    <option value="Balvatika">Balvatika</option>
+                                    <option value="Grade 1" selected>Grade 1</option>
+                                    <option value="Grade 2">Grade 2</option>
+                                    <option value="Grade 3">Grade 3</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 140px;">
+                                <label style="display:block; margin-bottom: 6px; font-weight: 600;">Division *</label>
+                                <select id="config-division" class="m3-input">
+                                    <option value="A" selected>A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Student Roster -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 class="fredoka-text" style="display: flex; align-items: center; gap: 8px;">
+                                <span class="material-icons-round text-primary">groups</span> Section 2: Student Roster
+                            </h3>
+                            <span id="roster-count-badge" class="badge-pill">0 Students</span>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                            <button id="btn-import-roster" class="btn-primary" type="button" style="font-size: 1rem; padding: 10px 20px;">
+                                <span class="material-icons-round">file_upload</span> Import Student List
+                            </button>
+                            <button id="btn-add-single-student" class="btn-secondary" type="button" style="font-size: 1rem; padding: 10px 20px;">
+                                <span class="material-icons-round">person_add</span> Add Student
+                            </button>
+                        </div>
+
+                        <div id="roster-display-container" class="roster-chips-grid" style="display: flex; flex-wrap: wrap; gap: 8px; max-height: 220px; overflow-y: auto; padding: 8px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--radius-sm); background: var(--md-sys-color-surface-variant);">
+                            <!-- Student chips rendered dynamically -->
+                            <p class="text-muted" style="font-size: 0.95rem; margin: auto;">No students added yet. Click "Import Student List" or "Add Student".</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Language Tracks -->
+                    <div class="card">
+                        <h3 class="fredoka-text" style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round text-primary">translate</span> Section 3: Language Tracks
+                        </h3>
+                        <div style="display: flex; gap: 16px; margin-bottom: 8px;">
+                            <label class="m3-chip-label">
+                                <input type="checkbox" id="track-gj" class="m3-checkbox">
+                                <span>☑ Gujarati</span>
+                            </label>
+                            <label class="m3-chip-label">
+                                <input type="checkbox" id="track-en" class="m3-checkbox" checked>
+                                <span>☑ English</span>
+                            </label>
+                        </div>
+                        <p id="language-helper-text" class="text-muted" style="font-size: 0.9rem; margin-top: 8px; display: none;">
+                            ℹ️ Each language is assessed independently.
+                        </p>
+                    </div>
+
+                    <!-- Section 4: Assessment Cadence -->
+                    <div class="card">
+                        <h3 class="fredoka-text" style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round text-primary">event_repeat</span> Section 4: Assessment Cadence
+                        </h3>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <label class="m3-radio-card active" id="cadence-option-designated">
+                                <input type="radio" name="cadence-radio" value="designated" checked>
+                                <div>
+                                    <div style="font-weight: 700;">● One Week Every Month (Recommended)</div>
+                                    <div class="text-muted" style="font-size: 0.9rem;">Assess all students in 1 intensive 5-day week per month.</div>
+                                </div>
+                            </label>
+                            <label class="m3-radio-card" id="cadence-option-rolling">
+                                <input type="radio" name="cadence-radio" value="rolling">
+                                <div>
+                                    <div style="font-weight: 700;">○ Rolling Across The Month</div>
+                                    <div class="text-muted" style="font-size: 0.9rem;">Distribute assessments steadily across 20 school days.</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Assessment Slot -->
+                    <div class="card">
+                        <h3 class="fredoka-text" style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round text-primary">schedule</span> Section 5: Assessment Slot
+                        </h3>
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label style="display:block; margin-bottom: 6px; font-weight: 600;">Slot Type</label>
+                                <select id="config-slot" class="m3-input">
+                                    <option value="dedicated">Dedicated ORF Period</option>
+                                    <option value="english_lecture">During English Lecture</option>
+                                    <option value="gujarati_lecture">During Gujarati Lecture</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 160px;">
+                                <label style="display:block; margin-bottom: 6px; font-weight: 600;">Assessment Duration</label>
+                                <select id="config-duration" class="m3-input">
+                                    <option value="10">10 min</option>
+                                    <option value="20" selected>20 min</option>
+                                    <option value="30">30 min</option>
+                                    <option value="40">40 min</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side Panel: Live Coverage Confirmation -->
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="card sticky-panel" id="coverage-box" style="background: var(--md-sys-color-success-container); border-color: #A5D6A7; transition: all 0.3s ease;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <span id="coverage-status-icon" class="material-icons-round text-success" style="font-size: 36px;">check_circle</span>
+                            <div>
+                                <h3 id="coverage-verdict" class="fredoka-text">Coverage Confirmation</h3>
+                                <p id="coverage-subtitle" class="text-muted" style="font-size: 0.9rem;">Automatically updates live</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 16px; margin-bottom: 20px;">
+                            <div style="flex: 1; background: white; padding: 12px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--md-sys-color-outline);">
+                                <span class="text-muted" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Sessions Needed</span>
+                                <div id="coverage-needed-count" style="font-size: 2rem; font-weight: 800; color: var(--md-sys-color-on-surface);">0</div>
+                            </div>
+                            <div style="flex: 1; background: white; padding: 12px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--md-sys-color-outline);">
+                                <span class="text-muted" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Sessions Available</span>
+                                <div id="coverage-available-count" style="font-size: 2rem; font-weight: 800; color: var(--md-sys-color-primary);">0</div>
+                            </div>
+                        </div>
+
+                        <div id="coverage-status-message" style="margin-bottom: 16px; font-weight: 600; font-size: 1.05rem;">
+                            ✅ Every child can be assessed.
+                        </div>
+                        <p id="coverage-details" class="text-muted" style="font-size: 0.95rem;">Configuration looks good.</p>
+
+                        <div id="coverage-suggestions" style="margin-top: 16px; display: none; background: #FFF8E1; padding: 12px; border-radius: var(--radius-sm); border: 1px dashed #FFB300;">
+                            <strong style="color: #F57F17; display: block; margin-bottom: 6px;">💡 Suggestions:</strong>
+                            <ul style="padding-left: 20px; font-size: 0.9rem; color: #5D4037;" id="coverage-suggestions-list">
+                                <li>Increase assessment duration</li>
+                                <li>Select Rolling Across Month</li>
+                                <li>Assess one language this month</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Bottom CTA Bar -->
+            <div class="sticky-bottom-bar" style="position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 16px 32px; border-top: 2px solid var(--md-sys-color-outline); z-index: 100; display: flex; justify-content: flex-end; align-items: center; box-shadow: 0 -4px 12px rgba(0,0,0,0.08);">
+                <button id="btn-complete-setup-trigger" class="btn-primary btn-large" style="min-width: 240px;" disabled>
+                    <span>Complete Setup</span> <span class="material-icons-round">arrow_forward</span>
+                </button>
             </div>
         </div>
 
@@ -134,6 +296,7 @@
                     <button class="tab-btn active" onclick="switchDashboardTab('class')">Class Report</button>
                     <button class="tab-btn" onclick="switchDashboardTab('student')">Student Report</button>
                     <button class="tab-btn" onclick="switchDashboardTab('log')">Response Log</button>
+                    <button class="tab-btn" onclick="switchDashboardTab('settings')">Configuration</button>
                 </div>
 
                 <div id="tab-class" class="tab-pane active">
@@ -158,6 +321,66 @@
                             <tbody></tbody>
                         </table>
                     </div>
+                </div>
+
+                <div id="tab-settings" class="tab-pane hidden">
+                    <div class="card" style="margin-bottom: 24px;">
+                        <h3 class="fredoka-text text-primary" style="margin-bottom: 16px;">Current Configuration</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div><strong>Grade & Division:</strong> <p id="settings-summary-class" class="text-muted">-</p></div>
+                            <div><strong>Languages:</strong> <p id="settings-summary-languages" class="text-muted">-</p></div>
+                            <div><strong>Cadence:</strong> <p id="settings-summary-cadence" class="text-muted">-</p></div>
+                            <div><strong>Slot & Duration:</strong> <p id="settings-summary-slot" class="text-muted">-</p></div>
+                            <div><strong>Total Students:</strong> <p id="settings-summary-students" class="text-muted">-</p></div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="border: 2px dashed #EF5350; background: #FFEBEE;">
+                        <h3 class="fredoka-text" style="color: #D32F2F; margin-bottom: 8px;">Danger Zone</h3>
+                        <p class="text-muted" style="margin-bottom: 16px;">Resetting configuration allows re-configuring class details, roster, and schedule.</p>
+                        <button id="btn-trigger-reset-config" class="btn-secondary" style="border-color: #EF5350; color: #D32F2F;">
+                            <span class="material-icons-round">restart_alt</span> Reset Configuration
+                        </button>
+                    </div>
+        <!-- Dialog: Import Student List Modal -->
+        <div id="import-roster-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 600px; height: auto;">
+                <h2 class="fredoka-text text-primary" style="margin-bottom: 12px;">Import Student List</h2>
+                <p class="text-muted" style="margin-bottom: 16px;">Paste student names below (one name per line):</p>
+                <textarea id="import-roster-textarea" rows="8" class="m3-input" style="width: 100%; margin-bottom: 20px;" placeholder="Aarav&#10;Meera&#10;Kunal&#10;Diya"></textarea>
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <button id="btn-cancel-import" class="btn-secondary" type="button">Cancel</button>
+                    <button id="btn-confirm-import" class="btn-primary" type="button">Import Names</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dialog: Confirmation Dialog for Complete Setup -->
+        <div id="confirm-setup-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 500px; height: auto; text-align: center;">
+                <span class="material-icons-round text-primary" style="font-size: 64px; margin-bottom: 12px;">task_alt</span>
+                <h2 class="fredoka-text" style="margin-bottom: 12px;">Complete Setup?</h2>
+                <p class="text-muted" style="margin-bottom: 24px; font-size: 1.05rem;">
+                    The class schedule will now be created automatically. You can change this later from Settings.
+                </p>
+                <div style="display: flex; justify-content: center; gap: 16px;">
+                    <button id="btn-cancel-setup" class="btn-secondary" type="button">Cancel</button>
+                    <button id="btn-confirm-complete-setup" class="btn-primary" type="button">Complete Setup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dialog: Reset Configuration Confirmation Modal -->
+        <div id="reset-config-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 500px; height: auto; text-align: center;">
+                <span class="material-icons-round" style="font-size: 64px; color: #D32F2F; margin-bottom: 12px;">warning</span>
+                <h2 class="fredoka-text" style="color: #D32F2F; margin-bottom: 12px;">Reset Configuration?</h2>
+                <p class="text-muted" style="margin-bottom: 24px; font-size: 1.05rem;">
+                    This removes the current class setup. <strong>Reading progress is NOT deleted.</strong> Only the class configuration is reset.
+                </p>
+                <div style="display: flex; justify-content: center; gap: 16px;">
+                    <button id="btn-cancel-reset-config" class="btn-secondary" type="button">Cancel</button>
+                    <button id="btn-confirm-reset-config" class="btn-primary" type="button" style="background-color: #D32F2F;">Reset</button>
                 </div>
             </div>
         </div>

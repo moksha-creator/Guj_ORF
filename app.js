@@ -115,65 +115,242 @@ function showScreen(screenElem) {
 }
 
 // ==========================================
-// SCREEN 00: CONFIGURATION (ONE-TIME)
+// SCREEN 00: CONFIGURATION (ORF SETUP)
 // ==========================================
+let tempRoster = [];
+
+function initSetupScreen() {
+    const existingConfig = getConfig();
+    const students = getStudents();
+    
+    if (students.length > 0) {
+        tempRoster = students.map(s => s.name);
+    } else {
+        tempRoster = ["Aarav", "Meera", "Kunal", "Diya", "Riya"];
+    }
+
+    if (existingConfig) {
+        if (existingConfig.grade) document.getElementById('config-grade').value = existingConfig.grade;
+        if (existingConfig.division) document.getElementById('config-division').value = existingConfig.division;
+        if (existingConfig.tracks) {
+            document.getElementById('track-en').checked = !!existingConfig.tracks.en;
+            document.getElementById('track-gj').checked = !!existingConfig.tracks.gj;
+        }
+        if (existingConfig.cadence) {
+            const radio = document.querySelector(`input[name="cadence-radio"][value="${existingConfig.cadence}"]`);
+            if (radio) {
+                radio.checked = true;
+                updateCadenceRadioUI(existingConfig.cadence);
+            }
+        }
+        if (existingConfig.slot) document.getElementById('config-slot').value = existingConfig.slot;
+        if (existingConfig.duration) document.getElementById('config-duration').value = existingConfig.duration;
+    }
+
+    renderRosterChips();
+    updateCoverage();
+}
+
+function renderRosterChips() {
+    const container = document.getElementById('roster-display-container');
+    const badge = document.getElementById('roster-count-badge');
+    badge.innerText = `${tempRoster.length} Students`;
+
+    if (tempRoster.length === 0) {
+        container.innerHTML = `<p class="text-muted" style="font-size: 0.95rem; margin: auto;">No students added yet. Click "Import Student List" or "Add Student".</p>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    tempRoster.forEach((name, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'roster-chip-item';
+        chip.innerHTML = `
+            <span>✓ ${name}</span>
+            <button title="Edit name" onclick="editRosterStudent(${index})">✏️</button>
+            <button title="Delete student" onclick="deleteRosterStudent(${index})">✕</button>
+        `;
+        container.appendChild(chip);
+    });
+}
+
+function deleteRosterStudent(index) {
+    tempRoster.splice(index, 1);
+    renderRosterChips();
+    updateCoverage();
+}
+
+function editRosterStudent(index) {
+    const newName = prompt("Edit student name:", tempRoster[index]);
+    if (newName && newName.trim()) {
+        tempRoster[index] = newName.trim();
+        renderRosterChips();
+        updateCoverage();
+    }
+}
+
+function updateCadenceRadioUI(selectedVal) {
+    document.querySelectorAll('.m3-radio-card').forEach(card => card.classList.remove('active'));
+    if (selectedVal === 'designated') {
+        document.getElementById('cadence-option-designated').classList.add('active');
+    } else {
+        document.getElementById('cadence-option-rolling').classList.add('active');
+    }
+}
+
 function updateCoverage() {
-    const rosterText = document.getElementById('config-roster').value.trim();
-    const names = rosterText ? rosterText.split('\n').filter(n => n.trim()) : [];
-    const rosterSize = names.length;
+    const grade = document.getElementById('config-grade').value;
+    const division = document.getElementById('config-division').value;
+    const rosterSize = tempRoster.length;
     
     const trackEn = document.getElementById('track-en').checked;
     const trackGj = document.getElementById('track-gj').checked;
     const numTracks = (trackEn ? 1 : 0) + (trackGj ? 1 : 0);
     
-    const cadence = document.getElementById('config-cadence').value; // 'rolling' (20) or 'designated' (5)
-    const slot = document.getElementById('config-slot').value; // 'lecture' (2) or 'dedicated' (5)
-    
-    const days = cadence === 'rolling' ? 20 : 5;
-    let sessionsPerDay = 2;
-    if(slot === 'dedicated') sessionsPerDay = 5;
-    if(slot === 'extended') sessionsPerDay = 15;
-    if(slot === 'full') sessionsPerDay = 30;
-    
-    const sessionsNeeded = rosterSize * numTracks;
-    const sessionsAvailable = days * sessionsPerDay;
-    
-    const box = document.getElementById('coverage-box');
-    const verdict = document.getElementById('coverage-verdict');
-    const details = document.getElementById('coverage-details');
-    const btn = document.getElementById('btn-confirm-config');
-    
-    if (rosterSize === 0 || numTracks === 0) {
-        box.style.background = '#E5E7EB';
-        verdict.innerText = 'Coverage Status';
-        details.innerText = 'Waiting for roster and language selection...';
-        btn.disabled = true;
-        return;
-    }
-    
-    if (sessionsAvailable >= sessionsNeeded) {
-        box.style.background = '#f0fdf4'; // Light green
-        verdict.innerText = '✅ Covered';
-        details.innerText = `You need ${sessionsNeeded} sessions this month. Your chosen slot provides ${sessionsAvailable} sessions.`;
-        btn.disabled = false;
+    // Toggle helper text for language tracks
+    const helperText = document.getElementById('language-helper-text');
+    if (trackEn && trackGj) {
+        helperText.style.display = 'block';
     } else {
-        box.style.background = '#fef2f2'; // Light red
-        verdict.innerText = '❌ Not Covered';
-        details.innerText = `You need ${sessionsNeeded} sessions, but only have ${sessionsAvailable} available. Try widening the slot or staggering tracks.`;
-        btn.disabled = true; // Force adjustment
+        helperText.style.display = 'none';
     }
+
+    const cadenceRadio = document.querySelector('input[name="cadence-radio"]:checked');
+    const cadence = cadenceRadio ? cadenceRadio.value : 'designated';
+    updateCadenceRadioUI(cadence);
+
+    const slot = document.getElementById('config-slot').value;
+    const duration = parseInt(document.getElementById('config-duration').value, 10) || 20;
+
+    // Days per month logic
+    const days = cadence === 'rolling' ? 20 : 5;
+
+    // Capacity per day based on slot and duration
+    let capacityPerDay = 4;
+    if (slot === 'dedicated') {
+        if (duration <= 10) capacityPerDay = 3;
+        else if (duration <= 20) capacityPerDay = 6;
+        else if (duration <= 30) capacityPerDay = 10;
+        else capacityPerDay = 15;
+    } else { // Lecture slots
+        if (duration <= 10) capacityPerDay = 2;
+        else if (duration <= 20) capacityPerDay = 4;
+        else if (duration <= 30) capacityPerDay = 7;
+        else capacityPerDay = 10;
+    }
+
+    const sessionsNeeded = rosterSize * numTracks;
+    const sessionsAvailable = days * capacityPerDay;
+
+    // Update Top Summary Checklist Card
+    document.getElementById('summary-class').innerText = `${grade} - ${division}`;
+    document.getElementById('summary-students').innerText = `${rosterSize} Students`;
+    document.getElementById('summary-languages').innerText = (trackEn && trackGj) ? 'Gujarati + English' : (trackGj ? 'Gujarati' : (trackEn ? 'English' : 'None'));
+    document.getElementById('summary-cadence').innerText = cadence === 'designated' ? '1 Week / Month' : 'Rolling';
+
+    const summaryBadge = document.getElementById('summary-coverage-badge');
+    
+    // Update Right Side Panel Elements
+    const box = document.getElementById('coverage-box');
+    const statusIcon = document.getElementById('coverage-status-icon');
+    const verdict = document.getElementById('coverage-verdict');
+    const neededEl = document.getElementById('coverage-needed-count');
+    const availableEl = document.getElementById('coverage-available-count');
+    const statusMsg = document.getElementById('coverage-status-message');
+    const details = document.getElementById('coverage-details');
+    const suggestionsBox = document.getElementById('coverage-suggestions');
+    const ctaBtn = document.getElementById('btn-complete-setup-trigger');
+
+    neededEl.innerText = sessionsNeeded;
+    availableEl.innerText = sessionsAvailable;
+
+    const isCovered = (sessionsAvailable >= sessionsNeeded) && rosterSize > 0 && numTracks > 0;
+
+    if (isCovered) {
+        summaryBadge.className = 'badge-status status-ready';
+        summaryBadge.innerText = '✅ Ready';
+
+        box.style.background = 'var(--md-sys-color-success-container)';
+        box.style.borderColor = '#A5D6A7';
+        statusIcon.innerText = 'check_circle';
+        statusIcon.className = 'material-icons-round text-success';
+        verdict.innerText = 'Coverage Confirmation';
+        statusMsg.innerText = '✅ Every child can be assessed.';
+        details.innerText = 'Configuration looks good.';
+        suggestionsBox.style.display = 'none';
+    } else {
+        summaryBadge.className = 'badge-status status-warning';
+        summaryBadge.innerText = '⚠ Check Coverage';
+
+        box.style.background = '#FFF8E1';
+        box.style.borderColor = '#FFE082';
+        statusIcon.innerText = 'warning';
+        statusIcon.className = 'material-icons-round';
+        statusIcon.style.color = '#F57F17';
+        verdict.innerText = 'Coverage Confirmation';
+        statusMsg.innerText = '⚠ Coverage may fall short.';
+        details.innerText = `Needed: ${sessionsNeeded} | Available: ${sessionsAvailable}`;
+        suggestionsBox.style.display = 'block';
+    }
+
+    // Bottom Sticky CTA disabled only if missing grade, division, roster, or languages
+    const isValidBasic = grade && division && rosterSize > 0 && numTracks > 0;
+    ctaBtn.disabled = !isValidBasic;
 }
 
-// Bind live updates
-['config-roster', 'config-cadence', 'config-slot'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updateCoverage);
-    document.getElementById(id).addEventListener('change', updateCoverage);
+// Bind live updates for Setup Controls
+['config-grade', 'config-division', 'config-slot', 'config-duration'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('change', updateCoverage);
+        el.addEventListener('input', updateCoverage);
+    }
 });
 ['track-en', 'track-gj'].forEach(id => {
-    document.getElementById(id).addEventListener('change', updateCoverage);
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', updateCoverage);
+});
+document.querySelectorAll('input[name="cadence-radio"]').forEach(radio => {
+    radio.addEventListener('change', updateCoverage);
 });
 
-document.getElementById('btn-confirm-config').onclick = () => {
+// Import Roster Modal Handlers
+document.getElementById('btn-import-roster').onclick = () => {
+    document.getElementById('import-roster-textarea').value = tempRoster.join('\n');
+    document.getElementById('import-roster-modal').classList.remove('hidden');
+};
+document.getElementById('btn-cancel-import').onclick = () => {
+    document.getElementById('import-roster-modal').classList.add('hidden');
+};
+document.getElementById('btn-confirm-import').onclick = () => {
+    const text = document.getElementById('import-roster-textarea').value.trim();
+    if (text) {
+        tempRoster = text.split('\n').map(n => n.trim()).filter(n => n);
+        renderRosterChips();
+        updateCoverage();
+    }
+    document.getElementById('import-roster-modal').classList.add('hidden');
+};
+
+// Add Single Student Handler
+document.getElementById('btn-add-single-student').onclick = () => {
+    const name = prompt("Enter student name:");
+    if (name && name.trim()) {
+        tempRoster.push(name.trim());
+        renderRosterChips();
+        updateCoverage();
+    }
+};
+
+// Complete Setup Trigger & Dialog Handlers
+document.getElementById('btn-complete-setup-trigger').onclick = () => {
+    document.getElementById('confirm-setup-modal').classList.remove('hidden');
+};
+document.getElementById('btn-cancel-setup').onclick = () => {
+    document.getElementById('confirm-setup-modal').classList.add('hidden');
+};
+document.getElementById('btn-confirm-complete-setup').onclick = () => {
+    const cadenceRadio = document.querySelector('input[name="cadence-radio"]:checked');
     const config = {
         grade: document.getElementById('config-grade').value,
         division: document.getElementById('config-division').value,
@@ -181,11 +358,30 @@ document.getElementById('btn-confirm-config').onclick = () => {
             en: document.getElementById('track-en').checked,
             gj: document.getElementById('track-gj').checked
         },
-        cadence: document.getElementById('config-cadence').value,
-        slot: document.getElementById('config-slot').value
+        cadence: cadenceRadio ? cadenceRadio.value : 'designated',
+        slot: document.getElementById('config-slot').value,
+        duration: document.getElementById('config-duration').value,
+        setupCompleted: true
     };
+    
     saveConfig(config);
-    importRoster(document.getElementById('config-roster').value);
+
+    // Save roster to students storage
+    const currentStudents = getStudents();
+    tempRoster.forEach(name => {
+        if (!currentStudents.find(s => s.name === name)) {
+            currentStudents.push({
+                id: Date.now().toString() + Math.floor(Math.random()*1000),
+                name: name,
+                currentLevel: 1,
+                dailyStatus: 'waiting',
+                sessions: []
+            });
+        }
+    });
+    saveStudents(currentStudents);
+
+    document.getElementById('confirm-setup-modal').classList.add('hidden');
     renderHome();
 };
 
@@ -310,6 +506,32 @@ window.renderTeacherDashboard = function() {
         });
         document.getElementById('student-details').innerHTML = detHtml;
     };
+    // Tab Settings / Configuration Summary
+    const config = getConfig() || {};
+    document.getElementById('settings-summary-class').innerText = `${config.grade || 'Grade 1'} - Division ${config.division || 'A'}`;
+    document.getElementById('settings-summary-languages').innerText = (config.tracks && config.tracks.en && config.tracks.gj) ? 'Gujarati + English' : (config.tracks && config.tracks.gj ? 'Gujarati' : 'English');
+    document.getElementById('settings-summary-cadence').innerText = config.cadence === 'designated' ? 'One Week Every Month' : 'Rolling Across Month';
+    document.getElementById('settings-summary-slot').innerText = `${config.slot || 'Dedicated'} (${config.duration || '20'} min)`;
+    document.getElementById('settings-summary-students').innerText = `${students.length} Students`;
+};
+
+// Reset Configuration Handlers
+document.getElementById('btn-trigger-reset-config').onclick = () => {
+    document.getElementById('reset-config-modal').classList.remove('hidden');
+};
+document.getElementById('btn-cancel-reset-config').onclick = () => {
+    document.getElementById('reset-config-modal').classList.add('hidden');
+};
+document.getElementById('btn-confirm-reset-config').onclick = () => {
+    const config = getConfig() || {};
+    config.setupCompleted = false;
+    saveConfig(config);
+
+    document.getElementById('reset-config-modal').classList.add('hidden');
+    document.getElementById('teacher-dashboard-modal').classList.add('hidden');
+    
+    showScreen(screens.CONFIG);
+    initSetupScreen();
 };
 
 window.exportToCSV = function() {
@@ -608,9 +830,9 @@ function triggerCelebration() {
 
 // Init App
 const savedConfig = getConfig();
-if (!savedConfig) {
+if (!savedConfig || savedConfig.setupCompleted === false) {
     showScreen(screens.CONFIG);
-    updateCoverage();
+    initSetupScreen();
 } else {
     renderHome();
 }
