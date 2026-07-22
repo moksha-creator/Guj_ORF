@@ -19,11 +19,20 @@ let studentSampleCount = 1; // 1, 2, or 3 samples per student session
 let activeCountdownInterval = null;
 let simulatedSpeechTimeout = null;
 
+// 3-Minute Assessment Timer State
+let assessmentTimerSeconds = 180; // 3:00
+let assessmentTimerInterval = null;
+
 // Real Web Speech API State
 let speechRecognition = null;
 let isRealListening = false;
 let currentTargetWordList = [];
 let currentMatchedWordIndex = 0;
+
+// Speech Error Handling & Silence Tracker
+let lastSpeechTimestamp = Date.now();
+let silenceCheckerInterval = null;
+let wordStuckTimer = null;
 
 // Roster Mock Data for Home Screen
 let rosterStudents = [
@@ -49,7 +58,63 @@ function showScreen(targetScreen) {
     targetScreen.classList.add('active');
 }
 
-// Live Transcript Helper
+// ----------------------------------------------------
+// 3-MINUTE ASSESSMENT COUNTDOWN TIMER (⏱ 3:00)
+// ----------------------------------------------------
+function startAssessmentTimer() {
+    if (assessmentTimerInterval) clearInterval(assessmentTimerInterval);
+    assessmentTimerSeconds = 180; // Reset to 3 minutes
+    updateTimerBadgesDisplay();
+
+    assessmentTimerInterval = setInterval(() => {
+        assessmentTimerSeconds--;
+        updateTimerBadgesDisplay();
+
+        if (assessmentTimerSeconds <= 0) {
+            clearInterval(assessmentTimerInterval);
+            // Session Time-Out: Auto navigate to Session Complete
+            stopRealSpeechRecognition();
+            showScreen(screens.END);
+            triggerCelebrationConfetti();
+        }
+    }, 1000);
+}
+
+function stopAssessmentTimer() {
+    if (assessmentTimerInterval) clearInterval(assessmentTimerInterval);
+}
+
+function updateTimerBadgesDisplay() {
+    const mins = Math.floor(assessmentTimerSeconds / 60);
+    const secs = assessmentTimerSeconds % 60;
+    const formatted = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+    const b1Text = document.getElementById('timer-display-text');
+    const b2Text = document.getElementById('comp-timer-display-text');
+    if (b1Text) b1Text.innerText = formatted;
+    if (b2Text) b2Text.innerText = formatted;
+
+    const b1 = document.getElementById('assessment-timer-badge');
+    const b2 = document.getElementById('comp-timer-badge');
+    const badges = [b1, b2];
+
+    badges.forEach(b => {
+        if (!b) return;
+        b.className = 'timer-badge';
+
+        if (assessmentTimerSeconds > 60) {
+            b.classList.add('neutral');
+        } else if (assessmentTimerSeconds > 15) {
+            b.classList.add('amber');
+        } else {
+            b.classList.add('pulse-urgent');
+        }
+    });
+}
+
+// ----------------------------------------------------
+// LIVE TRANSCRIPT & SILENCE DETECTOR (3-5s Prompt)
+// ----------------------------------------------------
 function updateLiveTranscriptText(rawText) {
     const box = document.getElementById('live-transcript-box');
     const textEl = document.getElementById('live-transcript-text');
@@ -58,6 +123,8 @@ function updateLiveTranscriptText(rawText) {
     if (rawText && rawText.trim().length > 0) {
         textEl.innerText = `Heard: "${rawText.trim()}"`;
         box.classList.remove('hidden');
+        hideSilencePrompt();
+        lastSpeechTimestamp = Date.now();
     } else {
         box.classList.add('hidden');
     }
@@ -65,9 +132,36 @@ function updateLiveTranscriptText(rawText) {
 
 function clearLiveTranscript() {
     updateLiveTranscriptText('');
+    hideSilencePrompt();
 }
 
-// Initialize Speech Recognition Engine
+function startSilenceChecker() {
+    if (silenceCheckerInterval) clearInterval(silenceCheckerInterval);
+    lastSpeechTimestamp = Date.now();
+
+    silenceCheckerInterval = setInterval(() => {
+        if (isRealListening && screens.ACTIVITY.classList.contains('active')) {
+            const elapsedSilence = Date.now() - lastSpeechTimestamp;
+            if (elapsedSilence >= 3500) { // 3.5 seconds silence prompt
+                showSilencePrompt();
+            }
+        }
+    }, 1000);
+}
+
+function showSilencePrompt() {
+    const p = document.getElementById('silence-prompt-toast');
+    if (p) p.classList.remove('hidden');
+}
+
+function hideSilencePrompt() {
+    const p = document.getElementById('silence-prompt-toast');
+    if (p) p.classList.add('hidden');
+}
+
+// ----------------------------------------------------
+// REAL WEB SPEECH RECONGNITION & STREAMING ENGINE
+// ----------------------------------------------------
 function initSpeechRecognitionEngine() {
     try {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -80,6 +174,7 @@ function initSpeechRecognitionEngine() {
             speechRecognition.onstart = () => {
                 isRealListening = true;
                 updateMicUI('listening');
+                startSilenceChecker();
             };
 
             speechRecognition.onresult = (event) => {
@@ -95,8 +190,10 @@ function initSpeechRecognitionEngine() {
                 }
 
                 const spokenText = (finalTranscript + ' ' + interimTranscript).trim();
-                updateLiveTranscriptText(spokenText);
-                processSpokenTranscript(spokenText.toLowerCase());
+                if (spokenText.length > 0) {
+                    updateLiveTranscriptText(spokenText);
+                    processSpokenTranscriptStream(spokenText.toLowerCase());
+                }
             };
 
             speechRecognition.onerror = (event) => {
@@ -127,6 +224,7 @@ function startRealSpeechRecognition() {
             speechRecognition.start();
             isRealListening = true;
             updateMicUI('listening');
+            startSilenceChecker();
         } catch (e) {
             console.warn("Recognition start error:", e);
         }
@@ -135,6 +233,7 @@ function startRealSpeechRecognition() {
 
 function stopRealSpeechRecognition() {
     isRealListening = false;
+    if (silenceCheckerInterval) clearInterval(silenceCheckerInterval);
     if (speechRecognition) {
         try { speechRecognition.stop(); } catch (e) {}
     }
@@ -170,11 +269,13 @@ function updateMicUI(state) {
     }
 }
 
-// Process Real Spoken Words against Target Content
-function processSpokenTranscript(spokenText) {
+// ----------------------------------------------------
+// STREAMING WORD MATCHING & SKIP / ADVANCE LOGIC
+// ----------------------------------------------------
+function processSpokenTranscriptStream(spokenText) {
     if (!spokenText || currentTargetWordList.length === 0) return;
 
-    const spokenTokens = spokenText.split(/\s+/);
+    const spokenTokens = spokenText.split(/\s+/).map(t => t.replace(/[^\w]/g, ''));
 
     if (currentTemplate === 'WORD_READ_TEXT') {
         const target = currentTargetWordList[0].toLowerCase();
@@ -199,9 +300,10 @@ function processSpokenTranscript(spokenText) {
         }
     }
     else if (currentTemplate === 'WORD_READ_SET_TEXT') {
-        // Match against 5 card words
+        // Match against 5 card words with skip tolerance
         currentTargetWordList.forEach((w, idx) => {
-            if (spokenText.includes(w.toLowerCase())) {
+            const target = w.toLowerCase();
+            if (spokenTokens.some(st => st.includes(target))) {
                 const card = document.getElementById(`set-card-${idx}`);
                 if (card) card.classList.add('highlight-read');
             }
@@ -234,13 +336,31 @@ function processSpokenTranscript(spokenText) {
         }
     }
     else if (currentTemplate.includes('SENTENCE') || currentTemplate.includes('PASSAGE')) {
-        // Sequential word matching
+        // Sequential word matching with skip lookahead (checks up to 3 words ahead!)
         for (let i = currentMatchedWordIndex; i < currentTargetWordList.length; i++) {
             const targetWord = currentTargetWordList[i].toLowerCase().replace(/[^\w]/g, '');
-            if (spokenTokens.some(st => st.includes(targetWord))) {
-                const span = document.getElementById(`word-${i}`);
+            
+            // Check if target word or a future word was spoken
+            let foundIdx = -1;
+            for (let lookahead = i; lookahead < Math.min(i + 3, currentTargetWordList.length); lookahead++) {
+                const futureTarget = currentTargetWordList[lookahead].toLowerCase().replace(/[^\w]/g, '');
+                if (spokenTokens.some(st => st === futureTarget || st.includes(futureTarget))) {
+                    foundIdx = lookahead;
+                    break;
+                }
+            }
+
+            if (foundIdx !== -1) {
+                // If skipped words, mark skipped words internally and highlight matched word
+                for (let skip = currentMatchedWordIndex; skip < foundIdx; skip++) {
+                    const skippedSpan = document.getElementById(`word-${skip}`);
+                    if (skippedSpan) skippedSpan.classList.add('missed'); // subtle skipped indicator
+                }
+
+                const span = document.getElementById(`word-${foundIdx}`);
                 if (span) span.classList.add('green');
-                currentMatchedWordIndex = i + 1;
+                currentMatchedWordIndex = foundIdx + 1;
+                break;
             }
         }
 
@@ -264,7 +384,9 @@ function processSpokenTranscript(spokenText) {
     }
 }
 
-// Demo Bar Initialization & Handlers
+// ----------------------------------------------------
+// DEMO CONTROLS & SELECTION HANDLERS
+// ----------------------------------------------------
 function initDemoControls() {
     const levelSelect = document.getElementById('demo-level-select');
     const tierSelect = document.getElementById('demo-tier-select');
@@ -396,6 +518,7 @@ function simulateProgression(action) {
 // ==========================================
 function renderTeacherHome() {
     stopRealSpeechRecognition();
+    stopAssessmentTimer();
     clearLiveTranscript();
     showScreen(screens.HOME);
     
@@ -459,6 +582,7 @@ function startTransitionScreen(studentName) {
         } else {
             clearInterval(activeCountdownInterval);
             try {
+                startAssessmentTimer(); // Start 3-Minute Timer on session start!
                 renderCurrentActivity();
             } catch (err) {
                 console.error("Error rendering activity:", err);
@@ -770,6 +894,7 @@ function completeAssessmentSampleStep() {
         setTimeout(() => {
             currentStudentIndex++;
             if (currentStudentIndex >= rosterStudents.length) {
+                stopAssessmentTimer();
                 showScreen(screens.END);
                 triggerCelebrationConfetti();
             } else {
@@ -790,6 +915,7 @@ function pauseSession() {
 
 function endAssessmentSessionPrompt() {
     if (confirm("End assessment session for this student?")) {
+        stopAssessmentTimer();
         renderTeacherHome();
     }
 }
@@ -799,6 +925,7 @@ function endAssessmentSessionPrompt() {
 // ==========================================
 function triggerCelebrationConfetti() {
     stopRealSpeechRecognition();
+    stopAssessmentTimer();
     clearLiveTranscript();
     const container = document.getElementById('confetti-container');
     if (!container) return;
@@ -823,6 +950,7 @@ function triggerCelebrationConfetti() {
 }
 
 function returnToHomeFromComplete() {
+    stopAssessmentTimer();
     rosterStudents.forEach(s => s.status = 'waiting');
     currentStudentIndex = 0;
     renderTeacherHome();

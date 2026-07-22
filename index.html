@@ -152,6 +152,12 @@
                     <span class="badge-pill" id="activity-sample-counter" style="background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary);">Sample 1 of 3</span>
                 </div>
                 <div class="teacher-live-controls">
+                    <!-- 3-Minute Assessment Countdown Timer -->
+                    <div class="timer-badge neutral" id="assessment-timer-badge">
+                        <span class="material-icons-round">timer</span>
+                        <span id="timer-display-text">3:00</span>
+                    </div>
+
                     <button class="btn-secondary" onclick="pauseSession()">
                         <span class="material-icons-round">pause</span> Pause
                     </button>
@@ -175,6 +181,11 @@
                 <div class="live-transcript-box hidden" id="live-transcript-box">
                     <span class="material-icons-round transcript-icon">record_voice_over</span>
                     <span class="transcript-text" id="live-transcript-text">Heard: "..."</span>
+                </div>
+
+                <!-- Subtle Silent Pause Prompt (3-5s silence) -->
+                <div class="silence-prompt-toast hidden" id="silence-prompt-toast">
+                    <span class="material-icons-round">sentiment_satisfied</span> Keep reading when you're ready
                 </div>
 
                 <!-- Listening Experience Indicator & Mic -->
@@ -205,6 +216,12 @@
                     <span class="badge-pill" id="comp-sample-counter" style="background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary);">Sample 1 of 3</span>
                 </div>
                 <div class="teacher-live-controls">
+                    <!-- Shared 3-Minute Assessment Countdown Timer -->
+                    <div class="timer-badge neutral" id="comp-timer-badge">
+                        <span class="material-icons-round">timer</span>
+                        <span id="comp-timer-display-text">3:00</span>
+                    </div>
+
                     <button class="btn-secondary" onclick="pauseSession()">
                         <span class="material-icons-round">pause</span> Pause
                     </button>
