@@ -463,6 +463,22 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
 .display-passage-text span.word-span.green { color: #2E7D32; background: #E8F5E9; font-weight: 700; }
 .display-passage-text span.word-span.missed { color: #C62828; background: #FFEBEE; animation: shake 0.4s ease; }
 
+/* Active Reading Cursor Visual Indicator */
+.display-passage-text span.word-span.current-cursor {
+    background: #DBEAFE;
+    color: #1D4ED8;
+    border: 2px solid #3B82F6;
+    border-radius: 6px;
+    font-weight: 800;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.35);
+    animation: cursorPulse 1.4s infinite alternate ease-in-out;
+}
+
+@keyframes cursorPulse {
+    0% { border-color: #3B82F6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.2); }
+    100% { border-color: #1D4ED8; box-shadow: 0 0 14px rgba(29, 78, 216, 0.5); }
+}
+
 .minimal-pairs-box { display: flex; gap: 48px; align-items: center; justify-content: center; }
 .minimal-pair-option {
     font-size: 64px; font-weight: 800; padding: 16px 32px; border-radius: var(--radius-md);
@@ -624,7 +640,7 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
 .stat-number { font-size: 2.5rem; font-weight: 800; font-family: var(--md-typeface-brand); }
 .stat-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--md-sys-color-on-surface-variant); }
 
-/* --- Animated Progression Toast --- */
+/* --- Animated Progression Simulation Toast --- */
 .progression-toast {
     position: fixed; top: 70px; right: 24px; z-index: 10000;
     animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;

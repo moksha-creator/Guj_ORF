@@ -197,6 +197,19 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Single Active Reading Cursor Controller
+function updateReadingCursor(targetIndex) {
+    const allSpans = document.querySelectorAll('.display-passage-text span.word-span');
+    allSpans.forEach(s => s.classList.remove('current-cursor'));
+
+    if (targetIndex >= 0 && targetIndex < currentTargetWordList.length) {
+        const activeSpan = document.getElementById(`word-${targetIndex}`);
+        if (activeSpan && !activeSpan.classList.contains('green')) {
+            activeSpan.classList.add('current-cursor');
+        }
+    }
+}
+
 // Roster Mock Data for Home Screen
 let rosterStudents = [
     { name: "Aarav Patel", status: "waiting", id: "s1" },
@@ -587,6 +600,7 @@ function processSpokenTranscriptStream(spokenText) {
                     playSFX('word_tick');
                 }
                 currentMatchedWordIndex = foundIdx + 1;
+                updateReadingCursor(currentMatchedWordIndex);
                 break;
             }
         }
@@ -919,6 +933,7 @@ function renderCurrentActivity() {
         currentTargetWordList = words;
         const wrappedWords = words.map((w, idx) => `<span class="word-span" id="word-${idx}">${w}</span>`).join(' ');
         container.innerHTML = `<div class="display-passage-text">${wrappedWords}</div>`;
+        updateReadingCursor(0);
     }
     else if (currentTemplate === 'SENTENCE_READ_TEXT_IMAGE') {
         const words = sample.text.split(' ');
@@ -930,6 +945,7 @@ function renderCurrentActivity() {
             </div>
             <div class="display-passage-text">${wrappedWords}</div>
         `;
+        updateReadingCursor(0);
     }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
         currentTargetWordList = [sample.target];
@@ -950,6 +966,7 @@ function renderCurrentActivity() {
                 <div class="display-passage-text" style="flex: 1;">${wrappedWords}</div>
             </div>
         `;
+        updateReadingCursor(0);
     }
 
     try {
@@ -1112,6 +1129,7 @@ function simulateWordSpeech() {
                     span.classList.add('green');
                 }
                 wordIdx++;
+                updateReadingCursor(wordIdx);
             } else {
                 clearInterval(simulatedSpeechTimeout);
                 updateMicUI('processing');
