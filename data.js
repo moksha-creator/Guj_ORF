@@ -168,6 +168,25 @@ const PROTOTYPE_DATA = {
           { text: "I have a red ball." }
         ]
       },
+      WORD_READ_MINIMAL_PAIR: {
+        title: "Minimal Pair Discrimination",
+        instruction: "Say the correct word for this picture out loud.",
+        tier1: [
+          { image: "☀️", options: ["sun", "sub"], target: "sun" },
+          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🐱", options: ["cat", "bat"], target: "cat" }
+        ],
+        tier2: [
+          { image: "☀️", options: ["sun", "sub"], target: "sun" },
+          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🐱", options: ["cat", "bat"], target: "cat" }
+        ],
+        tier3: [
+          { image: "☀️", options: ["sun", "sub"], target: "sun" },
+          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🐱", options: ["cat", "bat"], target: "cat" }
+        ]
+      },
       SENTENCE_READ_TEXT_IMAGE: {
         title: "Illustrated Sentence Reading",
         instruction: "Read the sentence.",

@@ -713,13 +713,19 @@ function renderCurrentActivity() {
         `;
     }
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
-        currentTargetWordList = [sample.target];
-        let optionsHtml = sample.options.map(opt => `
-            <div class="minimal-pair-option" id="min-option-${opt.toLowerCase()}" onclick="selectMinimalPair(this, '${opt}', '${sample.target}')">${opt}</div>
+        const targetWord = sample.target || "sun";
+        const optionsList = sample.options || ["sun", "sub"];
+        const imgDisplay = sample.image || (targetWord === "sun" ? "☀️" : targetWord === "pin" ? "🖊️" : "🐱");
+        
+        currentTargetWordList = [targetWord];
+
+        let optionsHtml = optionsList.map(opt => `
+            <div class="minimal-pair-option" id="min-option-${opt.toLowerCase()}" onclick="selectMinimalPair(this, '${opt}', '${targetWord}')">${opt}</div>
         `).join('');
+
         container.innerHTML = `
             <div class="display-image-word" style="margin-bottom: 24px;">
-                <div class="image-emoji" style="font-size: 110px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));">${sample.image}</div>
+                <div class="image-emoji" style="font-size: 110px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));">${imgDisplay}</div>
             </div>
             <div class="minimal-pairs-box">${optionsHtml}</div>
         `;
@@ -857,8 +863,9 @@ function simulateWordSpeech() {
         }, 350);
     }
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
-        updateLiveTranscriptText(sample.target);
-        const targetOptEl = document.getElementById(`min-option-${sample.target.toLowerCase()}`);
+        const targetWord = sample.target || "sun";
+        updateLiveTranscriptText(targetWord);
+        const targetOptEl = document.getElementById(`min-option-${targetWord.toLowerCase()}`);
         if (targetOptEl) {
             targetOptEl.classList.add('correct');
             updateMicUI('processing');
