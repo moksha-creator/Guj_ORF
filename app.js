@@ -51,9 +51,11 @@ function initDefaultAppState(customConfig) {
     AppState.students = [];
     for (let i = 0; i < count; i++) {
         const base = baseList[i % baseList.length] || { name: `Student ${i+1}`, level: 'L2', tier: 'tier1', accuracy: 88, wcpm: 40, compScore: 85, journey: ['L1', 'L2'], flag: null };
+        const avatarNum = (i % 4) + 1;
         AppState.students.push({
             id: `student_${i+1}`,
             name: base.name || `Student ${i+1}`,
+            avatarImg: `assets/kid_avatar_${avatarNum}.jpg`,
             grade: AppState.config.grade,
             lang: AppState.config.languageTrack,
             level: base.level || 'L2',
@@ -72,6 +74,7 @@ function initDefaultAppState(customConfig) {
         date: "2026-07-22",
         studentId: s.id,
         name: s.name,
+        avatarImg: s.avatarImg,
         grade: s.grade,
         lang: s.lang,
         level: s.level,
@@ -862,7 +865,7 @@ function simulateProgression(action) {
 }
 
 // ==========================================
-// SCREEN 1: TEACHER HOME (STREAMLINED)
+// SCREEN 1: TEACHER HOME (STREAMLINED WITH AI AVATARS)
 // ==========================================
 function renderTeacherHome() {
     isStepTransitioning = false;
@@ -900,12 +903,13 @@ function renderTeacherHome() {
         currentStudentIndex = AppState.students.findIndex(s => s.id === activeStudent.id);
         const heroContent = document.getElementById('hero-card-content');
         const heroActions = document.getElementById('hero-card-actions');
+        const avatarPath = activeStudent.avatarImg || `assets/kid_avatar_${(currentStudentIndex % 4) + 1}.jpg`;
 
         if (heroContent) {
             heroContent.style.display = 'flex';
             heroContent.innerHTML = `
                 <div class="hero-avatar">
-                    <span class="material-icons-round">face</span>
+                    <img src="${avatarPath}" alt="${activeStudent.name}" class="hero-avatar-img">
                 </div>
                 <div class="hero-student-info">
                     <span class="badge-pill hero-level-badge" id="hero-student-level-badge">${activeStudent.level} (${AppState.config.grade})</span>
@@ -953,7 +957,7 @@ function renderTeacherHome() {
         }
     }
 
-    // Render Assessment Queue Grid
+    // Render Assessment Queue Grid with AI Avatars
     const qRemEl = document.getElementById('queue-remaining-badge');
     if (qRemEl) qRemEl.innerText = `${pendingCount} remaining`;
 
@@ -967,10 +971,11 @@ function renderTeacherHome() {
 
             const statusClass = s.status === 'done' ? 'done' : isHero ? 'waiting' : s.status === 'absent' ? 'absent' : 'pending';
             const statusText = s.status === 'done' ? '🟢 Completed' : isHero ? '🔵 Up Next' : s.status === 'absent' ? '🟠 Absent' : '⚪ Pending';
+            const avatarPath = s.avatarImg || `assets/kid_avatar_${(idx % 4) + 1}.jpg`;
 
             item.innerHTML = `
                 <div class="queue-student-left">
-                    <div class="queue-student-avatar"><span class="material-icons-round">face</span></div>
+                    <div class="queue-student-avatar"><img src="${avatarPath}" alt="${s.name}" class="queue-avatar-img"></div>
                     <div>
                         <div class="queue-student-name">${s.name}</div>
                         <div style="font-size: 0.75rem; color: #64748B;">Roll No. ${idx + 1 < 10 ? '0' : ''}${idx + 1}</div>
@@ -1403,6 +1408,7 @@ function completeAssessmentSampleStep() {
                 date: "2026-07-22",
                 studentId: activeStudent.id,
                 name: activeStudent.name,
+                avatarImg: activeStudent.avatarImg,
                 grade: activeStudent.grade || AppState.config.grade,
                 lang: activeStudent.lang || AppState.config.languageTrack,
                 level: currentLevel,
