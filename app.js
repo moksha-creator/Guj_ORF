@@ -46,6 +46,24 @@ function showScreen(targetScreen) {
     targetScreen.classList.add('active');
 }
 
+// Live Transcript Helper
+function updateLiveTranscriptText(rawText) {
+    const box = document.getElementById('live-transcript-box');
+    const textEl = document.getElementById('live-transcript-text');
+    if (!box || !textEl) return;
+
+    if (rawText && rawText.trim().length > 0) {
+        textEl.innerText = `Heard: "${rawText.trim()}"`;
+        box.classList.remove('hidden');
+    } else {
+        box.classList.add('hidden');
+    }
+}
+
+function clearLiveTranscript() {
+    updateLiveTranscriptText('');
+}
+
 // Initialize Speech Recognition Engine
 function initSpeechRecognitionEngine() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -72,8 +90,9 @@ function initSpeechRecognitionEngine() {
                 }
             }
 
-            const spokenText = (finalTranscript + ' ' + interimTranscript).toLowerCase().trim();
-            processSpokenTranscript(spokenText);
+            const spokenText = (finalTranscript + ' ' + interimTranscript).trim();
+            updateLiveTranscriptText(spokenText);
+            processSpokenTranscript(spokenText.toLowerCase());
         };
 
         speechRecognition.onerror = (event) => {
@@ -356,6 +375,7 @@ function simulateProgression(action) {
 // ==========================================
 function renderTeacherHome() {
     stopRealSpeechRecognition();
+    clearLiveTranscript();
     showScreen(screens.HOME);
     
     // Update Up Next Student
@@ -393,6 +413,7 @@ function triggerStartSession() {
 // ==========================================
 function startTransitionScreen(studentName) {
     stopRealSpeechRecognition();
+    clearLiveTranscript();
     showScreen(screens.TRANSITION);
     document.getElementById('transition-greeting').innerText = studentName;
     document.getElementById('transition-subheading').innerText = "Please come forward";
@@ -418,6 +439,7 @@ function startTransitionScreen(studentName) {
 // SCREEN 3: ASSESSMENT ACTIVITY
 // ==========================================
 function renderCurrentActivity() {
+    clearLiveTranscript();
     const levelData = PROTOTYPE_DATA[currentLevel];
     if (!levelData) return;
 
@@ -532,6 +554,7 @@ function renderCurrentActivity() {
 // Dedicated Comprehension Screen (Screen 3b)
 function showComprehensionPage(sample) {
     stopRealSpeechRecognition();
+    clearLiveTranscript();
     showScreen(screens.COMPREHENSION);
 
     const levelData = PROTOTYPE_DATA[currentLevel];
@@ -566,6 +589,7 @@ function simulateWordSpeech() {
     const sample = sampleList[sampleIndex % sampleList.length];
 
     if (currentTemplate === 'WORD_READ_TEXT') {
+        updateLiveTranscriptText(sample.text);
         const el = document.getElementById('target-text-display');
         if (el) {
             el.classList.add('highlight-green');
@@ -576,12 +600,16 @@ function simulateWordSpeech() {
         }
     }
     else if (currentTemplate === 'WORD_READ_SET_TEXT') {
-        // Highlight 5 cards sequentially!
         let cardIndex = 0;
+        let simulatedTranscript = [];
         if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
 
         simulatedSpeechTimeout = setInterval(() => {
             if (cardIndex < 5) {
+                const item = sample.items[cardIndex];
+                if (item) simulatedTranscript.push(item.word);
+                updateLiveTranscriptText(simulatedTranscript.join(' '));
+
                 const card = document.getElementById(`set-card-${cardIndex}`);
                 if (card) card.classList.add('highlight-read');
                 cardIndex++;
@@ -595,6 +623,7 @@ function simulateWordSpeech() {
         }, 350);
     }
     else if (currentTemplate === 'WORD_IMAGE_NAMING') {
+        updateLiveTranscriptText(sample.targetWord);
         const revealed = document.getElementById('image-word-revealed');
         if (revealed) {
             revealed.classList.remove('hidden');
@@ -605,6 +634,7 @@ function simulateWordSpeech() {
         }
     }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
+        updateLiveTranscriptText(sample.target);
         const blank = document.getElementById('cloze-blank-target');
         if (blank) {
             blank.innerText = sample.target;
@@ -619,11 +649,15 @@ function simulateWordSpeech() {
         const text = sample.text || sample.story;
         const words = text.split(' ');
         let wordIdx = 0;
+        let simulatedWords = [];
 
         if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
 
         simulatedSpeechTimeout = setInterval(() => {
             if (wordIdx < words.length) {
+                simulatedWords.push(words[wordIdx]);
+                updateLiveTranscriptText(simulatedWords.join(' '));
+
                 const span = document.getElementById(`word-${wordIdx}`);
                 if (span) span.classList.add('green');
                 wordIdx++;
@@ -647,6 +681,7 @@ function simulateWordSpeech() {
 function selectMinimalPair(elem, selected, target) {
     document.querySelectorAll('.minimal-pair-option').forEach(el => el.classList.remove('correct'));
     elem.classList.add('correct');
+    updateLiveTranscriptText(selected);
     updateMicUI('processing');
     setTimeout(() => {
         completeAssessmentSampleStep();
@@ -704,6 +739,7 @@ function endAssessmentSessionPrompt() {
 // ==========================================
 function triggerCelebrationConfetti() {
     stopRealSpeechRecognition();
+    clearLiveTranscript();
     const container = document.getElementById('confetti-container');
     container.innerHTML = '';
     const assessed = rosterStudents.filter(s => s.status === 'done').length;

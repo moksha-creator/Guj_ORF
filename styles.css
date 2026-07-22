@@ -363,6 +363,31 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
     align-items: center; justify-content: center; text-align: center; padding: 24px;
 }
 
+/* Live Speech Transcript Box */
+.live-transcript-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    padding: 6px 18px;
+    border-radius: var(--radius-pill);
+    color: #64748B;
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin-top: -6px;
+    margin-bottom: 4px;
+    max-width: 800px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.live-transcript-box .transcript-icon {
+    font-size: 20px;
+    color: #94A3B8;
+}
+.live-transcript-box .transcript-text {
+    font-style: italic;
+}
+
 /* 5-Card Word Set Grid for WORD_READ_SET_TEXT */
 .word-set-cards-grid {
     display: grid;
