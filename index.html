@@ -62,7 +62,7 @@
 
     <div id="app-container">
 
-        <!-- Screen 1: Teacher Home (Classroom Control Center Redesign) -->
+        <!-- Screen 1: Teacher Home (Streamlined Dashboard) -->
         <div id="screen-01-home" class="screen active">
             <header class="top-bar-clean">
                 <div class="header-left">
@@ -84,30 +84,11 @@
             </header>
 
             <main class="dashboard-main-layout">
-                <!-- Assessment Summary Compact Metrics Row -->
-                <div class="summary-metrics-row">
-                    <div class="card metric-card">
-                        <span class="metric-label">TOTAL STUDENTS</span>
-                        <h3 class="fredoka-text text-primary" id="home-metric-total">40</h3>
-                    </div>
-                    <div class="card metric-card">
-                        <span class="metric-label">COMPLETED</span>
-                        <h3 class="fredoka-text text-success" id="home-metric-completed">32</h3>
-                    </div>
-                    <div class="card metric-card">
-                        <span class="metric-label">PENDING</span>
-                        <h3 class="fredoka-text text-secondary" id="home-metric-pending">6</h3>
-                    </div>
-                    <div class="card metric-card">
-                        <span class="metric-label">ABSENT</span>
-                        <h3 class="fredoka-text text-muted" id="home-metric-absent">2</h3>
-                    </div>
-                </div>
 
-                <!-- Animated Progress Bar Container -->
+                <!-- Assessment Progress Bar -->
                 <div class="card compact-progress-card">
                     <div class="progress-info-row">
-                        <span class="progress-title-sm">Today's Assessment Progress</span>
+                        <span class="progress-title-sm">Assessment Progress</span>
                         <span class="progress-count-sm" id="progress-text-count">32 / 40 Students (80%)</span>
                     </div>
                     <div class="progress-bar-container-sm">
@@ -115,10 +96,10 @@
                     </div>
                 </div>
 
-                <!-- Main Control Split: Hero Card (Left) + Assessment Queue (Right) -->
+                <!-- Main 2-Column Split Layout: Currently Assessing (Hero) + Assessment Queue -->
                 <div class="dashboard-split-layout">
                     
-                    <!-- Current Student Hero Card -->
+                    <!-- Currently Assessing Hero Card -->
                     <div class="card hero-student-card" id="hero-student-card">
                         <div class="hero-header-badge">
                             <span class="material-icons-round" style="font-size: 16px;">graphic_eq</span> CURRENTLY ASSESSING
@@ -145,27 +126,17 @@
                         </div>
                     </div>
 
-                    <!-- Assessment Roster Queue Container -->
+                    <!-- Assessment Queue Card -->
                     <div class="card roster-queue-card">
                         <div class="queue-card-header">
                             <span class="queue-title-text"><span class="material-icons-round" style="font-size: 18px; vertical-align: middle;">format_list_bulleted</span> Assessment Queue</span>
                             <span class="text-muted" style="font-size: 0.85rem;" id="queue-remaining-badge">8 remaining</span>
                         </div>
                         <div class="roster-queue-grid" id="queue-chips-strip">
-                            <!-- Compact Student Cards Injected via JS -->
+                            <!-- Student Cards Injected via JS -->
                         </div>
                     </div>
-                </div>
 
-                <!-- Quick Teacher Insights Banner -->
-                <div class="card quick-insights-banner">
-                    <div class="insights-pill"><span class="material-icons-round">schedule</span> <span id="insight-time-rem">~18 mins remaining</span></div>
-                    <div class="insights-divider"></div>
-                    <div class="insights-pill"><span class="material-icons-round">groups</span> <span id="insight-pending-count">6 pending</span></div>
-                    <div class="insights-divider"></div>
-                    <div class="insights-pill"><span class="material-icons-round">person_off</span> <span id="insight-absent-count">2 absent today</span></div>
-                    <div class="insights-divider"></div>
-                    <div class="insights-pill"><span class="material-icons-round">auto_awesome</span> <span id="insight-avg-level">Avg Class Level: Level 2</span></div>
                 </div>
 
             </main>

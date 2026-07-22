@@ -862,7 +862,7 @@ function simulateProgression(action) {
 }
 
 // ==========================================
-// SCREEN 1: TEACHER HOME (CONTROL CENTER REDESIGN)
+// SCREEN 1: TEACHER HOME (STREAMLINED)
 // ==========================================
 function renderTeacherHome() {
     isStepTransitioning = false;
@@ -881,48 +881,23 @@ function renderTeacherHome() {
     if (subEl) subEl.innerText = `${AppState.config.district} • ${AppState.config.grade}`;
     if (langEl) langEl.innerText = AppState.config.languageTrack;
 
-    // Calculate Summary Metrics & Progress Bar
+    // Calculate Progress Bar
     const totalCount = AppState.students.length;
     const doneCount = AppState.students.filter(s => s.status === 'done').length;
     const pendingCount = AppState.students.filter(s => s.status === 'waiting').length;
-    const absentCount = AppState.students.filter(s => s.status === 'absent').length;
     const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    const mTotal = document.getElementById('home-metric-total');
-    const mDone = document.getElementById('home-metric-completed');
-    const mPending = document.getElementById('home-metric-pending');
-    const mAbsent = document.getElementById('home-metric-absent');
     const countEl = document.getElementById('progress-text-count');
     const fillEl = document.getElementById('progress-bar-fill-large');
 
-    if (mTotal) mTotal.innerText = totalCount;
-    if (mDone) mDone.innerText = doneCount;
-    if (mPending) mPending.innerText = pendingCount;
-    if (mAbsent) mAbsent.innerText = absentCount;
     if (countEl) countEl.innerText = `${doneCount} / ${totalCount} Students (${percent}%)`;
     if (fillEl) fillEl.style.width = `${percent}%`;
 
-    // Quick Insights
-    const remTime = pendingCount * 3;
-    const timeRemEl = document.getElementById('insight-time-rem');
-    const pendEl = document.getElementById('insight-pending-count');
-    const absEl = document.getElementById('insight-absent-count');
-    const avgLvlEl = document.getElementById('insight-avg-level');
-
-    if (timeRemEl) timeRemEl.innerText = `~${remTime} mins remaining`;
-    if (pendEl) pendEl.innerText = `${pendingCount} pending`;
-    if (absEl) absEl.innerText = `${absentCount} absent today`;
-    if (avgLvlEl) avgLvlEl.innerText = `Avg Class Level: Level 2`;
-
     // Active Student / Hero Card
-    const heroCard = document.getElementById('hero-student-card');
     const activeStudent = AppState.students.find(s => s.status === 'waiting');
 
     if (activeStudent) {
         currentStudentIndex = AppState.students.findIndex(s => s.id === activeStudent.id);
-        const nameEl = document.getElementById('up-next-student-name');
-        const subtextEl = document.getElementById('up-next-student-subtext');
-        const levelBadge = document.getElementById('hero-student-level-badge');
         const heroContent = document.getElementById('hero-card-content');
         const heroActions = document.getElementById('hero-card-actions');
 
@@ -958,7 +933,7 @@ function renderTeacherHome() {
         if (heroContent) {
             heroContent.style.display = 'flex';
             heroContent.innerHTML = `
-                <div style="text-align: center; width: 100%; padding: 12px 0;">
+                <div style="text-align: center; width: 100%; padding: 16px 0;">
                     <span class="material-icons-round text-success" style="font-size: 54px; margin-bottom: 6px;">stars</span>
                     <h2 class="fredoka-text text-success" style="font-size: 1.8rem;">Today's Assessments Complete!</h2>
                     <p class="text-muted">All ${doneCount} scheduled student assessments have been finished.</p>
