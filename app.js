@@ -12,7 +12,8 @@ const screens = {
 let currentLevel = 'L1';
 let currentTier = 'tier1';
 let currentTemplate = 'WORD_READ_TEXT';
-let sampleIndex = 0; // 0, 1, or 2
+let sampleIndex = 0; // Index into template sample array
+let studentSampleCount = 1; // 1, 2, or 3 samples per student session
 
 let activeCountdownInterval = null;
 let simulatedSpeechTimeout = null;
@@ -46,17 +47,23 @@ function initDemoControls() {
 
     levelSelect.onchange = (e) => {
         currentLevel = e.target.value;
+        sampleIndex = 0;
+        studentSampleCount = 1;
         populateTemplatesForLevel(currentLevel);
         renderCurrentActivity();
     };
 
     tierSelect.onchange = (e) => {
         currentTier = e.target.value;
+        sampleIndex = 0;
+        studentSampleCount = 1;
         renderCurrentActivity();
     };
 
     templateSelect.onchange = (e) => {
         currentTemplate = e.target.value;
+        sampleIndex = 0;
+        studentSampleCount = 1;
         renderCurrentActivity();
     };
 
@@ -130,6 +137,9 @@ function simulateProgression(action) {
     document.getElementById('demo-tier-select').value = currentTier;
     populateTemplatesForLevel(currentLevel);
 
+    sampleIndex = 0;
+    studentSampleCount = 1;
+
     // Show Toast
     toast.classList.remove('hidden');
     setTimeout(() => {
@@ -172,6 +182,8 @@ function markCurrentStudentAbsent() {
 }
 
 function triggerStartSession() {
+    studentSampleCount = 1;
+    sampleIndex = 0;
     const student = rosterStudents[currentStudentIndex] || rosterStudents[0];
     startTransitionScreen(student.name);
 }
@@ -211,9 +223,10 @@ function renderCurrentActivity() {
     const templateData = levelData.templates[currentTemplate];
     if (!templateData) return;
 
-    // Update Badges & Instruction
+    // Update Badges, Counter & Instruction
     document.getElementById('activity-level-badge').innerText = levelData.name;
     document.getElementById('activity-template-badge').innerText = currentTemplate;
+    document.getElementById('activity-sample-counter').innerText = `Sample ${studentSampleCount} of 3`;
     document.getElementById('activity-instruction-text').innerText = templateData.instruction;
 
     const container = document.getElementById('reading-card-container');
@@ -238,7 +251,7 @@ function renderCurrentActivity() {
         `;
     }
     else if (currentTemplate === 'WORD_READ_SET_TEXT') {
-        container.innerHTML = `<div class="display-word-text" style="font-size: 48px;" id="target-text-display">${sample.text}</div>`;
+        container.innerHTML = `<div class="display-word-text" style="font-size: 44px;" id="target-text-display">${sample.text}</div>`;
     }
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
         let optionsHtml = sample.options.map(opt => `
@@ -294,8 +307,8 @@ function renderCurrentActivity() {
                 document.querySelectorAll('.comp-option-btn').forEach(b => b.classList.remove('selected-correct'));
                 btn.classList.add('selected-correct');
                 setTimeout(() => {
-                    completeAssessmentTurn();
-                }, 1200);
+                    completeAssessmentSampleStep();
+                }, 1000);
             };
             grid.appendChild(btn);
         });
@@ -314,8 +327,8 @@ function simulateWordSpeech() {
         if (el) {
             el.classList.add('highlight-green');
             setTimeout(() => {
-                completeAssessmentTurn();
-            }, 1200);
+                completeAssessmentSampleStep();
+            }, 1000);
         }
     }
     else if (currentTemplate === 'WORD_IMAGE_NAMING') {
@@ -323,8 +336,8 @@ function simulateWordSpeech() {
         if (revealed) {
             revealed.classList.remove('hidden');
             setTimeout(() => {
-                completeAssessmentTurn();
-            }, 1400);
+                completeAssessmentSampleStep();
+            }, 1200);
         }
     }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
@@ -333,8 +346,8 @@ function simulateWordSpeech() {
             blank.innerText = sample.target;
             blank.style.color = '#2E7D32';
             setTimeout(() => {
-                completeAssessmentTurn();
-            }, 1400);
+                completeAssessmentSampleStep();
+            }, 1200);
         }
     }
     else if (currentTemplate.includes('SENTENCE') || currentTemplate.includes('PASSAGE')) {
@@ -356,11 +369,11 @@ function simulateWordSpeech() {
                     document.getElementById('comprehension-container').classList.remove('hidden');
                 } else {
                     setTimeout(() => {
-                        completeAssessmentTurn();
-                    }, 1200);
+                        completeAssessmentSampleStep();
+                    }, 1000);
                 }
             }
-        }, 220);
+        }, 180);
     }
 }
 
@@ -368,31 +381,40 @@ function selectMinimalPair(elem, selected, target) {
     document.querySelectorAll('.minimal-pair-option').forEach(el => el.classList.remove('correct'));
     elem.classList.add('correct');
     setTimeout(() => {
-        completeAssessmentTurn();
-    }, 1200);
+        completeAssessmentSampleStep();
+    }, 1000);
 }
 
-function completeAssessmentTurn() {
-    sampleIndex++;
-    if (rosterStudents[currentStudentIndex]) {
-        rosterStudents[currentStudentIndex].status = 'done';
-    }
-
-    // Show completion screen or transition back
-    showScreen(screens.TRANSITION);
-    document.getElementById('transition-greeting').innerText = "Great Reading!";
-    document.getElementById('transition-subheading').innerText = "You're done for today 🌟";
-    document.getElementById('countdown').innerText = "✓";
-
-    setTimeout(() => {
-        currentStudentIndex++;
-        if (currentStudentIndex >= rosterStudents.length) {
-            showScreen(screens.END);
-            triggerCelebrationConfetti();
-        } else {
-            renderTeacherHome();
+// 3-Sample Progression per Student Session
+function completeAssessmentSampleStep() {
+    if (studentSampleCount < 3) {
+        studentSampleCount++;
+        sampleIndex++;
+        renderCurrentActivity();
+    } else {
+        // Complete Student Session after 3 samples
+        sampleIndex++;
+        studentSampleCount = 1;
+        if (rosterStudents[currentStudentIndex]) {
+            rosterStudents[currentStudentIndex].status = 'done';
         }
-    }, 2200);
+
+        // Show completion screen or transition back
+        showScreen(screens.TRANSITION);
+        document.getElementById('transition-greeting').innerText = "Great Reading!";
+        document.getElementById('transition-subheading').innerText = "You're done for today 🌟";
+        document.getElementById('countdown').innerText = "✓";
+
+        setTimeout(() => {
+            currentStudentIndex++;
+            if (currentStudentIndex >= rosterStudents.length) {
+                showScreen(screens.END);
+                triggerCelebrationConfetti();
+            } else {
+                renderTeacherHome();
+            }
+        }, 2200);
+    }
 }
 
 // Pause & End Session Handlers
