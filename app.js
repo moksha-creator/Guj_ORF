@@ -5,6 +5,7 @@ const screens = {
     HOME: document.getElementById('screen-01-home'),
     TRANSITION: document.getElementById('screen-02-transition'),
     ACTIVITY: document.getElementById('screen-03-activity'),
+    COMPREHENSION: document.getElementById('screen-03b-comprehension'),
     END: document.getElementById('screen-04-end')
 };
 
@@ -147,7 +148,7 @@ function simulateProgression(action) {
     }, 2800);
 
     // If currently on activity screen, re-render
-    if (screens.ACTIVITY.classList.contains('active')) {
+    if (screens.ACTIVITY.classList.contains('active') || screens.COMPREHENSION.classList.contains('active')) {
         renderCurrentActivity();
     }
 }
@@ -223,6 +224,9 @@ function renderCurrentActivity() {
     const templateData = levelData.templates[currentTemplate];
     if (!templateData) return;
 
+    // Show Assessment Screen
+    showScreen(screens.ACTIVITY);
+
     // Update Badges, Counter & Instruction
     document.getElementById('activity-level-badge').innerText = levelData.name;
     document.getElementById('activity-template-badge').innerText = currentTemplate;
@@ -230,9 +234,7 @@ function renderCurrentActivity() {
     document.getElementById('activity-instruction-text').innerText = templateData.instruction;
 
     const container = document.getElementById('reading-card-container');
-    const compContainer = document.getElementById('comprehension-container');
     container.innerHTML = '';
-    compContainer.classList.add('hidden');
 
     const sampleList = templateData[currentTier] || templateData.tier1;
     const sample = sampleList[sampleIndex % sampleList.length];
@@ -311,25 +313,34 @@ function renderCurrentActivity() {
                 <div class="display-passage-text" style="flex: 1;">${wrappedWords}</div>
             </div>
         `;
-
-        // Render Comprehension Question
-        document.getElementById('comp-question-text').innerText = sample.question;
-        const grid = document.getElementById('comp-options-grid');
-        grid.innerHTML = '';
-        sample.options.forEach(opt => {
-            const btn = document.createElement('div');
-            btn.className = 'comp-option-btn';
-            btn.innerText = opt;
-            btn.onclick = () => {
-                document.querySelectorAll('.comp-option-btn').forEach(b => b.classList.remove('selected-correct'));
-                btn.classList.add('selected-correct');
-                setTimeout(() => {
-                    completeAssessmentSampleStep();
-                }, 1000);
-            };
-            grid.appendChild(btn);
-        });
     }
+}
+
+// Dedicated Comprehension Screen (Screen 3b)
+function showComprehensionPage(sample) {
+    showScreen(screens.COMPREHENSION);
+
+    const levelData = PROTOTYPE_DATA[currentLevel];
+    document.getElementById('comp-level-badge').innerText = levelData ? levelData.name : currentLevel;
+    document.getElementById('comp-sample-counter').innerText = `Sample ${studentSampleCount} of 3`;
+    document.getElementById('comp-page-question-text').innerText = sample.question;
+
+    const grid = document.getElementById('comp-page-options-grid');
+    grid.innerHTML = '';
+
+    sample.options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'comp-option-page-btn';
+        btn.innerText = opt;
+        btn.onclick = () => {
+            document.querySelectorAll('.comp-option-page-btn').forEach(b => b.classList.remove('selected-correct'));
+            btn.classList.add('selected-correct');
+            setTimeout(() => {
+                completeAssessmentSampleStep();
+            }, 1000);
+        };
+        grid.appendChild(btn);
+    });
 }
 
 // Simulate Speech / Per-Word Highlighting
@@ -399,9 +410,11 @@ function simulateWordSpeech() {
                 wordIdx++;
             } else {
                 clearInterval(simulatedSpeechTimeout);
-                // If passage, show comprehension
+                // If passage, transition to dedicated Comprehension Page (Screen 3b)!
                 if (currentTemplate.includes('PASSAGE')) {
-                    document.getElementById('comprehension-container').classList.remove('hidden');
+                    setTimeout(() => {
+                        showComprehensionPage(sample);
+                    }, 800);
                 } else {
                     setTimeout(() => {
                         completeAssessmentSampleStep();

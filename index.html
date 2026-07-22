@@ -182,12 +182,34 @@
                         <span class="material-icons-round">volume_up</span> Simulate Speech
                     </button>
                 </div>
+            </main>
+        </div>
 
-                <!-- Comprehension Question Overlay (Rendered when passage reading completes) -->
-                <div id="comprehension-container" class="card comprehension-card hidden">
-                    <div class="comp-badge">COMPREHENSION QUESTION</div>
-                    <h2 class="fredoka-text comp-question-text" id="comp-question-text">Question text</h2>
-                    <div class="comp-options-grid" id="comp-options-grid"></div>
+        <!-- Screen 3b: Dedicated Comprehension Question Screen -->
+        <div id="screen-03b-comprehension" class="screen hidden activity-screen">
+            <header class="activity-header">
+                <div class="activity-meta">
+                    <span class="badge-pill" id="comp-level-badge">Grade 2 (L3)</span>
+                    <span class="badge-pill" style="background: #F3E8FF; color: #7E22CE;">COMPREHENSION</span>
+                    <span class="badge-pill" id="comp-sample-counter" style="background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary);">Sample 1 of 3</span>
+                </div>
+                <div class="teacher-live-controls">
+                    <button class="btn-secondary" onclick="pauseSession()">
+                        <span class="material-icons-round">pause</span> Pause
+                    </button>
+                    <button class="btn-secondary" onclick="endAssessmentSessionPrompt()">
+                        <span class="material-icons-round">stop</span> End Session
+                    </button>
+                </div>
+            </header>
+
+            <main class="activity-body" style="justify-content: center;">
+                <div class="card comprehension-page-card">
+                    <div class="comp-badge-header">
+                        <span class="material-icons-round">quiz</span> COMPREHENSION QUESTION
+                    </div>
+                    <h1 class="fredoka-text comp-question-title" id="comp-page-question-text">Question text</h1>
+                    <div class="comp-options-page-grid" id="comp-page-options-grid"></div>
                 </div>
             </main>
         </div>
