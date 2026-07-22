@@ -225,14 +225,15 @@ function renderCurrentActivity() {
     const sample = sampleList[sampleIndex % sampleList.length];
 
     // Render by Template Type
-    if (currentTemplate === 'WORD_READ_TEXT' || currentTemplate === 'WORD_READ_NONWORD_TEXT') {
+    if (currentTemplate === 'WORD_READ_TEXT') {
         container.innerHTML = `<div class="display-word-text" id="target-text-display">${sample.text}</div>`;
     } 
-    else if (currentTemplate === 'WORD_READ_TEXT_IMAGE') {
+    else if (currentTemplate === 'WORD_IMAGE_NAMING') {
+        // Image-Only Prompt (NO text displayed initially!)
         container.innerHTML = `
             <div class="display-image-word">
-                <div class="image-emoji">${sample.image}</div>
-                <div class="display-word-text" id="target-text-display">${sample.text}</div>
+                <div class="image-emoji" style="font-size: 120px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));">${sample.image}</div>
+                <div class="display-word-text text-success hidden" id="image-word-revealed" style="font-size: 48px; margin-top: 12px;">${sample.targetWord}</div>
             </div>
         `;
     }
@@ -308,13 +309,22 @@ function simulateWordSpeech() {
     const sampleList = templateData[currentTier] || templateData.tier1;
     const sample = sampleList[sampleIndex % sampleList.length];
 
-    if (currentTemplate === 'WORD_READ_TEXT' || currentTemplate === 'WORD_READ_TEXT_IMAGE' || currentTemplate === 'WORD_READ_NONWORD_TEXT' || currentTemplate === 'WORD_READ_SET_TEXT') {
+    if (currentTemplate === 'WORD_READ_TEXT' || currentTemplate === 'WORD_READ_SET_TEXT') {
         const el = document.getElementById('target-text-display');
         if (el) {
             el.classList.add('highlight-green');
             setTimeout(() => {
                 completeAssessmentTurn();
             }, 1200);
+        }
+    }
+    else if (currentTemplate === 'WORD_IMAGE_NAMING') {
+        const revealed = document.getElementById('image-word-revealed');
+        if (revealed) {
+            revealed.classList.remove('hidden');
+            setTimeout(() => {
+                completeAssessmentTurn();
+            }, 1400);
         }
     }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {

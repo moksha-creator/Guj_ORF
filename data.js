@@ -1,5 +1,5 @@
 // High-Fidelity Prototype Content Bank
-// Contains exactly 3 realistic examples for every template across Levels (L1-L4) and Tiers (1-3)
+// Contains realistic examples for templates across Levels (L1-L4) and Tiers (1-3)
 
 const PROTOTYPE_DATA = {
   // BALVATIKA (L1)
@@ -13,23 +13,23 @@ const PROTOTYPE_DATA = {
         tier2: [{ text: "Pen" }, { text: "Dog" }, { text: "Hat" }],
         tier3: [{ text: "Cup" }, { text: "Box" }, { text: "Bed" }]
       },
-      WORD_READ_TEXT_IMAGE: {
-        title: "Word & Picture Reading",
-        instruction: "Read the word for the picture.",
+      WORD_IMAGE_NAMING: {
+        title: "Picture Naming",
+        instruction: "Say the word for this picture out loud.",
         tier1: [
-          { text: "Elephant", image: "🐘", emoji: true },
-          { text: "Cat", image: "🐱", emoji: true },
-          { text: "Ball", image: "⚽", emoji: true }
+          { targetWord: "Elephant", image: "🐘", emoji: true },
+          { targetWord: "Cat", image: "🐱", emoji: true },
+          { targetWord: "Ball", image: "⚽", emoji: true }
         ],
         tier2: [
-          { text: "Dog", image: "🐶", emoji: true },
-          { text: "Tree", image: "🌳", emoji: true },
-          { text: "Fish", image: "🐟", emoji: true }
+          { targetWord: "Dog", image: "🐶", emoji: true },
+          { targetWord: "Tree", image: "🌳", emoji: true },
+          { targetWord: "Fish", image: "🐟", emoji: true }
         ],
         tier3: [
-          { text: "Car", image: "🚗", emoji: true },
-          { text: "Book", image: "📚", emoji: true },
-          { text: "Apple", image: "🍎", emoji: true }
+          { targetWord: "Car", image: "🚗", emoji: true },
+          { targetWord: "Book", image: "📚", emoji: true },
+          { targetWord: "Apple", image: "🍎", emoji: true }
         ]
       },
       WORD_READ_SET_TEXT: {
@@ -50,13 +50,6 @@ const PROTOTYPE_DATA = {
           { text: "Mud  Tub  Bug  Rug  Mug" },
           { text: "Pot  Dot  Hot  Cot  Fox" }
         ]
-      },
-      WORD_READ_NONWORD_TEXT: {
-        title: "Nonword Phonics Reading",
-        instruction: "Read the made-up word out loud.",
-        tier1: [{ text: "Flim" }, { text: "Nesh" }, { text: "Zop" }],
-        tier2: [{ text: "Blop" }, { text: "Crat" }, { text: "Smeb" }],
-        tier3: [{ text: "Plig" }, { text: "Drak" }, { text: "Vosp" }]
       },
       WORD_READ_MINIMAL_PAIR: {
         title: "Minimal Pair Discrimination",
