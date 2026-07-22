@@ -1,5 +1,5 @@
 // High-Fidelity Prototype Content Bank
-// Strictly contains 3 sample items per template across Levels (L1-L4) and Tiers
+// Strictly contains sample items per template across Levels (L1-L4) and Tiers
 
 const PROTOTYPE_DATA = {
   // BALVATIKA (L1)
@@ -73,24 +73,6 @@ const PROTOTYPE_DATA = {
               { word: "Cat", image: "🐱", colorTheme: "purple" },
               { word: "Book", image: "📚", colorTheme: "pink" }
             ]
-          },
-          {
-            items: [
-              { word: "Red", image: "🔴", colorTheme: "yellow" },
-              { word: "Big", image: "🐘", colorTheme: "green" },
-              { word: "Box", image: "📦", colorTheme: "blue" },
-              { word: "Dog", image: "🐶", colorTheme: "purple" },
-              { word: "Cup", image: "☕", colorTheme: "pink" }
-            ]
-          },
-          {
-            items: [
-              { word: "Run", image: "🏃", colorTheme: "yellow" },
-              { word: "Pen", image: "🖊️", colorTheme: "green" },
-              { word: "Hat", image: "👒", colorTheme: "blue" },
-              { word: "Bed", image: "🛏️", colorTheme: "purple" },
-              { word: "Fish", image: "🐟", colorTheme: "pink" }
-            ]
           }
         ],
         tier3: [
@@ -101,24 +83,6 @@ const PROTOTYPE_DATA = {
               { word: "Tree", image: "🌳", colorTheme: "blue" },
               { word: "Cat", image: "🐱", colorTheme: "purple" },
               { word: "Book", image: "📚", colorTheme: "pink" }
-            ]
-          },
-          {
-            items: [
-              { word: "Red", image: "🔴", colorTheme: "yellow" },
-              { word: "Big", image: "🐘", colorTheme: "green" },
-              { word: "Box", image: "📦", colorTheme: "blue" },
-              { word: "Dog", image: "🐶", colorTheme: "purple" },
-              { word: "Cup", image: "☕", colorTheme: "pink" }
-            ]
-          },
-          {
-            items: [
-              { word: "Run", image: "🏃", colorTheme: "yellow" },
-              { word: "Pen", image: "🖊️", colorTheme: "green" },
-              { word: "Hat", image: "👒", colorTheme: "blue" },
-              { word: "Bed", image: "🛏️", colorTheme: "purple" },
-              { word: "Fish", image: "🐟", colorTheme: "pink" }
             ]
           }
         ]
@@ -140,6 +104,25 @@ const PROTOTYPE_DATA = {
           { image: "🐟", options: ["fish", "dish"], target: "fish" },
           { image: "🏃", options: ["run", "sun"], target: "run" },
           { image: "🛏️", options: ["bed", "red"], target: "bed" }
+        ]
+      },
+      SENTENCE_READ_CLOZE_ORAL: {
+        title: "Cloze Oral Sentence Completion",
+        instruction: "Read the sentence and supply the missing word out loud.",
+        tier1: [
+          { display: "The sun is _____.", target: "bright", fullText: "The sun is bright" },
+          { display: "A cat says _____.", target: "meow", fullText: "A cat says meow" },
+          { display: "Birds fly in the _____.", target: "sky", fullText: "Birds fly in the sky" }
+        ],
+        tier2: [
+          { display: "The sun is _____.", target: "bright", fullText: "The sun is bright" },
+          { display: "A cat says _____.", target: "meow", fullText: "A cat says meow" },
+          { display: "Birds fly in the _____.", target: "sky", fullText: "Birds fly in the sky" }
+        ],
+        tier3: [
+          { display: "The sun is _____.", target: "bright", fullText: "The sun is bright" },
+          { display: "A cat says _____.", target: "meow", fullText: "A cat says meow" },
+          { display: "Birds fly in the _____.", target: "sky", fullText: "Birds fly in the sky" }
         ]
       }
     }
@@ -168,6 +151,25 @@ const PROTOTYPE_DATA = {
           { text: "I have a red ball." }
         ]
       },
+      SENTENCE_READ_CLOZE_ORAL: {
+        title: "Cloze Oral Sentence Completion",
+        instruction: "Read the sentence and supply the missing word out loud.",
+        tier1: [
+          { display: "The cat is _____ on the mat.", target: "sleeping", fullText: "The cat is sleeping on the mat" },
+          { display: "The bird can _____ high.", target: "fly", fullText: "The bird can fly high" },
+          { display: "I have a red _____ to play.", target: "ball", fullText: "I have a red ball to play" }
+        ],
+        tier2: [
+          { display: "The cat is _____ on the mat.", target: "sleeping", fullText: "The cat is sleeping on the mat" },
+          { display: "The bird can _____ high.", target: "fly", fullText: "The bird can fly high" },
+          { display: "I have a red _____ to play.", target: "ball", fullText: "I have a red ball to play" }
+        ],
+        tier3: [
+          { display: "The cat is _____ on the mat.", target: "sleeping", fullText: "The cat is sleeping on the mat" },
+          { display: "The bird can _____ high.", target: "fly", fullText: "The bird can fly high" },
+          { display: "I have a red _____ to play.", target: "ball", fullText: "I have a red ball to play" }
+        ]
+      },
       WORD_READ_MINIMAL_PAIR: {
         title: "Minimal Pair Discrimination",
         instruction: "Say the correct word for this picture out loud.",
@@ -189,7 +191,7 @@ const PROTOTYPE_DATA = {
       },
       SENTENCE_READ_TEXT_IMAGE: {
         title: "Illustrated Sentence Reading",
-        instruction: "Read the sentence.",
+        instruction: "Read the sentence out loud.",
         tier1: [
           { text: "The cat is sleeping on the mat.", image: "🐱", emoji: true },
           { text: "A yellow sun is in the sky.", image: "☀️", emoji: true },
@@ -223,25 +225,6 @@ const PROTOTYPE_DATA = {
           { text: "The cat is sleeping. The bird can fly. I have a red ball." },
           { text: "The sun is hot. A dog can run fast. We play together." },
           { text: "Look at the red bus. The tree is big. She has a hat." }
-        ]
-      },
-      SENTENCE_READ_CLOZE_ORAL: {
-        title: "Cloze Oral Reading",
-        instruction: "Read the sentence and supply the missing word out loud.",
-        tier1: [
-          { display: "The cat is _____", target: "sleeping", fullText: "The cat is sleeping" },
-          { display: "The bird can _____", target: "fly", fullText: "The bird can fly" },
-          { display: "I have a red _____", target: "ball", fullText: "I have a red ball" }
-        ],
-        tier2: [
-          { display: "The cat is _____", target: "sleeping", fullText: "The cat is sleeping" },
-          { display: "The bird can _____", target: "fly", fullText: "The bird can fly" },
-          { display: "I have a red _____", target: "ball", fullText: "I have a red ball" }
-        ],
-        tier3: [
-          { display: "The cat is _____", target: "sleeping", fullText: "The cat is sleeping" },
-          { display: "The bird can _____", target: "fly", fullText: "The bird can fly" },
-          { display: "I have a red _____", target: "ball", fullText: "I have a red ball" }
         ]
       }
     }
@@ -284,20 +267,6 @@ const PROTOTYPE_DATA = {
             question: "What did Riya plant in the pot?",
             options: ["A seed", "A rock", "A leaf", "A fruit"],
             correct: "A seed"
-          },
-          {
-            story: "A little puppy found a red ball in the garden. He chased it around the green grass. He wagged his tail happily.",
-            image: "🐶",
-            question: "Where did the puppy find the ball?",
-            options: ["In the garden", "In the house", "On the street", "In a box"],
-            correct: "In the garden"
-          },
-          {
-            story: "Kunal went to the lake with his grandfather. They saw three ducks swimming gracefully. The sun shone bright over the water.",
-            image: "🦆",
-            question: "How many ducks did they see?",
-            options: ["Three ducks", "One duck", "Five ducks", "Two ducks"],
-            correct: "Three ducks"
           }
         ],
         tier3: [
@@ -307,21 +276,22 @@ const PROTOTYPE_DATA = {
             question: "What did Riya plant in the pot?",
             options: ["A seed", "A rock", "A leaf", "A fruit"],
             correct: "A seed"
-          },
-          {
-            story: "A little puppy found a red ball in the garden. He chased it around the green grass. He wagged his tail happily.",
-            image: "🐶",
-            question: "Where did the puppy find the ball?",
-            options: ["In the garden", "In the house", "On the street", "In a box"],
-            correct: "In the garden"
-          },
-          {
-            story: "Kunal went to the lake with his grandfather. They saw three ducks swimming gracefully. The sun shone bright over the water.",
-            image: "🦆",
-            question: "How many ducks did they see?",
-            options: ["Three ducks", "One duck", "Five ducks", "Two ducks"],
-            correct: "Three ducks"
           }
+        ]
+      },
+      SENTENCE_READ_CLOZE_ORAL: {
+        title: "Cloze Oral Sentence Completion",
+        instruction: "Read the sentence and supply the missing word out loud.",
+        tier1: [
+          { display: "Riya planted a _____ in a pot.", target: "seed", fullText: "Riya planted a seed in a pot" },
+          { display: "The puppy chased the red _____.", target: "ball", fullText: "The puppy chased the red ball" },
+          { display: "They saw three _____ swimming.", target: "ducks", fullText: "They saw three ducks swimming" }
+        ],
+        tier2: [
+          { display: "Riya planted a _____ in a pot.", target: "seed", fullText: "Riya planted a seed in a pot" }
+        ],
+        tier3: [
+          { display: "Riya planted a _____ in a pot.", target: "seed", fullText: "Riya planted a seed in a pot" }
         ]
       }
     }
@@ -348,28 +318,28 @@ const PROTOTYPE_DATA = {
             correct: "Her clear explanation of clean solar power"
           },
           {
-            story: "Deep inside the lush Gir forest, lions rested under the shade of banyan trees. The afternoon heat was intense, so the cubs splashed in a shallow stream. Their mother watched over them while listening to bird calls echoing through the valley.",
+            story: "In a quiet forest near Gir, a mother lion brought her two young cubs to drink water from the stream. The cubs splashed playfully while the mother watched attentively for any sign of danger. It was a peaceful morning in the sanctuary.",
             image: "🦁",
-            question: "What were the lion cubs doing to stay cool?",
+            question: "What were the lion cubs doing at the stream?",
             options: [
-              "Splashing playfully in a shallow stream",
-              "Sleeping under the banyan tree",
-              "Climbing high mountain rocks",
-              "Hunting through tall grasslands"
+              "Splashing playfully in the water",
+              "Sleeping under a big tree",
+              "Hunting for food",
+              "Climbing up a steep hill"
             ],
-            correct: "Splashing playfully in a shallow stream"
+            correct: "Splashing playfully in the water"
           },
           {
-            story: "Farmer Ramesh prepared his terraced field before monsoon arrival. He planted organic rice seeds across the soil. When heavy rains arrived, green shoots sprouted rapidly, promising a bountiful harvest for the village.",
+            story: "The farmers in Kutch harvested fresh cotton after the monsoon rains. They transported the white cotton bales in wooden bullock carts to the local market. Everyone celebrated a prosperous harvest festival.",
             image: "🌾",
-            question: "What promised a bountiful harvest for the village?",
+            question: "How did the farmers transport the cotton bales?",
             options: [
-              "Rapidly sprouting green rice shoots after heavy rain",
-              "Building a new grain storage house",
-              "Buying seeds from the city market",
-              "Sunny weather throughout winter"
+              "In wooden bullock carts",
+              "By cargo train",
+              "On speedboats",
+              "Using heavy trucks"
             ],
-            correct: "Rapidly sprouting green rice shoots after heavy rain"
+            correct: "In wooden bullock carts"
           }
         ],
         tier2: [
@@ -384,30 +354,6 @@ const PROTOTYPE_DATA = {
               "She drew poster paintings"
             ],
             correct: "Her clear explanation of clean solar power"
-          },
-          {
-            story: "Deep inside the lush Gir forest, lions rested under the shade of banyan trees. The afternoon heat was intense, so the cubs splashed in a shallow stream. Their mother watched over them while listening to bird calls echoing through the valley.",
-            image: "🦁",
-            question: "What were the lion cubs doing to stay cool?",
-            options: [
-              "Splashing playfully in a shallow stream",
-              "Sleeping under the banyan tree",
-              "Climbing high mountain rocks",
-              "Hunting through tall grasslands"
-            ],
-            correct: "Splashing playfully in a shallow stream"
-          },
-          {
-            story: "Farmer Ramesh prepared his terraced field before monsoon arrival. He planted organic rice seeds across the soil. When heavy rains arrived, green shoots sprouted rapidly, promising a bountiful harvest for the village.",
-            image: "🌾",
-            question: "What promised a bountiful harvest for the village?",
-            options: [
-              "Rapidly sprouting green rice shoots after heavy rain",
-              "Building a new grain storage house",
-              "Buying seeds from the city market",
-              "Sunny weather throughout winter"
-            ],
-            correct: "Rapidly sprouting green rice shoots after heavy rain"
           }
         ],
         tier3: [
@@ -422,77 +368,24 @@ const PROTOTYPE_DATA = {
               "She drew poster paintings"
             ],
             correct: "Her clear explanation of clean solar power"
-          },
-          {
-            story: "Deep inside the lush Gir forest, lions rested under the shade of banyan trees. The afternoon heat was intense, so the cubs splashed in a shallow stream. Their mother watched over them while listening to bird calls echoing through the valley.",
-            image: "🦁",
-            question: "What were the lion cubs doing to stay cool?",
-            options: [
-              "Splashing playfully in a shallow stream",
-              "Sleeping under the banyan tree",
-              "Climbing high mountain rocks",
-              "Hunting through tall grasslands"
-            ],
-            correct: "Splashing playfully in a shallow stream"
-          },
-          {
-            story: "Farmer Ramesh prepared his terraced field before monsoon arrival. He planted organic rice seeds across the soil. When heavy rains arrived, green shoots sprouted rapidly, promising a bountiful harvest for the village.",
-            image: "🌾",
-            question: "What promised a bountiful harvest for the village?",
-            options: [
-              "Rapidly sprouting green rice shoots after heavy rain",
-              "Building a new grain storage house",
-              "Buying seeds from the city market",
-              "Sunny weather throughout winter"
-            ],
-            correct: "Rapidly sprouting green rice shoots after heavy rain"
           }
+        ]
+      },
+      SENTENCE_READ_CLOZE_ORAL: {
+        title: "Cloze Oral Sentence Completion",
+        instruction: "Read the sentence and supply the missing word out loud.",
+        tier1: [
+          { display: "Sunlight can generate clean _____.", target: "electricity", fullText: "Sunlight can generate clean electricity" },
+          { display: "The cubs splashed _____ in the stream.", target: "playfully", fullText: "The cubs splashed playfully in the stream" },
+          { display: "They celebrated a prosperous _____ festival.", target: "harvest", fullText: "They celebrated a prosperous harvest festival" }
+        ],
+        tier2: [
+          { display: "Sunlight can generate clean _____.", target: "electricity", fullText: "Sunlight can generate clean electricity" }
+        ],
+        tier3: [
+          { display: "Sunlight can generate clean _____.", target: "electricity", fullText: "Sunlight can generate clean electricity" }
         ]
       }
     }
   }
 };
-
-// 40 Student Mock Data for Reporting Module
-const MOCK_REPORTING_STUDENTS = [
-  { id: "s1", name: "Aarav Patel", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L1", "L2", "L2", "L3"], accuracy: 92, wcpm: 48, compScore: 100, assessments: 6, flag: null },
-  { id: "s2", name: "Meera Shah", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "3 days ago", journey: ["L1", "L1", "L2"], accuracy: 88, wcpm: 34, compScore: 80, assessments: 4, flag: null },
-  { id: "s3", name: "Kunal Joshi", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "1 week ago", journey: ["L1", "L1"], accuracy: 64, wcpm: 18, compScore: 60, assessments: 3, flag: "Stuck at Level 1" },
-  { id: "s4", name: "Diya Parikh", grade: "Grade 1-B", lang: "Gujarati", level: "L4", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 98, wcpm: 72, compScore: 100, assessments: 8, flag: null },
-  { id: "s5", name: "Riya Mehta", grade: "Grade 1-B", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2", "L3"], accuracy: 90, wcpm: 42, compScore: 90, assessments: 5, flag: null },
-  { id: "s6", name: "Vihaan Sharma", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L1", "L2"], accuracy: 85, wcpm: 31, compScore: 75, assessments: 4, flag: null },
-  { id: "s7", name: "Ananya Desai", grade: "Grade 1-A", lang: "English", level: "L2", tier: "Tier 1", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 82, wcpm: 29, compScore: 70, assessments: 3, flag: null },
-  { id: "s8", name: "Dev Trivedi", grade: "Grade 1-B", lang: "Gujarati", level: "L1", tier: "Tier 2", lastAssessed: "2 weeks ago", journey: ["L1"], accuracy: 58, wcpm: 14, compScore: 50, assessments: 2, flag: "Not Assessed Recently" },
-  { id: "s9", name: "Isha Solanki", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L2", "L3"], accuracy: 91, wcpm: 46, compScore: 85, assessments: 4, flag: null },
-  { id: "s10", name: "Kabir Vora", grade: "Grade 1-B", lang: "English", level: "L2", tier: "Tier 3", lastAssessed: "3 days ago", journey: ["L1", "L2"], accuracy: 89, wcpm: 38, compScore: 60, assessments: 4, flag: "Low Comprehension" },
-  { id: "s11", name: "Manav Bhatia", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "1 month ago", journey: ["L1"], accuracy: 52, wcpm: 12, compScore: 40, assessments: 1, flag: "Not Assessed Recently" },
-  { id: "s12", name: "Navya Chaudhari", grade: "Grade 1-A", lang: "Gujarati", level: "L4", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 96, wcpm: 68, compScore: 100, assessments: 7, flag: null },
-  { id: "s13", name: "Parth Soni", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "6 days ago", journey: ["L1", "L2"], accuracy: 80, wcpm: 28, compScore: 80, assessments: 3, flag: null },
-  { id: "s14", name: "Saanvi Parmar", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "2 days ago", journey: ["L2", "L3"], accuracy: 94, wcpm: 50, compScore: 90, assessments: 5, flag: null },
-  { id: "s15", name: "Tanish Kothari", grade: "Grade 1-B", lang: "English", level: "L2", tier: "Tier 2", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 84, wcpm: 30, compScore: 75, assessments: 3, flag: null },
-  { id: "s16", name: "Yashvi Zala", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 3", lastAssessed: "3 days ago", journey: ["L1"], accuracy: 70, wcpm: 22, compScore: 65, assessments: 3, flag: "Review Required" },
-  { id: "s17", name: "Aditya Barot", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2"], accuracy: 87, wcpm: 35, compScore: 85, assessments: 4, flag: null },
-  { id: "s18", name: "Bhavya Dave", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "2 days ago", journey: ["L2", "L3"], accuracy: 93, wcpm: 49, compScore: 95, assessments: 5, flag: null },
-  { id: "s19", name: "Charmi Vyas", grade: "Grade 1-B", lang: "English", level: "L4", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 97, wcpm: 70, compScore: 100, assessments: 6, flag: null },
-  { id: "s20", name: "Dharmi Rathod", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 2", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 83, wcpm: 32, compScore: 70, assessments: 3, flag: null },
-  { id: "s21", name: "Eshan Macwan", grade: "Grade 1-B", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "1 week ago", journey: ["L1"], accuracy: 60, wcpm: 16, compScore: 50, assessments: 2, flag: "Stuck at Level 1" },
-  { id: "s22", name: "Falguni Pandva", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L1", "L2"], accuracy: 86, wcpm: 33, compScore: 80, assessments: 4, flag: null },
-  { id: "s23", name: "Gaurav Jadeha", grade: "Grade 1-B", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "3 days ago", journey: ["L1", "L2", "L3"], accuracy: 90, wcpm: 45, compScore: 90, assessments: 5, flag: null },
-  { id: "s24", name: "Hetal Chavda", grade: "Grade 1-A", lang: "English", level: "L2", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 81, wcpm: 28, compScore: 75, assessments: 3, flag: null },
-  { id: "s25", name: "Ishaan Bhati", grade: "Grade 1-B", lang: "Gujarati", level: "L4", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L3", "L4"], accuracy: 95, wcpm: 66, compScore: 95, assessments: 6, flag: null },
-  { id: "s26", name: "Jiya Vaghela", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "2 days ago", journey: ["L1", "L2"], accuracy: 88, wcpm: 36, compScore: 85, assessments: 4, flag: null },
-  { id: "s27", name: "Kavya Shrimali", grade: "Grade 1-B", lang: "Gujarati", level: "L3", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L2", "L3"], accuracy: 92, wcpm: 47, compScore: 90, assessments: 5, flag: null },
-  { id: "s28", name: "Luv Dabhi", grade: "Grade 1-A", lang: "English", level: "L1", tier: "Tier 2", lastAssessed: "3 weeks ago", journey: ["L1"], accuracy: 55, wcpm: 15, compScore: 45, assessments: 2, flag: "Not Assessed Recently" },
-  { id: "s29", name: "Mahi Gohil", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 2", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 84, wcpm: 30, compScore: 75, assessments: 3, flag: null },
-  { id: "s30", name: "Nikhil Panchal", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2", "L3"], accuracy: 91, wcpm: 44, compScore: 90, assessments: 4, flag: null },
-  { id: "s31", name: "Om Vania", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 86, wcpm: 34, compScore: 80, assessments: 3, flag: null },
-  { id: "s32", name: "Pooja Damor", grade: "Grade 1-A", lang: "Gujarati", level: "L4", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 99, wcpm: 75, compScore: 100, assessments: 7, flag: null },
-  { id: "s33", name: "Rohan Makwana", grade: "Grade 1-B", lang: "English", level: "L2", tier: "Tier 2", lastAssessed: "2 days ago", journey: ["L1", "L2"], accuracy: 85, wcpm: 33, compScore: 70, assessments: 4, flag: null },
-  { id: "s34", name: "Shruti Thakar", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L2", "L3"], accuracy: 93, wcpm: 51, compScore: 95, assessments: 5, flag: null },
-  { id: "s35", name: "Tushti Upadhyay", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 87, wcpm: 37, compScore: 85, assessments: 3, flag: null },
-  { id: "s36", name: "Urvi Garange", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1"], accuracy: 68, wcpm: 20, compScore: 60, assessments: 2, flag: null },
-  { id: "s37", name: "Vatsal Sisodiya", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 3", lastAssessed: "3 days ago", journey: ["L1", "L2"], accuracy: 83, wcpm: 31, compScore: 75, assessments: 3, flag: null },
-  { id: "s38", name: "Yash Katara", grade: "Grade 1-A", lang: "English", level: "L3", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2", "L3"], accuracy: 92, wcpm: 48, compScore: 90, assessments: 5, flag: null },
-  { id: "s39", name: "Zoya Merchant", grade: "Grade 1-B", lang: "Gujarati", level: "L4", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 97, wcpm: 71, compScore: 100, assessments: 8, flag: null },
-  { id: "s40", name: "Dhairya Sanghavi", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 85, wcpm: 33, compScore: 80, assessments: 4, flag: null }
-];
