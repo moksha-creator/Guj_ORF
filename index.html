@@ -173,9 +173,14 @@
 
                 <!-- Listening Experience Indicator & Mic -->
                 <div class="listening-experience-box">
-                    <div class="listening-indicator" id="listening-indicator">
-                        <div class="pulse-ring"></div>
-                        <span class="material-icons-round mic-icon">mic</span>
+                    <div class="waveform-wrapper">
+                        <div class="waveform-dots" id="waveform-dots">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <div class="listening-indicator" id="listening-indicator" onclick="toggleRealSpeechRecognition()" title="Tap to toggle Microphone">
+                            <div class="pulse-ring"></div>
+                            <span class="material-icons-round mic-icon" id="mic-icon-btn">mic</span>
+                        </div>
                     </div>
                     <div class="listening-label" id="listening-label">Listening... Speak clearly</div>
                     <button class="btn-secondary btn-simulate-read" onclick="simulateWordSpeech()">

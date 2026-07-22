@@ -499,19 +499,45 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
     display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: auto;
 }
 
-.listening-indicator {
-    position: relative; width: 64px; height: 64px; border-radius: 50%;
-    background: var(--md-sys-color-primary); color: white; display: flex; align-items: center; justify-content: center;
-}
-.listening-indicator .mic-icon { font-size: 32px; z-index: 2; }
-.listening-indicator .pulse-ring {
-    position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px;
-    border-radius: 50%; border: 3px solid var(--md-sys-color-primary);
-    animation: micPulse 1.6s infinite ease-out; opacity: 0.6;
+.waveform-wrapper {
+    position: relative; display: flex; align-items: center; justify-content: center;
 }
 
+.waveform-dots {
+    display: flex; gap: 6px; align-items: center; position: absolute; left: -70px; right: -70px; justify-content: space-between; pointer-events: none;
+}
+.waveform-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: #93C5FD;
+    animation: wavePulse 1.2s infinite ease-in-out alternate;
+}
+.waveform-dots span:nth-child(1) { animation-delay: 0.1s; }
+.waveform-dots span:nth-child(2) { animation-delay: 0.3s; }
+.waveform-dots span:nth-child(3) { animation-delay: 0.5s; }
+.waveform-dots span:nth-child(4) { animation-delay: 0.2s; }
+.waveform-dots span:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes wavePulse {
+    0% { transform: scale(1); opacity: 0.4; }
+    100% { transform: scale(2.2); opacity: 1; background: var(--md-sys-color-primary); }
+}
+
+.listening-indicator {
+    position: relative; width: 68px; height: 68px; border-radius: 50%;
+    background: var(--md-sys-color-primary); color: white; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 6px 18px rgba(63, 81, 181, 0.3); transition: all 0.3s;
+}
+.listening-indicator:hover { transform: scale(1.06); }
+.listening-indicator.listening-active { background: #2563EB; }
+.listening-indicator.listening-active .pulse-ring {
+    position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px;
+    border-radius: 50%; border: 3px solid #60A5FA;
+    animation: micPulse 1.4s infinite ease-out; opacity: 0.8;
+}
+
+.listening-indicator.processing { background: #EAB308; }
+
 @keyframes micPulse {
-    0% { transform: scale(0.9); opacity: 0.8; }
+    0% { transform: scale(0.95); opacity: 0.9; }
     100% { transform: scale(1.4); opacity: 0; }
 }
 

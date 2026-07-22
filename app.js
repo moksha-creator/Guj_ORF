@@ -19,6 +19,12 @@ let studentSampleCount = 1; // 1, 2, or 3 samples per student session
 let activeCountdownInterval = null;
 let simulatedSpeechTimeout = null;
 
+// Real Web Speech API State
+let speechRecognition = null;
+let isRealListening = false;
+let currentTargetWordList = [];
+let currentMatchedWordIndex = 0;
+
 // Roster Mock Data for Home Screen
 let rosterStudents = [
     { name: "Aarav Patel", status: "waiting", id: "04" },
@@ -38,6 +44,198 @@ function showScreen(targetScreen) {
     });
     targetScreen.classList.remove('hidden');
     targetScreen.classList.add('active');
+}
+
+// Initialize Speech Recognition Engine
+function initSpeechRecognitionEngine() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        speechRecognition = new SpeechRecognition();
+        speechRecognition.continuous = true;
+        speechRecognition.interimResults = true;
+        speechRecognition.lang = 'en-IN'; // English (India)
+
+        speechRecognition.onstart = () => {
+            isRealListening = true;
+            updateMicUI('listening');
+        };
+
+        speechRecognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            const spokenText = (finalTranscript + ' ' + interimTranscript).toLowerCase().trim();
+            processSpokenTranscript(spokenText);
+        };
+
+        speechRecognition.onerror = (event) => {
+            console.log("Speech recognition error:", event.error);
+            if (event.error !== 'no-speech') {
+                updateMicUI('error');
+            }
+        };
+
+        speechRecognition.onend = () => {
+            if (isRealListening && screens.ACTIVITY.classList.contains('active')) {
+                try { speechRecognition.start(); } catch (e) {}
+            } else {
+                isRealListening = false;
+                updateMicUI('idle');
+            }
+        };
+    }
+}
+
+function startRealSpeechRecognition() {
+    if (!speechRecognition) initSpeechRecognitionEngine();
+    if (speechRecognition && !isRealListening) {
+        try {
+            speechRecognition.start();
+            isRealListening = true;
+            updateMicUI('listening');
+        } catch (e) {
+            console.log("Recognition start error:", e);
+        }
+    }
+}
+
+function stopRealSpeechRecognition() {
+    isRealListening = false;
+    if (speechRecognition) {
+        try { speechRecognition.stop(); } catch (e) {}
+    }
+    updateMicUI('idle');
+}
+
+function toggleRealSpeechRecognition() {
+    if (isRealListening) {
+        stopRealSpeechRecognition();
+    } else {
+        startRealSpeechRecognition();
+    }
+}
+
+function updateMicUI(state) {
+    const indicator = document.getElementById('listening-indicator');
+    const label = document.getElementById('listening-label');
+    const dots = document.getElementById('waveform-dots');
+
+    if (!indicator || !label) return;
+
+    if (state === 'listening') {
+        indicator.className = 'listening-indicator listening-active';
+        label.innerText = 'Listening... Speak clearly';
+        if (dots) dots.style.display = 'flex';
+    } else if (state === 'processing') {
+        indicator.className = 'listening-indicator processing';
+        label.innerText = 'Processing speech...';
+    } else {
+        indicator.className = 'listening-indicator';
+        label.innerText = 'Tap mic to start listening';
+        if (dots) dots.style.display = 'none';
+    }
+}
+
+// Process Real Spoken Words against Target Content
+function processSpokenTranscript(spokenText) {
+    if (!spokenText || currentTargetWordList.length === 0) return;
+
+    const spokenTokens = spokenText.split(/\s+/);
+
+    if (currentTemplate === 'WORD_READ_TEXT') {
+        const target = currentTargetWordList[0].toLowerCase();
+        if (spokenText.includes(target)) {
+            const el = document.getElementById('target-text-display');
+            if (el) el.classList.add('highlight-green');
+            updateMicUI('processing');
+            setTimeout(() => {
+                completeAssessmentSampleStep();
+            }, 1000);
+        }
+    }
+    else if (currentTemplate === 'WORD_IMAGE_NAMING') {
+        const target = currentTargetWordList[0].toLowerCase();
+        if (spokenText.includes(target)) {
+            const revealed = document.getElementById('image-word-revealed');
+            if (revealed) revealed.classList.remove('hidden');
+            updateMicUI('processing');
+            setTimeout(() => {
+                completeAssessmentSampleStep();
+            }, 1200);
+        }
+    }
+    else if (currentTemplate === 'WORD_READ_SET_TEXT') {
+        // Match against 5 card words
+        currentTargetWordList.forEach((w, idx) => {
+            if (spokenText.includes(w.toLowerCase())) {
+                const card = document.getElementById(`set-card-${idx}`);
+                if (card) card.classList.add('highlight-read');
+            }
+        });
+
+        const allRead = currentTargetWordList.every((w, idx) => {
+            const card = document.getElementById(`set-card-${idx}`);
+            return card && card.classList.contains('highlight-read');
+        });
+
+        if (allRead) {
+            updateMicUI('processing');
+            setTimeout(() => {
+                completeAssessmentSampleStep();
+            }, 1000);
+        }
+    }
+    else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
+        const target = currentTargetWordList[0].toLowerCase();
+        if (spokenText.includes(target)) {
+            const blank = document.getElementById('cloze-blank-target');
+            if (blank) {
+                blank.innerText = target;
+                blank.style.color = '#2E7D32';
+            }
+            updateMicUI('processing');
+            setTimeout(() => {
+                completeAssessmentSampleStep();
+            }, 1200);
+        }
+    }
+    else if (currentTemplate.includes('SENTENCE') || currentTemplate.includes('PASSAGE')) {
+        // Sequential word matching
+        for (let i = currentMatchedWordIndex; i < currentTargetWordList.length; i++) {
+            const targetWord = currentTargetWordList[i].toLowerCase().replace(/[^\w]/g, '');
+            if (spokenTokens.some(st => st.includes(targetWord))) {
+                const span = document.getElementById(`word-${i}`);
+                if (span) span.classList.add('green');
+                currentMatchedWordIndex = i + 1;
+            }
+        }
+
+        if (currentMatchedWordIndex >= currentTargetWordList.length) {
+            updateMicUI('processing');
+            const levelData = PROTOTYPE_DATA[currentLevel];
+            const templateData = levelData.templates[currentTemplate];
+            const sampleList = templateData[currentTier] || templateData.tier1;
+            const sample = sampleList[sampleIndex % sampleList.length];
+
+            if (currentTemplate.includes('PASSAGE')) {
+                setTimeout(() => {
+                    showComprehensionPage(sample);
+                }, 800);
+            } else {
+                setTimeout(() => {
+                    completeAssessmentSampleStep();
+                }, 1000);
+            }
+        }
+    }
 }
 
 // Demo Bar Initialization & Handlers
@@ -157,6 +355,7 @@ function simulateProgression(action) {
 // SCREEN 1: TEACHER HOME
 // ==========================================
 function renderTeacherHome() {
+    stopRealSpeechRecognition();
     showScreen(screens.HOME);
     
     // Update Up Next Student
@@ -193,6 +392,7 @@ function triggerStartSession() {
 // SCREEN 2: TRANSITION SCREEN
 // ==========================================
 function startTransitionScreen(studentName) {
+    stopRealSpeechRecognition();
     showScreen(screens.TRANSITION);
     document.getElementById('transition-greeting').innerText = studentName;
     document.getElementById('transition-subheading').innerText = "Please come forward";
@@ -239,12 +439,17 @@ function renderCurrentActivity() {
     const sampleList = templateData[currentTier] || templateData.tier1;
     const sample = sampleList[sampleIndex % sampleList.length];
 
+    // Reset Target Word List & Match Index
+    currentTargetWordList = [];
+    currentMatchedWordIndex = 0;
+
     // Render by Template Type
     if (currentTemplate === 'WORD_READ_TEXT') {
+        currentTargetWordList = [sample.text];
         container.innerHTML = `<div class="display-word-text" id="target-text-display">${sample.text}</div>`;
     } 
     else if (currentTemplate === 'WORD_IMAGE_NAMING') {
-        // Image-Only Prompt (NO text displayed initially!)
+        currentTargetWordList = [sample.targetWord];
         container.innerHTML = `
             <div class="display-image-word">
                 <div class="image-emoji" style="font-size: 120px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));">${sample.image}</div>
@@ -253,7 +458,7 @@ function renderCurrentActivity() {
         `;
     }
     else if (currentTemplate === 'WORD_READ_SET_TEXT') {
-        // Robot speech bubble + 5-card layout UI
+        currentTargetWordList = sample.items.map(item => item.word);
         let cardsHtml = sample.items.map((item, idx) => `
             <div class="word-set-card theme-${item.colorTheme}" id="set-card-${idx}">
                 <div class="card-number-badge">${idx + 1}</div>
@@ -273,6 +478,7 @@ function renderCurrentActivity() {
         `;
     }
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
+        currentTargetWordList = [sample.target];
         let optionsHtml = sample.options.map(opt => `
             <div class="minimal-pair-option" onclick="selectMinimalPair(this, '${opt}', '${sample.target}')">${opt}</div>
         `).join('');
@@ -283,11 +489,13 @@ function renderCurrentActivity() {
     }
     else if (currentTemplate === 'SENTENCE_READ_TEXT' || currentTemplate === 'SENTENCE_READ_SET_TEXT') {
         const words = sample.text.split(' ');
+        currentTargetWordList = words;
         const wrappedWords = words.map((w, idx) => `<span class="word-span" id="word-${idx}">${w}</span>`).join(' ');
         container.innerHTML = `<div class="display-passage-text">${wrappedWords}</div>`;
     }
     else if (currentTemplate === 'SENTENCE_READ_TEXT_IMAGE') {
         const words = sample.text.split(' ');
+        currentTargetWordList = words;
         const wrappedWords = words.map((w, idx) => `<span class="word-span" id="word-${idx}">${w}</span>`).join(' ');
         container.innerHTML = `
             <div class="display-image-word" style="margin-bottom: 20px;">
@@ -297,6 +505,7 @@ function renderCurrentActivity() {
         `;
     }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
+        currentTargetWordList = [sample.target];
         container.innerHTML = `
             <div class="cloze-sentence-display">
                 ${sample.display} <span class="cloze-blank-box" id="cloze-blank-target">?</span>
@@ -306,6 +515,7 @@ function renderCurrentActivity() {
     }
     else if (currentTemplate === 'PASSAGE_READ_COMP' || currentTemplate === 'PASSAGE_READ_ADVANCED') {
         const words = sample.story.split(' ');
+        currentTargetWordList = words;
         const wrappedWords = words.map((w, idx) => `<span class="word-span" id="word-${idx}">${w}</span>`).join(' ');
         container.innerHTML = `
             <div style="display: flex; gap: 24px; align-items: center; width: 100%;">
@@ -314,10 +524,14 @@ function renderCurrentActivity() {
             </div>
         `;
     }
+
+    // Auto-start Speech Recognition on Screen 3
+    startRealSpeechRecognition();
 }
 
 // Dedicated Comprehension Screen (Screen 3b)
 function showComprehensionPage(sample) {
+    stopRealSpeechRecognition();
     showScreen(screens.COMPREHENSION);
 
     const levelData = PROTOTYPE_DATA[currentLevel];
@@ -343,8 +557,9 @@ function showComprehensionPage(sample) {
     });
 }
 
-// Simulate Speech / Per-Word Highlighting
+// Developer Tool: Simulate Speech / Per-Word Highlighting
 function simulateWordSpeech() {
+    updateMicUI('listening');
     const levelData = PROTOTYPE_DATA[currentLevel];
     const templateData = levelData.templates[currentTemplate];
     const sampleList = templateData[currentTier] || templateData.tier1;
@@ -354,6 +569,7 @@ function simulateWordSpeech() {
         const el = document.getElementById('target-text-display');
         if (el) {
             el.classList.add('highlight-green');
+            updateMicUI('processing');
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1000);
@@ -371,6 +587,7 @@ function simulateWordSpeech() {
                 cardIndex++;
             } else {
                 clearInterval(simulatedSpeechTimeout);
+                updateMicUI('processing');
                 setTimeout(() => {
                     completeAssessmentSampleStep();
                 }, 1000);
@@ -381,6 +598,7 @@ function simulateWordSpeech() {
         const revealed = document.getElementById('image-word-revealed');
         if (revealed) {
             revealed.classList.remove('hidden');
+            updateMicUI('processing');
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1200);
@@ -391,6 +609,7 @@ function simulateWordSpeech() {
         if (blank) {
             blank.innerText = sample.target;
             blank.style.color = '#2E7D32';
+            updateMicUI('processing');
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1200);
@@ -410,7 +629,7 @@ function simulateWordSpeech() {
                 wordIdx++;
             } else {
                 clearInterval(simulatedSpeechTimeout);
-                // If passage, transition to dedicated Comprehension Page (Screen 3b)!
+                updateMicUI('processing');
                 if (currentTemplate.includes('PASSAGE')) {
                     setTimeout(() => {
                         showComprehensionPage(sample);
@@ -428,6 +647,7 @@ function simulateWordSpeech() {
 function selectMinimalPair(elem, selected, target) {
     document.querySelectorAll('.minimal-pair-option').forEach(el => el.classList.remove('correct'));
     elem.classList.add('correct');
+    updateMicUI('processing');
     setTimeout(() => {
         completeAssessmentSampleStep();
     }, 1000);
@@ -435,6 +655,7 @@ function selectMinimalPair(elem, selected, target) {
 
 // 3-Sample Progression per Student Session
 function completeAssessmentSampleStep() {
+    stopRealSpeechRecognition();
     if (studentSampleCount < 3) {
         studentSampleCount++;
         sampleIndex++;
@@ -467,7 +688,9 @@ function completeAssessmentSampleStep() {
 
 // Pause & End Session Handlers
 function pauseSession() {
+    stopRealSpeechRecognition();
     alert("Session Paused. Click OK to resume.");
+    startRealSpeechRecognition();
 }
 
 function endAssessmentSessionPrompt() {
@@ -480,6 +703,7 @@ function endAssessmentSessionPrompt() {
 // SCREEN 4: SESSION COMPLETE SCREEN
 // ==========================================
 function triggerCelebrationConfetti() {
+    stopRealSpeechRecognition();
     const container = document.getElementById('confetti-container');
     container.innerHTML = '';
     const assessed = rosterStudents.filter(s => s.status === 'done').length;
@@ -506,4 +730,5 @@ function returnToHomeFromComplete() {
 
 // App Initialization
 initDemoControls();
+initSpeechRecognitionEngine();
 renderTeacherHome();
