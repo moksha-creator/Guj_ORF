@@ -862,7 +862,7 @@ function simulateProgression(action) {
 }
 
 // ==========================================
-// SCREEN 1: TEACHER HOME
+// SCREEN 1: TEACHER HOME (CONTROL CENTER REDESIGN)
 // ==========================================
 function renderTeacherHome() {
     isStepTransitioning = false;
@@ -878,38 +878,135 @@ function renderTeacherHome() {
     const langEl = document.getElementById('home-lang-track-label');
 
     if (titleEl) titleEl.innerText = AppState.config.schoolName;
-    if (subEl) subEl.innerText = AppState.config.district;
+    if (subEl) subEl.innerText = `${AppState.config.district} • ${AppState.config.grade}`;
     if (langEl) langEl.innerText = AppState.config.languageTrack;
 
-    // Calculate Coverage Stats from AppState.students
+    // Calculate Summary Metrics & Progress Bar
     const totalCount = AppState.students.length;
     const doneCount = AppState.students.filter(s => s.status === 'done').length;
+    const pendingCount = AppState.students.filter(s => s.status === 'waiting').length;
+    const absentCount = AppState.students.filter(s => s.status === 'absent').length;
     const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
+    const mTotal = document.getElementById('home-metric-total');
+    const mDone = document.getElementById('home-metric-completed');
+    const mPending = document.getElementById('home-metric-pending');
+    const mAbsent = document.getElementById('home-metric-absent');
     const countEl = document.getElementById('progress-text-count');
     const fillEl = document.getElementById('progress-bar-fill-large');
-    if (countEl) countEl.innerText = `${doneCount} / ${totalCount} Students Completed`;
+
+    if (mTotal) mTotal.innerText = totalCount;
+    if (mDone) mDone.innerText = doneCount;
+    if (mPending) mPending.innerText = pendingCount;
+    if (mAbsent) mAbsent.innerText = absentCount;
+    if (countEl) countEl.innerText = `${doneCount} / ${totalCount} Students (${percent}%)`;
     if (fillEl) fillEl.style.width = `${percent}%`;
 
-    // Find next unassessed student
-    const activeStudent = AppState.students.find(s => s.status === 'waiting') || AppState.students[0] || { name: 'Aarav Patel', grade: AppState.config.grade, id: 's1' };
-    currentStudentIndex = AppState.students.findIndex(s => s.id === activeStudent.id);
-    if (currentStudentIndex === -1) currentStudentIndex = 0;
+    // Quick Insights
+    const remTime = pendingCount * 3;
+    const timeRemEl = document.getElementById('insight-time-rem');
+    const pendEl = document.getElementById('insight-pending-count');
+    const absEl = document.getElementById('insight-absent-count');
+    const avgLvlEl = document.getElementById('insight-avg-level');
 
-    const nameEl = document.getElementById('up-next-student-name');
-    const subtextEl = document.getElementById('up-next-student-subtext');
-    if (nameEl) nameEl.innerText = activeStudent.name;
-    if (subtextEl) subtextEl.innerText = `Roll No. ${currentStudentIndex + 1 < 10 ? '0' : ''}${currentStudentIndex + 1} • ${activeStudent.grade || AppState.config.grade}`;
+    if (timeRemEl) timeRemEl.innerText = `~${remTime} mins remaining`;
+    if (pendEl) pendEl.innerText = `${pendingCount} pending`;
+    if (absEl) absEl.innerText = `${absentCount} absent today`;
+    if (avgLvlEl) avgLvlEl.innerText = `Avg Class Level: Level 2`;
 
-    // Render Queue Chips Strip from AppState.students
+    // Active Student / Hero Card
+    const heroCard = document.getElementById('hero-student-card');
+    const activeStudent = AppState.students.find(s => s.status === 'waiting');
+
+    if (activeStudent) {
+        currentStudentIndex = AppState.students.findIndex(s => s.id === activeStudent.id);
+        const nameEl = document.getElementById('up-next-student-name');
+        const subtextEl = document.getElementById('up-next-student-subtext');
+        const levelBadge = document.getElementById('hero-student-level-badge');
+        const heroContent = document.getElementById('hero-card-content');
+        const heroActions = document.getElementById('hero-card-actions');
+
+        if (heroContent) {
+            heroContent.style.display = 'flex';
+            heroContent.innerHTML = `
+                <div class="hero-avatar">
+                    <span class="material-icons-round">face</span>
+                </div>
+                <div class="hero-student-info">
+                    <span class="badge-pill hero-level-badge" id="hero-student-level-badge">${activeStudent.level} (${AppState.config.grade})</span>
+                    <h2 class="fredoka-text hero-student-name" id="up-next-student-name">${activeStudent.name}</h2>
+                    <p class="text-muted hero-student-details" id="up-next-student-subtext">Roll No. ${currentStudentIndex + 1 < 10 ? '0' : ''}${currentStudentIndex + 1} • ${activeStudent.grade || AppState.config.grade} • ${AppState.config.languageTrack} Track</p>
+                </div>
+            `;
+        }
+        if (heroActions) {
+            heroActions.style.display = 'flex';
+            heroActions.innerHTML = `
+                <button class="btn-primary btn-hero-start" onclick="triggerStartSession()">
+                    <span class="material-icons-round" style="font-size: 28px;">play_circle</span> Start Assessment
+                </button>
+                <button class="btn-secondary btn-hero-absent" onclick="markCurrentStudentAbsent()">
+                    <span class="material-icons-round">person_off</span> Mark Absent
+                </button>
+            `;
+        }
+    } else {
+        // ALL COMPLETED EMPTY STATE
+        currentStudentIndex = 0;
+        const heroContent = document.getElementById('hero-card-content');
+        const heroActions = document.getElementById('hero-card-actions');
+        if (heroContent) {
+            heroContent.style.display = 'flex';
+            heroContent.innerHTML = `
+                <div style="text-align: center; width: 100%; padding: 12px 0;">
+                    <span class="material-icons-round text-success" style="font-size: 54px; margin-bottom: 6px;">stars</span>
+                    <h2 class="fredoka-text text-success" style="font-size: 1.8rem;">Today's Assessments Complete!</h2>
+                    <p class="text-muted">All ${doneCount} scheduled student assessments have been finished.</p>
+                </div>
+            `;
+        }
+        if (heroActions) {
+            heroActions.style.display = 'flex';
+            heroActions.innerHTML = `
+                <button class="btn-primary" style="flex: 1; padding: 12px 20px;" onclick="openReportingFromSettings()">
+                    <span class="material-icons-round">assessment</span> View Reporting Dashboard
+                </button>
+                <button class="btn-secondary" style="padding: 12px 20px;" onclick="triggerResetConfiguration()">
+                    <span class="material-icons-round">restart_alt</span> Start New Cycle
+                </button>
+            `;
+        }
+    }
+
+    // Render Assessment Queue Grid
+    const qRemEl = document.getElementById('queue-remaining-badge');
+    if (qRemEl) qRemEl.innerText = `${pendingCount} remaining`;
+
     const strip = document.getElementById('queue-chips-strip');
     if (strip) {
         strip.innerHTML = '';
-        AppState.students.forEach(s => {
-            const chip = document.createElement('div');
-            chip.className = `chip-item ${s.status}`;
-            chip.innerText = s.name;
-            strip.appendChild(chip);
+        AppState.students.forEach((s, idx) => {
+            const isHero = activeStudent && s.id === activeStudent.id;
+            const item = document.createElement('div');
+            item.className = 'queue-student-item';
+
+            const statusClass = s.status === 'done' ? 'done' : isHero ? 'waiting' : s.status === 'absent' ? 'absent' : 'pending';
+            const statusText = s.status === 'done' ? '🟢 Completed' : isHero ? '🔵 Up Next' : s.status === 'absent' ? '🟠 Absent' : '⚪ Pending';
+
+            item.innerHTML = `
+                <div class="queue-student-left">
+                    <div class="queue-student-avatar"><span class="material-icons-round">face</span></div>
+                    <div>
+                        <div class="queue-student-name">${s.name}</div>
+                        <div style="font-size: 0.75rem; color: #64748B;">Roll No. ${idx + 1 < 10 ? '0' : ''}${idx + 1}</div>
+                    </div>
+                </div>
+                <div class="queue-student-right">
+                    <span class="badge-pill" style="font-size: 0.75rem; padding: 2px 8px;">${s.level}</span>
+                    <span class="q-badge ${statusClass}">${statusText}</span>
+                </div>
+            `;
+            strip.appendChild(item);
         });
     }
 }
