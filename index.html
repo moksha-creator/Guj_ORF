@@ -453,7 +453,7 @@
                     <button class="btn-icon" onclick="closeTeacherSettingsModal()"><span class="material-icons-round">close</span></button>
                 </div>
                 <div class="modal-body">
-                    <div class="settings-options-grid">
+                    <div class="settings-options-grid" style="margin-bottom: 24px;">
                         <div class="settings-option-card" onclick="openReportingFromSettings()">
                             <span class="material-icons-round option-icon text-primary">assessment</span>
                             <h3>Reporting Dashboard</h3>
@@ -463,6 +463,22 @@
                             <span class="material-icons-round option-icon text-secondary">restart_alt</span>
                             <h3>Reset Configuration</h3>
                             <p class="text-muted">Return app to initial setup flow and re-configure school settings.</p>
+                        </div>
+                    </div>
+
+                    <!-- Sound Effects Accessibility Controls -->
+                    <div class="card sfx-settings-card" style="text-align: left;">
+                        <h3 class="fredoka-text" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round text-primary">volume_up</span> Sound Effects (SFX)
+                        </h3>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                            <label for="sfx-enable-toggle" style="font-weight: 700;">Enable Audio Feedback:</label>
+                            <input type="checkbox" id="sfx-enable-toggle" checked style="width: 20px; height: 20px; cursor: pointer;" onchange="toggleSFXEnabled(this.checked)">
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                            <label for="sfx-volume-slider" style="font-weight: 700; width: 140px;">SFX Volume:</label>
+                            <input type="range" id="sfx-volume-slider" min="0" max="1" step="0.1" value="0.5" style="flex: 1; cursor: pointer;" onchange="updateSFXVolume(this.value)">
+                            <span id="sfx-volume-val" style="font-weight: 800; width: 40px;">50%</span>
                         </div>
                     </div>
                 </div>

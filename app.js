@@ -36,6 +36,167 @@ let lastSpeechTimestamp = Date.now();
 let silenceCheckerInterval = null;
 let micPermissionRequested = false;
 
+// ----------------------------------------------------
+// WEB AUDIO API SOUND EFFECTS (SFX) ENGINE
+// ----------------------------------------------------
+let audioCtx = null;
+let sfxEnabled = true;
+let sfxVolume = 0.5;
+
+function getAudioContext() {
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+            audioCtx = new AudioContext();
+        }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    return audioCtx;
+}
+
+function playSFX(type) {
+    if (!sfxEnabled) return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(sfxVolume, now);
+        masterGain.connect(ctx.destination);
+
+        if (type === 'tap') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(260, now);
+            osc.frequency.exponentialRampToValueAtTime(130, now + 0.04);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.04);
+        }
+        else if (type === 'mic_on') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(660, now + 0.15);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        }
+        else if (type === 'mic_off') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(550, now);
+            osc.frequency.exponentialRampToValueAtTime(330, now + 0.12);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        }
+        else if (type === 'word_tick') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(784, now);
+            osc.frequency.exponentialRampToValueAtTime(987, now + 0.035);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.035);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.035);
+        }
+        else if (type === 'success_chime') {
+            [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now + idx * 0.08);
+                osc.stop(now + idx * 0.08 + 0.25);
+            });
+        }
+        else if (type === 'transition') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(450, now + 0.08);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.08);
+        }
+        else if (type === 'timer_reminder') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, now);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        }
+        else if (type === 'level_up') {
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                gain.gain.setValueAtTime(0.22, now + idx * 0.07);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.3);
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start(now + idx * 0.07);
+                osc.stop(now + idx * 0.07 + 0.3);
+            });
+        }
+    } catch (e) {
+        console.warn("SFX Error:", e);
+    }
+}
+
+function toggleSFXEnabled(val) {
+    sfxEnabled = val;
+    if (val) playSFX('tap');
+}
+
+function updateSFXVolume(val) {
+    sfxVolume = parseFloat(val);
+    const label = document.getElementById('sfx-volume-val');
+    if (label) label.innerText = `${Math.round(sfxVolume * 100)}%`;
+    playSFX('tap');
+}
+
+// Global click event listener to play soft tap SFX on buttons and cards
+document.addEventListener('click', (e) => {
+    const target = e.target.closest('button, .card, .chip-item, .rep-tab-btn, .settings-option-card, .minimal-pair-option, .comp-option-page-btn');
+    if (target) {
+        playSFX('tap');
+    }
+});
+
 // Roster Mock Data for Home Screen
 let rosterStudents = [
     { name: "Aarav Patel", status: "waiting", id: "s1" },
@@ -50,6 +211,7 @@ let currentStudentIndex = 0;
 // Screen Router
 function showScreen(targetScreen) {
     if (!targetScreen) return;
+    playSFX('transition');
     Object.values(screens).forEach(s => {
         if (s) {
             s.classList.remove('active');
@@ -71,6 +233,10 @@ function startAssessmentTimer() {
     assessmentTimerInterval = setInterval(() => {
         assessmentTimerSeconds--;
         updateTimerBadgesDisplay();
+
+        if (assessmentTimerSeconds === 60) {
+            playSFX('timer_reminder'); // Single soft reminder tone at 1 minute remaining
+        }
 
         if (assessmentTimerSeconds <= 0) {
             clearInterval(assessmentTimerInterval);
@@ -174,6 +340,7 @@ function initSpeechRecognitionEngine() {
 
             speechRecognition.onstart = () => {
                 isRealListening = true;
+                playSFX('mic_on');
                 updateMicUI('listening');
                 startSilenceChecker();
             };
@@ -214,6 +381,7 @@ function initSpeechRecognitionEngine() {
                     try { speechRecognition.start(); } catch (e) {}
                 } else {
                     isRealListening = false;
+                    playSFX('mic_off');
                     updateMicUI('idle');
                 }
             };
@@ -250,6 +418,7 @@ function launchRecognitionInstance() {
         try {
             speechRecognition.start();
             isRealListening = true;
+            playSFX('mic_on');
             updateMicUI('listening');
             startSilenceChecker();
         } catch (e) {
@@ -259,6 +428,7 @@ function launchRecognitionInstance() {
 }
 
 function stopRealSpeechRecognition() {
+    if (isRealListening) playSFX('mic_off');
     isRealListening = false;
     if (silenceCheckerInterval) clearInterval(silenceCheckerInterval);
     if (speechRecognition) {
@@ -315,6 +485,7 @@ function processSpokenTranscriptStream(spokenText) {
     if (currentTemplate === 'WORD_READ_TEXT') {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
+            playSFX('word_tick');
             const el = document.getElementById('target-text-display');
             if (el) el.classList.add('highlight-green');
             updateMicUI('processing');
@@ -327,6 +498,7 @@ function processSpokenTranscriptStream(spokenText) {
     else if (currentTemplate === 'WORD_IMAGE_NAMING') {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
+            playSFX('word_tick');
             const revealed = document.getElementById('image-word-revealed');
             if (revealed) revealed.classList.remove('hidden');
             updateMicUI('processing');
@@ -341,7 +513,10 @@ function processSpokenTranscriptStream(spokenText) {
             const target = w.toLowerCase();
             if (spokenTokens.some(st => st === target || st.includes(target))) {
                 const card = document.getElementById(`set-card-${idx}`);
-                if (card) card.classList.add('highlight-read');
+                if (card && !card.classList.contains('highlight-read')) {
+                    card.classList.add('highlight-read');
+                    playSFX('word_tick');
+                }
             }
         });
 
@@ -361,6 +536,7 @@ function processSpokenTranscriptStream(spokenText) {
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
+            playSFX('word_tick');
             const targetOptEl = document.getElementById(`min-option-${target}`);
             if (targetOptEl) targetOptEl.classList.add('correct');
             updateMicUI('processing');
@@ -373,6 +549,7 @@ function processSpokenTranscriptStream(spokenText) {
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
+            playSFX('word_tick');
             const blank = document.getElementById('cloze-blank-target');
             if (blank) {
                 blank.innerText = target;
@@ -405,7 +582,10 @@ function processSpokenTranscriptStream(spokenText) {
                 }
 
                 const span = document.getElementById(`word-${foundIdx}`);
-                if (span) span.classList.add('green');
+                if (span && !span.classList.contains('green')) {
+                    span.classList.add('green');
+                    playSFX('word_tick');
+                }
                 currentMatchedWordIndex = foundIdx + 1;
                 break;
             }
@@ -505,6 +685,7 @@ function simulateProgression(action) {
     let prevTier = currentTier;
 
     if (action === 'Advance') {
+        playSFX('level_up');
         icon.innerText = 'north_east';
         icon.style.color = '#7ED957';
         title.innerText = 'Advancing Progression';
@@ -518,12 +699,14 @@ function simulateProgression(action) {
         subtitle.innerText = `${prevLvl} (${prevTier})  ➔  ${currentLevel} (${currentTier})`;
     } 
     else if (action === 'Stay') {
+        playSFX('tap');
         icon.innerText = 'remove';
         icon.style.color = '#FF9800';
         title.innerText = 'Maintaining Level';
         subtitle.innerText = `Continue practicing at ${currentLevel} (${currentTier})`;
     } 
     else if (action === 'Move Down') {
+        playSFX('tap');
         icon.innerText = 'south_east';
         icon.style.color = '#EF5350';
         title.innerText = 'Adjusting Support';
@@ -803,6 +986,7 @@ function showComprehensionPage(sample) {
         btn.onclick = () => {
             if (isStepTransitioning) return;
             isStepTransitioning = true;
+            playSFX('success_chime');
             document.querySelectorAll('.comp-option-page-btn').forEach(b => b.classList.remove('selected-correct'));
             btn.classList.add('selected-correct');
             setTimeout(() => {
@@ -831,6 +1015,7 @@ function simulateWordSpeech() {
         updateLiveTranscriptText(sample.text);
         const el = document.getElementById('target-text-display');
         if (el) {
+            playSFX('word_tick');
             el.classList.add('highlight-green');
             updateMicUI('processing');
             isStepTransitioning = true;
@@ -851,7 +1036,10 @@ function simulateWordSpeech() {
                 updateLiveTranscriptText(simulatedTranscript.join(' '));
 
                 const card = document.getElementById(`set-card-${cardIndex}`);
-                if (card) card.classList.add('highlight-read');
+                if (card) {
+                    playSFX('word_tick');
+                    card.classList.add('highlight-read');
+                }
                 cardIndex++;
             } else {
                 clearInterval(simulatedSpeechTimeout);
@@ -868,6 +1056,7 @@ function simulateWordSpeech() {
         updateLiveTranscriptText(targetWord);
         const targetOptEl = document.getElementById(`min-option-${targetWord.toLowerCase()}`);
         if (targetOptEl) {
+            playSFX('word_tick');
             targetOptEl.classList.add('correct');
             updateMicUI('processing');
             isStepTransitioning = true;
@@ -880,6 +1069,7 @@ function simulateWordSpeech() {
         updateLiveTranscriptText(sample.targetWord);
         const revealed = document.getElementById('image-word-revealed');
         if (revealed) {
+            playSFX('word_tick');
             revealed.classList.remove('hidden');
             updateMicUI('processing');
             isStepTransitioning = true;
@@ -892,6 +1082,7 @@ function simulateWordSpeech() {
         updateLiveTranscriptText(sample.target);
         const blank = document.getElementById('cloze-blank-target');
         if (blank) {
+            playSFX('word_tick');
             blank.innerText = sample.target;
             blank.style.color = '#2E7D32';
             updateMicUI('processing');
@@ -915,7 +1106,10 @@ function simulateWordSpeech() {
                 updateLiveTranscriptText(simulatedWords.join(' '));
 
                 const span = document.getElementById(`word-${wordIdx}`);
-                if (span) span.classList.add('green');
+                if (span) {
+                    playSFX('word_tick');
+                    span.classList.add('green');
+                }
                 wordIdx++;
             } else {
                 clearInterval(simulatedSpeechTimeout);
@@ -939,6 +1133,7 @@ function simulateWordSpeech() {
 function selectMinimalPair(elem, selected, target) {
     if (isStepTransitioning) return;
     isStepTransitioning = true;
+    playSFX('word_tick');
     document.querySelectorAll('.minimal-pair-option').forEach(el => el.classList.remove('correct'));
     elem.classList.add('correct');
     updateLiveTranscriptText(selected);
@@ -950,6 +1145,7 @@ function selectMinimalPair(elem, selected, target) {
 
 // 3-Sample Progression per Student Session
 function completeAssessmentSampleStep() {
+    playSFX('success_chime');
     if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
     stopRealSpeechRecognition();
 
@@ -1010,6 +1206,7 @@ function triggerCelebrationConfetti() {
     stopRealSpeechRecognition();
     stopAssessmentTimer();
     clearLiveTranscript();
+    playSFX('level_up');
     const container = document.getElementById('confetti-container');
     if (!container) return;
     container.innerHTML = '';
