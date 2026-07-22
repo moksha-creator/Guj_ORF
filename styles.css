@@ -50,30 +50,43 @@ body {
 .screen { display: none; height: 100%; width: 100%; position: absolute; top:0; left:0; flex-direction: column; padding: var(--spacing-base); overflow-y: auto; }
 .screen.active { display: flex; }
 
-/* --- Typography --- */
+/* --- Typography (Laptop/Tablet Scale) --- */
 h1, h2, h3, h4, .fredoka-text { font-family: var(--md-typeface-brand); font-weight: 600; }
-h1 { font-size: 2.5rem; line-height: 1.2; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.5rem; }
-p { font-size: 1.1rem; line-height: 1.5; }
+h1 { font-size: 2rem; line-height: 1.2; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.25rem; }
+p { font-size: 1rem; line-height: 1.5; }
 .text-muted { color: var(--md-sys-color-on-surface-variant); }
 .text-primary { color: var(--md-sys-color-primary); }
 
-/* --- Cards --- */
+/* --- Cards & Containers --- */
 .card, .reading-card {
     background: var(--md-sys-color-surface);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-base);
+    border-radius: 16px;
+    padding: 20px;
     border: 1px solid var(--md-sys-color-outline);
-    box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+    box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.15);
     transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-/* --- Buttons --- */
+/* --- Screen Container & Routing --- */
+.screen { 
+    display: none; 
+    height: 100%; 
+    width: 100%; 
+    max-width: 1240px; 
+    margin: 0 auto; 
+    position: relative; 
+    flex-direction: column; 
+    padding: 20px 24px; 
+    overflow-y: auto; 
+}
+
+/* --- Buttons (Laptop Proportions) --- */
 button {
-    font-family: var(--md-typeface-brand); font-weight: 500; font-size: 1.25rem;
+    font-family: var(--md-typeface-brand); font-weight: 500; font-size: 1.05rem;
     border: none; cursor: pointer; border-radius: var(--radius-pill);
-    padding: 14px 28px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 22px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); outline: none;
 }
 button:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
@@ -114,15 +127,15 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
 .chip.status-done { background: var(--success); color: white; }
 .chip.status-absent { background: var(--accent); color: white; }
 
-/* --- Activity Screens --- */
-#screen-03-activity { align-items: center; justify-content: center; padding-bottom: 120px;}
+/* --- Activity Screens (Laptop Scale) --- */
+#screen-03-activity { align-items: center; justify-content: center; padding-bottom: 80px;}
 .reading-card {
-    background: var(--card-bg); border-radius: var(--radius-lg); padding: 48px;
-    width: 60%; max-width: 900px; text-align: center;
-    box-shadow: 0 8px 16px rgba(36, 48, 66, 0.05); margin-bottom: 48px;
+    background: var(--card-bg); border-radius: 20px; padding: 36px;
+    width: 90%; max-width: 800px; text-align: center;
+    box-shadow: 0 4px 12px rgba(36, 48, 66, 0.08); margin-bottom: 24px;
 }
-.word-text { font-size: 96px; font-weight: 900; }
-.sentence-text, .passage-text { font-size: 48px; line-height: 1.5; font-weight: 700; text-align: left; }
+.word-text { font-size: 64px; font-weight: 800; }
+.sentence-text, .passage-text { font-size: 32px; line-height: 1.45; font-weight: 600; text-align: left; }
 .highlight { background-color: rgba(91, 124, 250, 0.2); border-radius: 8px; padding: 0 4px;}
 
 .meaning-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; width: 60%; max-width: 900px; }
