@@ -28,6 +28,7 @@ let speechRecognition = null;
 let isRealListening = false;
 let currentTargetWordList = [];
 let currentMatchedWordIndex = 0;
+let isStepTransitioning = false; // Flag to prevent rapid double transitions
 
 // Speech Error Handling & Silence Tracker
 let lastSpeechTimestamp = Date.now();
@@ -72,7 +73,6 @@ function startAssessmentTimer() {
 
         if (assessmentTimerSeconds <= 0) {
             clearInterval(assessmentTimerInterval);
-            // Session Time-Out: Auto navigate to Session Complete
             stopRealSpeechRecognition();
             showScreen(screens.END);
             triggerCelebrationConfetti();
@@ -169,7 +169,7 @@ function initSpeechRecognitionEngine() {
             speechRecognition = new SpeechRecognition();
             speechRecognition.continuous = true;
             speechRecognition.interimResults = true;
-            speechRecognition.lang = 'en-US'; // Standard English recognition
+            speechRecognition.lang = 'en-US';
 
             speechRecognition.onstart = () => {
                 isRealListening = true;
@@ -178,6 +178,8 @@ function initSpeechRecognitionEngine() {
             };
 
             speechRecognition.onresult = (event) => {
+                if (isStepTransitioning) return; // Ignore residual speech during page transitions
+
                 let interimTranscript = '';
                 let finalTranscript = '';
 
@@ -226,12 +228,10 @@ function initSpeechRecognitionEngine() {
 function startRealSpeechRecognition() {
     if (!speechRecognition) initSpeechRecognitionEngine();
 
-    // Explicitly request microphone stream permission from browser
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !micPermissionRequested) {
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 micPermissionRequested = true;
-                // Stop temporary mic stream once permission is granted
                 stream.getTracks().forEach(track => track.stop());
                 launchRecognitionInstance();
             })
@@ -307,7 +307,7 @@ function updateMicUI(state) {
 // STREAMING WORD MATCHING & SKIP / ADVANCE LOGIC
 // ----------------------------------------------------
 function processSpokenTranscriptStream(spokenText) {
-    if (!spokenText || currentTargetWordList.length === 0) return;
+    if (isStepTransitioning || !spokenText || currentTargetWordList.length === 0) return;
 
     const spokenTokens = spokenText.split(/\s+/).map(t => t.replace(/[^\w]/g, ''));
 
@@ -317,6 +317,7 @@ function processSpokenTranscriptStream(spokenText) {
             const el = document.getElementById('target-text-display');
             if (el) el.classList.add('highlight-green');
             updateMicUI('processing');
+            isStepTransitioning = true;
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1000);
@@ -328,13 +329,13 @@ function processSpokenTranscriptStream(spokenText) {
             const revealed = document.getElementById('image-word-revealed');
             if (revealed) revealed.classList.remove('hidden');
             updateMicUI('processing');
+            isStepTransitioning = true;
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1200);
         }
     }
     else if (currentTemplate === 'WORD_READ_SET_TEXT') {
-        // Match against 5 card words with skip tolerance
         currentTargetWordList.forEach((w, idx) => {
             const target = w.toLowerCase();
             if (spokenTokens.some(st => st === target || st.includes(target))) {
@@ -350,6 +351,7 @@ function processSpokenTranscriptStream(spokenText) {
 
         if (allRead) {
             updateMicUI('processing');
+            isStepTransitioning = true;
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1000);
@@ -364,6 +366,7 @@ function processSpokenTranscriptStream(spokenText) {
                 blank.style.color = '#2E7D32';
             }
             updateMicUI('processing');
+            isStepTransitioning = true;
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1200);
@@ -374,7 +377,6 @@ function processSpokenTranscriptStream(spokenText) {
         for (let i = currentMatchedWordIndex; i < currentTargetWordList.length; i++) {
             const targetWord = currentTargetWordList[i].toLowerCase().replace(/[^\w]/g, '');
             
-            // Check if target word or a future word was spoken
             let foundIdx = -1;
             for (let lookahead = i; lookahead < Math.min(i + 3, currentTargetWordList.length); lookahead++) {
                 const futureTarget = currentTargetWordList[lookahead].toLowerCase().replace(/[^\w]/g, '');
@@ -385,10 +387,9 @@ function processSpokenTranscriptStream(spokenText) {
             }
 
             if (foundIdx !== -1) {
-                // If skipped words, mark skipped words internally and highlight matched word
                 for (let skip = currentMatchedWordIndex; skip < foundIdx; skip++) {
                     const skippedSpan = document.getElementById(`word-${skip}`);
-                    if (skippedSpan) skippedSpan.classList.add('missed'); // subtle skipped indicator
+                    if (skippedSpan) skippedSpan.classList.add('missed');
                 }
 
                 const span = document.getElementById(`word-${foundIdx}`);
@@ -398,8 +399,11 @@ function processSpokenTranscriptStream(spokenText) {
             }
         }
 
-        if (currentMatchedWordIndex >= currentTargetWordList.length) {
+        // Complete passage/sentence only after all words matched
+        if (currentMatchedWordIndex > 0 && currentMatchedWordIndex >= currentTargetWordList.length) {
             updateMicUI('processing');
+            isStepTransitioning = true;
+
             const levelData = PROTOTYPE_DATA[currentLevel];
             const templateData = levelData.templates[currentTemplate];
             const sampleList = templateData[currentTier] || templateData.tier1;
@@ -522,7 +526,6 @@ function simulateProgression(action) {
         subtitle.innerText = `${prevLvl} (${prevTier})  ➔  ${currentLevel} (${currentTier})`;
     }
 
-    // Sync Dropdowns
     const levelSelect = document.getElementById('demo-level-select');
     const tierSelect = document.getElementById('demo-tier-select');
     if (levelSelect) levelSelect.value = currentLevel;
@@ -533,7 +536,6 @@ function simulateProgression(action) {
     sampleIndex = 0;
     studentSampleCount = 1;
 
-    // Show Toast
     if (toast) {
         toast.classList.remove('hidden');
         setTimeout(() => {
@@ -541,7 +543,6 @@ function simulateProgression(action) {
         }, 2800);
     }
 
-    // If currently on activity screen, re-render
     if (screens.ACTIVITY.classList.contains('active') || screens.COMPREHENSION.classList.contains('active')) {
         renderCurrentActivity();
     }
@@ -551,17 +552,17 @@ function simulateProgression(action) {
 // SCREEN 1: TEACHER HOME
 // ==========================================
 function renderTeacherHome() {
+    isStepTransitioning = false;
+    if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
     stopRealSpeechRecognition();
     stopAssessmentTimer();
     clearLiveTranscript();
     showScreen(screens.HOME);
     
-    // Update Up Next Student
     const student = rosterStudents[currentStudentIndex] || rosterStudents[0];
     const nameEl = document.getElementById('up-next-student-name');
     if (nameEl) nameEl.innerText = student.name;
 
-    // Render Queue Strip
     const strip = document.getElementById('queue-chips-strip');
     if (strip) {
         strip.innerHTML = '';
@@ -593,6 +594,8 @@ function triggerStartSession() {
 // SCREEN 2: TRANSITION SCREEN
 // ==========================================
 function startTransitionScreen(studentName) {
+    isStepTransitioning = false;
+    if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
     stopRealSpeechRecognition();
     clearLiveTranscript();
     showScreen(screens.TRANSITION);
@@ -630,17 +633,18 @@ function startTransitionScreen(studentName) {
 // SCREEN 3: ASSESSMENT ACTIVITY
 // ==========================================
 function renderCurrentActivity() {
+    if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
+    isStepTransitioning = false;
     clearLiveTranscript();
+
     const levelData = PROTOTYPE_DATA[currentLevel];
     if (!levelData) return;
 
     const templateData = levelData.templates[currentTemplate];
     if (!templateData) return;
 
-    // Show Assessment Screen
     showScreen(screens.ACTIVITY);
 
-    // Update Badges, Counter & Instruction
     const lvlBadge = document.getElementById('activity-level-badge');
     const tmplBadge = document.getElementById('activity-template-badge');
     const counterBadge = document.getElementById('activity-sample-counter');
@@ -746,7 +750,6 @@ function renderCurrentActivity() {
         `;
     }
 
-    // Auto-start Speech Recognition on Screen 3 safely
     try {
         startRealSpeechRecognition();
     } catch (e) {
@@ -756,6 +759,7 @@ function renderCurrentActivity() {
 
 // Dedicated Comprehension Screen (Screen 3b)
 function showComprehensionPage(sample) {
+    if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
     stopRealSpeechRecognition();
     clearLiveTranscript();
     showScreen(screens.COMPREHENSION);
@@ -778,6 +782,8 @@ function showComprehensionPage(sample) {
         btn.className = 'comp-option-page-btn';
         btn.innerText = opt;
         btn.onclick = () => {
+            if (isStepTransitioning) return;
+            isStepTransitioning = true;
             document.querySelectorAll('.comp-option-page-btn').forEach(b => b.classList.remove('selected-correct'));
             btn.classList.add('selected-correct');
             setTimeout(() => {
@@ -790,7 +796,9 @@ function showComprehensionPage(sample) {
 
 // Developer Tool: Simulate Speech / Per-Word Highlighting
 function simulateWordSpeech() {
+    if (isStepTransitioning) return;
     updateMicUI('listening');
+
     const levelData = PROTOTYPE_DATA[currentLevel];
     const templateData = levelData ? levelData.templates[currentTemplate] : null;
     if (!templateData) return;
@@ -806,6 +814,7 @@ function simulateWordSpeech() {
         if (el) {
             el.classList.add('highlight-green');
             updateMicUI('processing');
+            isStepTransitioning = true;
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1000);
@@ -828,6 +837,7 @@ function simulateWordSpeech() {
             } else {
                 clearInterval(simulatedSpeechTimeout);
                 updateMicUI('processing');
+                isStepTransitioning = true;
                 setTimeout(() => {
                     completeAssessmentSampleStep();
                 }, 1000);
@@ -840,6 +850,7 @@ function simulateWordSpeech() {
         if (revealed) {
             revealed.classList.remove('hidden');
             updateMicUI('processing');
+            isStepTransitioning = true;
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1200);
@@ -852,6 +863,7 @@ function simulateWordSpeech() {
             blank.innerText = sample.target;
             blank.style.color = '#2E7D32';
             updateMicUI('processing');
+            isStepTransitioning = true;
             setTimeout(() => {
                 completeAssessmentSampleStep();
             }, 1200);
@@ -876,6 +888,8 @@ function simulateWordSpeech() {
             } else {
                 clearInterval(simulatedSpeechTimeout);
                 updateMicUI('processing');
+                isStepTransitioning = true;
+
                 if (currentTemplate.includes('PASSAGE')) {
                     setTimeout(() => {
                         showComprehensionPage(sample);
@@ -891,6 +905,8 @@ function simulateWordSpeech() {
 }
 
 function selectMinimalPair(elem, selected, target) {
+    if (isStepTransitioning) return;
+    isStepTransitioning = true;
     document.querySelectorAll('.minimal-pair-option').forEach(el => el.classList.remove('correct'));
     elem.classList.add('correct');
     updateLiveTranscriptText(selected);
@@ -902,7 +918,9 @@ function selectMinimalPair(elem, selected, target) {
 
 // 3-Sample Progression per Student Session
 function completeAssessmentSampleStep() {
+    if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
     stopRealSpeechRecognition();
+
     if (studentSampleCount < 3) {
         studentSampleCount++;
         sampleIndex++;
@@ -915,7 +933,6 @@ function completeAssessmentSampleStep() {
             rosterStudents[currentStudentIndex].status = 'done';
         }
 
-        // Show completion screen or transition back
         showScreen(screens.TRANSITION);
         const greetingEl = document.getElementById('transition-greeting');
         const subEl = document.getElementById('transition-subheading');
