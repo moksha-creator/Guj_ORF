@@ -125,21 +125,21 @@ const PROTOTYPE_DATA = {
       },
       WORD_READ_MINIMAL_PAIR: {
         title: "Minimal Pair Discrimination",
-        instruction: "Read the target word out loud.",
+        instruction: "Say the correct word for this picture out loud.",
         tier1: [
-          { options: ["sun", "sub"], target: "sun" },
-          { options: ["pin", "bin"], target: "pin" },
-          { options: ["fan", "van"], target: "fan" }
+          { image: "☀️", options: ["sun", "sub"], target: "sun" },
+          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🐱", options: ["cat", "bat"], target: "cat" }
         ],
         tier2: [
-          { options: ["sun", "sub"], target: "sun" },
-          { options: ["pin", "bin"], target: "pin" },
-          { options: ["fan", "van"], target: "fan" }
+          { image: "☀️", options: ["sun", "sub"], target: "sun" },
+          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🐱", options: ["cat", "bat"], target: "cat" }
         ],
         tier3: [
-          { options: ["sun", "sub"], target: "sun" },
-          { options: ["pin", "bin"], target: "pin" },
-          { options: ["fan", "van"], target: "fan" }
+          { image: "☀️", options: ["sun", "sub"], target: "sun" },
+          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🐱", options: ["cat", "bat"], target: "cat" }
         ]
       }
     }

@@ -178,7 +178,7 @@ function initSpeechRecognitionEngine() {
             };
 
             speechRecognition.onresult = (event) => {
-                if (isStepTransitioning) return; // Ignore residual speech during page transitions
+                if (isStepTransitioning) return;
 
                 let interimTranscript = '';
                 let finalTranscript = '';
@@ -357,6 +357,18 @@ function processSpokenTranscriptStream(spokenText) {
             }, 1000);
         }
     }
+    else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
+        const target = currentTargetWordList[0].toLowerCase();
+        if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
+            const targetOptEl = document.getElementById(`min-option-${target}`);
+            if (targetOptEl) targetOptEl.classList.add('correct');
+            updateMicUI('processing');
+            isStepTransitioning = true;
+            setTimeout(() => {
+                completeAssessmentSampleStep();
+            }, 1200);
+        }
+    }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
@@ -373,7 +385,6 @@ function processSpokenTranscriptStream(spokenText) {
         }
     }
     else if (currentTemplate.includes('SENTENCE') || currentTemplate.includes('PASSAGE')) {
-        // Sequential word matching with skip lookahead (checks up to 3 words ahead!)
         for (let i = currentMatchedWordIndex; i < currentTargetWordList.length; i++) {
             const targetWord = currentTargetWordList[i].toLowerCase().replace(/[^\w]/g, '');
             
@@ -399,7 +410,6 @@ function processSpokenTranscriptStream(spokenText) {
             }
         }
 
-        // Complete passage/sentence only after all words matched
         if (currentMatchedWordIndex > 0 && currentMatchedWordIndex >= currentTargetWordList.length) {
             updateMicUI('processing');
             isStepTransitioning = true;
@@ -705,10 +715,12 @@ function renderCurrentActivity() {
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
         currentTargetWordList = [sample.target];
         let optionsHtml = sample.options.map(opt => `
-            <div class="minimal-pair-option" onclick="selectMinimalPair(this, '${opt}', '${sample.target}')">${opt}</div>
+            <div class="minimal-pair-option" id="min-option-${opt.toLowerCase()}" onclick="selectMinimalPair(this, '${opt}', '${sample.target}')">${opt}</div>
         `).join('');
         container.innerHTML = `
-            <div style="font-size: 1.2rem; color: var(--md-sys-color-on-surface-variant); margin-bottom: 20px;">Target word to read: <strong style="color: var(--md-sys-color-primary);">${sample.target}</strong></div>
+            <div class="display-image-word" style="margin-bottom: 24px;">
+                <div class="image-emoji" style="font-size: 110px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));">${sample.image}</div>
+            </div>
             <div class="minimal-pairs-box">${optionsHtml}</div>
         `;
     }
@@ -843,6 +855,18 @@ function simulateWordSpeech() {
                 }, 1000);
             }
         }, 350);
+    }
+    else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
+        updateLiveTranscriptText(sample.target);
+        const targetOptEl = document.getElementById(`min-option-${sample.target.toLowerCase()}`);
+        if (targetOptEl) {
+            targetOptEl.classList.add('correct');
+            updateMicUI('processing');
+            isStepTransitioning = true;
+            setTimeout(() => {
+                completeAssessmentSampleStep();
+            }, 1200);
+        }
     }
     else if (currentTemplate === 'WORD_IMAGE_NAMING') {
         updateLiveTranscriptText(sample.targetWord);
