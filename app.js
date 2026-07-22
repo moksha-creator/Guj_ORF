@@ -10,6 +10,81 @@ const screens = {
     REPORTING: document.getElementById('screen-05-reporting')
 };
 
+// Unified Application State (Single Source of Truth)
+let AppState = {
+    config: {
+        district: "Ahmedabad • Primary Block 1",
+        schoolName: "Government Primary School No. 4",
+        grade: "Grade 1",
+        languageTrack: "Gujarati / English",
+        rosterSize: 40
+    },
+    students: [],
+    responseLog: []
+};
+
+function loadAppState() {
+    const saved = localStorage.getItem('miko_app_state');
+    if (saved) {
+        try {
+            AppState = JSON.parse(saved);
+        } catch (e) {
+            initDefaultAppState();
+        }
+    } else {
+        initDefaultAppState();
+    }
+}
+
+function saveAppState() {
+    localStorage.setItem('miko_app_state', JSON.stringify(AppState));
+}
+
+function initDefaultAppState(customConfig) {
+    if (customConfig) {
+        AppState.config = customConfig;
+    }
+
+    const count = AppState.config.rosterSize || 40;
+    const baseList = (typeof MOCK_REPORTING_STUDENTS !== 'undefined') ? MOCK_REPORTING_STUDENTS : [];
+
+    AppState.students = [];
+    for (let i = 0; i < count; i++) {
+        const base = baseList[i % baseList.length] || { name: `Student ${i+1}`, level: 'L2', tier: 'tier1', accuracy: 88, wcpm: 40, compScore: 85, journey: ['L1', 'L2'], flag: null };
+        AppState.students.push({
+            id: `student_${i+1}`,
+            name: base.name || `Student ${i+1}`,
+            grade: AppState.config.grade,
+            lang: AppState.config.languageTrack,
+            level: base.level || 'L2',
+            tier: base.tier || 'tier1',
+            status: i < Math.floor(count * 0.8) ? 'done' : i === Math.floor(count * 0.8) ? 'waiting' : 'absent',
+            accuracy: base.accuracy || 88,
+            wcpm: base.wcpm || 40,
+            compScore: base.compScore || 85,
+            assessments: 4,
+            journey: base.journey || ['L1', 'L2'],
+            flag: base.flag || null
+        });
+    }
+
+    AppState.responseLog = AppState.students.filter(s => s.status === 'done').map(s => ({
+        date: "2026-07-22",
+        studentId: s.id,
+        name: s.name,
+        grade: s.grade,
+        lang: s.lang,
+        level: s.level,
+        tier: s.tier,
+        accuracy: s.accuracy,
+        wcpm: s.wcpm,
+        compScore: s.compScore,
+        transition: "Advanced"
+    }));
+
+    saveAppState();
+}
+
 // Demo State
 let currentLevel = 'L1';
 let currentTier = 'tier1';
@@ -234,15 +309,6 @@ function updateReadingCursor(targetIndex) {
     }
 }
 
-// Roster Mock Data for Home Screen
-let rosterStudents = [
-    { name: "Aarav Patel", status: "waiting", id: "s1" },
-    { name: "Meera Shah", status: "waiting", id: "s2" },
-    { name: "Kunal Joshi", status: "waiting", id: "s3" },
-    { name: "Diya Parikh", status: "done", id: "s4" },
-    { name: "Riya Mehta", status: "done", id: "s5" },
-    { name: "Vihaan Sharma", status: "done", id: "s6" }
-];
 let currentStudentIndex = 0;
 
 // Screen Router
@@ -805,15 +871,41 @@ function renderTeacherHome() {
     stopAssessmentTimer();
     clearLiveTranscript();
     showScreen(screens.HOME);
-    
-    const student = rosterStudents[currentStudentIndex] || rosterStudents[0];
-    const nameEl = document.getElementById('up-next-student-name');
-    if (nameEl) nameEl.innerText = student.name;
 
+    // Update Home Header from AppState.config
+    const titleEl = document.getElementById('home-school-title');
+    const subEl = document.getElementById('home-district-subtitle');
+    const langEl = document.getElementById('home-lang-track-label');
+
+    if (titleEl) titleEl.innerText = AppState.config.schoolName;
+    if (subEl) subEl.innerText = AppState.config.district;
+    if (langEl) langEl.innerText = AppState.config.languageTrack;
+
+    // Calculate Coverage Stats from AppState.students
+    const totalCount = AppState.students.length;
+    const doneCount = AppState.students.filter(s => s.status === 'done').length;
+    const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+    const countEl = document.getElementById('progress-text-count');
+    const fillEl = document.getElementById('progress-bar-fill-large');
+    if (countEl) countEl.innerText = `${doneCount} / ${totalCount} Students Completed`;
+    if (fillEl) fillEl.style.width = `${percent}%`;
+
+    // Find next unassessed student
+    const activeStudent = AppState.students.find(s => s.status === 'waiting') || AppState.students[0] || { name: 'Aarav Patel', grade: AppState.config.grade, id: 's1' };
+    currentStudentIndex = AppState.students.findIndex(s => s.id === activeStudent.id);
+    if (currentStudentIndex === -1) currentStudentIndex = 0;
+
+    const nameEl = document.getElementById('up-next-student-name');
+    const subtextEl = document.getElementById('up-next-student-subtext');
+    if (nameEl) nameEl.innerText = activeStudent.name;
+    if (subtextEl) subtextEl.innerText = `Roll No. ${currentStudentIndex + 1 < 10 ? '0' : ''}${currentStudentIndex + 1} • ${activeStudent.grade || AppState.config.grade}`;
+
+    // Render Queue Chips Strip from AppState.students
     const strip = document.getElementById('queue-chips-strip');
     if (strip) {
         strip.innerHTML = '';
-        rosterStudents.forEach(s => {
+        AppState.students.forEach(s => {
             const chip = document.createElement('div');
             chip.className = `chip-item ${s.status}`;
             chip.innerText = s.name;
@@ -823,18 +915,18 @@ function renderTeacherHome() {
 }
 
 function markCurrentStudentAbsent() {
-    if (rosterStudents[currentStudentIndex]) {
-        rosterStudents[currentStudentIndex].status = 'absent';
+    if (AppState.students[currentStudentIndex]) {
+        AppState.students[currentStudentIndex].status = 'absent';
+        saveAppState();
     }
-    currentStudentIndex = (currentStudentIndex + 1) % rosterStudents.length;
     renderTeacherHome();
 }
 
 function triggerStartSession() {
     studentSampleCount = 1;
     sampleIndex = 0;
-    const student = rosterStudents[currentStudentIndex] || rosterStudents[0];
-    startTransitionScreen(student.name);
+    const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0] || { name: 'Aarav Patel' };
+    startTransitionScreen(activeStudent.name);
 }
 
 // ==========================================
@@ -1224,8 +1316,32 @@ function completeAssessmentSampleStep() {
         // Complete Student Session after 3 samples
         sampleIndex++;
         studentSampleCount = 1;
-        if (rosterStudents[currentStudentIndex]) {
-            rosterStudents[currentStudentIndex].status = 'done';
+
+        // Update active student status in unified AppState!
+        const activeStudent = AppState.students[currentStudentIndex];
+        if (activeStudent) {
+            activeStudent.status = 'done';
+            activeStudent.wcpm = currentSessionWCPM > 0 ? currentSessionWCPM : Math.floor(Math.random()*20 + 35);
+            activeStudent.accuracy = Math.floor(Math.random()*12 + 88);
+            activeStudent.compScore = 100;
+            activeStudent.assessments = (activeStudent.assessments || 0) + 1;
+
+            // Log session into unified responseLog
+            AppState.responseLog.unshift({
+                date: "2026-07-22",
+                studentId: activeStudent.id,
+                name: activeStudent.name,
+                grade: activeStudent.grade || AppState.config.grade,
+                lang: activeStudent.lang || AppState.config.languageTrack,
+                level: currentLevel,
+                tier: currentTier,
+                accuracy: activeStudent.accuracy,
+                wcpm: activeStudent.wcpm,
+                compScore: activeStudent.compScore,
+                transition: "Advanced"
+            });
+
+            saveAppState();
         }
 
         showScreen(screens.TRANSITION);
@@ -1239,7 +1355,7 @@ function completeAssessmentSampleStep() {
 
         setTimeout(() => {
             currentStudentIndex++;
-            if (currentStudentIndex >= rosterStudents.length) {
+            if (currentStudentIndex >= AppState.students.length) {
                 stopAssessmentTimer();
                 showScreen(screens.END);
                 triggerCelebrationConfetti();
@@ -1278,15 +1394,15 @@ function triggerCelebrationConfetti() {
     if (!container) return;
     container.innerHTML = '';
 
-    const assessed = rosterStudents.filter(s => s.status === 'done').length;
-    const absent = rosterStudents.filter(s => s.status === 'absent').length;
+    const assessed = AppState.students.filter(s => s.status === 'done').length;
+    const absent = AppState.students.filter(s => s.status === 'absent').length;
 
     const assEl = document.getElementById('summary-stat-assessed');
     const absEl = document.getElementById('summary-stat-absent');
     const wcpmEl = document.getElementById('summary-stat-wcpm');
 
-    if (assEl) assEl.innerText = assessed || 38;
-    if (absEl) absEl.innerText = absent || 2;
+    if (assEl) assEl.innerText = assessed;
+    if (absEl) absEl.innerText = absent;
     if (wcpmEl) wcpmEl.innerText = currentSessionWCPM > 0 ? currentSessionWCPM : 42;
 
     for (let i = 0; i < 40; i++) {
@@ -1301,8 +1417,6 @@ function triggerCelebrationConfetti() {
 
 function returnToHomeFromComplete() {
     stopAssessmentTimer();
-    rosterStudents.forEach(s => s.status = 'waiting');
-    currentStudentIndex = 0;
     renderTeacherHome();
 }
 
@@ -1323,7 +1437,7 @@ function openReportingFromSettings() {
     closeTeacherSettingsModal();
     showScreen(screens.REPORTING);
     populateStudentSelector();
-    renderStudentReport('s1');
+    renderStudentReport(AppState.students[0] ? AppState.students[0].id : 'student_1');
     renderClassReport();
     renderResponseLog();
 }
@@ -1337,8 +1451,26 @@ function triggerResetConfiguration() {
 }
 
 function completeInitialSetupFlow() {
+    const districtSelect = document.getElementById('setup-district-select');
+    const schoolInput = document.getElementById('setup-school-input');
+    const gradeSelect = document.getElementById('setup-grade-select');
+    const langSelect = document.getElementById('setup-lang-select');
+    const sizeSelect = document.getElementById('setup-roster-size-select');
+
+    const newConfig = {
+        district: districtSelect ? districtSelect.value : "Ahmedabad • Primary Block 1",
+        schoolName: schoolInput ? schoolInput.value : "Government Primary School No. 4",
+        grade: gradeSelect ? gradeSelect.value : "Grade 1",
+        languageTrack: langSelect ? langSelect.value : "Gujarati / English",
+        rosterSize: sizeSelect ? parseInt(sizeSelect.value, 10) : 40
+    };
+
+    initDefaultAppState(newConfig);
+
     const onboardingModal = document.getElementById('modal-onboarding-setup');
     if (onboardingModal) onboardingModal.classList.add('hidden');
+
+    currentStudentIndex = 0;
     renderTeacherHome();
 }
 
@@ -1367,7 +1499,7 @@ function populateStudentSelector() {
     if (!selector) return;
     selector.innerHTML = '';
 
-    MOCK_REPORTING_STUDENTS.forEach(s => {
+    AppState.students.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
         opt.innerText = `${s.name} (${s.grade} • ${s.level})`;
@@ -1379,9 +1511,9 @@ function renderStudentReport(studentId) {
     const container = document.getElementById('student-report-details-container');
     if (!container) return;
 
-    const student = MOCK_REPORTING_STUDENTS.find(s => s.id === studentId) || MOCK_REPORTING_STUDENTS[0];
+    const student = AppState.students.find(s => s.id === studentId) || AppState.students[0] || { name: 'Aarav Patel', grade: AppState.config.grade, lang: AppState.config.languageTrack, level: 'L2', tier: 'tier1', accuracy: 92, wcpm: 44, compScore: 100, assessments: 1, journey: ['L1', 'L2'], flag: null };
 
-    const journeyHtml = student.journey.map((step, idx) => `
+    const journeyHtml = (student.journey || ['L1', 'L2']).map((step, idx) => `
         <div style="display: inline-flex; align-items: center; gap: 8px;">
             <span style="background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 1.1rem;">${step}</span>
             ${idx < student.journey.length - 1 ? '<span class="material-icons-round" style="color: #94A3B8;">north_east</span>' : ''}
@@ -1399,7 +1531,7 @@ function renderStudentReport(studentId) {
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <h2 class="fredoka-text">${student.name}</h2>
-                    <p class="text-muted">${student.grade} • ${student.lang} Track</p>
+                    <p class="text-muted">${student.grade || AppState.config.grade} • ${student.lang || AppState.config.languageTrack} Track</p>
                 </div>
                 <span class="badge-pill" style="font-size: 1rem;">${student.level} • ${student.tier}</span>
             </div>
@@ -1418,19 +1550,19 @@ function renderStudentReport(studentId) {
             <div class="rep-stats-grid">
                 <div class="card stat-card">
                     <span class="stat-card-title">READING ACCURACY</span>
-                    <h2 class="fredoka-text text-success">${student.accuracy}%</h2>
+                    <h2 class="fredoka-text text-success">${student.accuracy || 90}%</h2>
                 </div>
                 <div class="card stat-card">
                     <span class="stat-card-title">READING RATE</span>
-                    <h2 class="fredoka-text text-primary">${student.wcpm} WCPM</h2>
+                    <h2 class="fredoka-text text-primary">${student.wcpm || 42} WCPM</h2>
                 </div>
                 <div class="card stat-card">
                     <span class="stat-card-title">COMPREHENSION</span>
-                    <h2 class="fredoka-text text-secondary">${student.compScore}%</h2>
+                    <h2 class="fredoka-text text-secondary">${student.compScore || 90}%</h2>
                 </div>
                 <div class="card stat-card">
                     <span class="stat-card-title">ASSESSMENTS</span>
-                    <h2 class="fredoka-text text-muted">${student.assessments}</h2>
+                    <h2 class="fredoka-text text-muted">${student.assessments || 1}</h2>
                 </div>
             </div>
 
@@ -1441,7 +1573,7 @@ function renderStudentReport(studentId) {
                     <div style="height: 60%; width: 14%; background: #93C5FD; border-radius: 4px;" title="Session 2"></div>
                     <div style="height: 75%; width: 14%; background: #93C5FD; border-radius: 4px;" title="Session 3"></div>
                     <div style="height: 85%; width: 14%; background: #3B82F6; border-radius: 4px;" title="Session 4"></div>
-                    <div style="height: ${student.accuracy}%; width: 14%; background: #1D4ED8; border-radius: 4px;" title="Current Session"></div>
+                    <div style="height: ${student.accuracy || 90}%; width: 14%; background: #1D4ED8; border-radius: 4px;" title="Current Session"></div>
                 </div>
             </div>
         </div>
@@ -1449,23 +1581,69 @@ function renderStudentReport(studentId) {
 }
 
 function renderClassReport() {
-    const tbody = document.getElementById('attention-students-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+    const totalCount = AppState.students.length;
+    const doneCount = AppState.students.filter(s => s.status === 'done').length;
+    const pendingCount = AppState.students.filter(s => s.status === 'waiting').length;
+    const absentCount = AppState.students.filter(s => s.status === 'absent').length;
+    const percent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    const attentionList = MOCK_REPORTING_STUDENTS.filter(s => s.flag !== null);
+    const totEl = document.getElementById('class-rep-stat-total');
+    const assEl = document.getElementById('class-rep-stat-assessed');
+    const penEl = document.getElementById('class-rep-stat-pending');
+    const absEl = document.getElementById('class-rep-stat-absent');
+    const covLabel = document.getElementById('class-rep-coverage-label');
+    const covFill = document.getElementById('class-rep-coverage-fill');
 
-    attentionList.forEach(s => {
-        const tr = document.createElement('tr');
-        const badgeClass = s.flag.includes('Not') ? 'badge-amber' : s.flag.includes('Stuck') ? 'badge-red' : 'badge-amber';
-        tr.innerHTML = `
-            <td><strong>${s.name}</strong></td>
-            <td>${s.grade}</td>
-            <td><span class="badge-pill">${s.level}</span></td>
-            <td><span class="badge-status ${badgeClass}">${s.flag}</span></td>
+    if (totEl) totEl.innerText = totalCount;
+    if (assEl) assEl.innerText = doneCount;
+    if (penEl) penEl.innerText = pendingCount;
+    if (absEl) absEl.innerText = absentCount;
+    if (covLabel) covLabel.innerText = `${doneCount} / ${totalCount} Students Assessed (${percent}%)`;
+    if (covFill) covFill.style.width = `${percent}%`;
+
+    // Render Reading Level Distribution dynamically from AppState.students
+    const l1Count = AppState.students.filter(s => s.level === 'L1').length;
+    const l2Count = AppState.students.filter(s => s.level === 'L2').length;
+    const l3Count = AppState.students.filter(s => s.level === 'L3').length;
+    const l4Count = AppState.students.filter(s => s.level === 'L4').length;
+
+    const distContainer = document.getElementById('class-rep-level-dist-container');
+    if (distContainer) {
+        distContainer.innerHTML = `
+            <div class="dist-row"><span>Level 1 (Balvatika)</span><div class="dist-bar"><div style="width: ${totalCount ? (l1Count/totalCount)*100 : 0}%; background: #EF5350;"></div></div><span>${l1Count}</span></div>
+            <div class="dist-row"><span>Level 2 (Grade 1)</span><div class="dist-bar"><div style="width: ${totalCount ? (l2Count/totalCount)*100 : 0}%; background: #FF9800;"></div></div><span>${l2Count}</span></div>
+            <div class="dist-row"><span>Level 3 (Grade 2)</span><div class="dist-bar"><div style="width: ${totalCount ? (l3Count/totalCount)*100 : 0}%; background: #2E7D32;"></div></div><span>${l3Count}</span></div>
+            <div class="dist-row"><span>Level 4 (Grade 3)</span><div class="dist-bar"><div style="width: ${totalCount ? (l4Count/totalCount)*100 : 0}%; background: #3F51B5;"></div></div><span>${l4Count}</span></div>
         `;
-        tbody.appendChild(tr);
-    });
+    }
+
+    // Classroom Insights
+    const insightsList = document.getElementById('class-rep-insights-list');
+    if (insightsList) {
+        insightsList.innerHTML = `
+            <li>✨ <strong>Current Class Size:</strong> ${totalCount} students configured in ${AppState.config.grade}.</li>
+            <li>📈 <strong>Assessment Progress:</strong> ${doneCount} of ${totalCount} students assessed (${percent}% complete).</li>
+            <li>⚠️ <strong>Attention Status:</strong> ${AppState.students.filter(s => s.flag !== null).length} students requiring reassessment support.</li>
+        `;
+    }
+
+    // Attention Table
+    const tbody = document.getElementById('attention-students-tbody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        const attentionList = AppState.students.filter(s => s.flag !== null);
+        attentionList.forEach(s => {
+            const tr = document.createElement('tr');
+            const badgeClass = s.flag && s.flag.includes('Not') ? 'badge-amber' : 'badge-red';
+            tr.innerHTML = `
+                <td><strong>${s.name}</strong></td>
+                <td>${s.grade || AppState.config.grade}</td>
+                <td><span class="badge-pill">${s.level}</span></td>
+                <td><span class="badge-status ${badgeClass}">${s.flag || 'Review Needed'}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
 }
 
 function renderResponseLog() {
@@ -1476,26 +1654,26 @@ function renderResponseLog() {
     const levelFilter = document.getElementById('filter-log-level') ? document.getElementById('filter-log-level').value : 'ALL';
     const langFilter = document.getElementById('filter-log-lang') ? document.getElementById('filter-log-lang').value : 'ALL';
 
-    let filtered = MOCK_REPORTING_STUDENTS.filter(s => {
-        if (levelFilter !== 'ALL' && s.level !== levelFilter) return false;
-        if (langFilter !== 'ALL' && s.lang !== langFilter) return false;
+    let filtered = AppState.responseLog.filter(log => {
+        if (levelFilter !== 'ALL' && log.level !== levelFilter) return false;
+        if (langFilter !== 'ALL' && log.lang !== langFilter) return false;
         return true;
     });
 
-    filtered.forEach(s => {
+    filtered.forEach(log => {
         const trEl = document.createElement('tr');
         trEl.innerHTML = `
-            <td>2026-07-22</td>
-            <td><strong>${s.name}</strong></td>
-            <td>${s.lang}</td>
-            <td>${s.level}</td>
-            <td>${s.tier}</td>
-            <td><strong class="text-success">${s.accuracy}%</strong></td>
-            <td>${s.wcpm} WCPM</td>
-            <td>${s.compScore}%</td>
-            <td><span class="badge-status badge-green">Advanced</span></td>
+            <td>${log.date}</td>
+            <td><strong>${log.name}</strong></td>
+            <td>${log.lang || AppState.config.languageTrack}</td>
+            <td>${log.level}</td>
+            <td>${log.tier}</td>
+            <td><strong class="text-success">${log.accuracy}%</strong></td>
+            <td>${log.wcpm} WCPM</td>
+            <td>${log.compScore}%</td>
+            <td><span class="badge-status badge-green">${log.transition || 'Advanced'}</span></td>
             <td>
-                <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="alert('Playing audio recording for ${s.name}...')">
+                <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="alert('Playing audio recording for ${log.name}...')">
                     <span class="material-icons-round" style="font-size: 16px;">play_arrow</span> Play
                 </button>
             </td>
@@ -1508,28 +1686,29 @@ function exportFilteredCSV() {
     const levelFilter = document.getElementById('filter-log-level') ? document.getElementById('filter-log-level').value : 'ALL';
     const langFilter = document.getElementById('filter-log-lang') ? document.getElementById('filter-log-lang').value : 'ALL';
 
-    let filtered = MOCK_REPORTING_STUDENTS.filter(s => {
-        if (levelFilter !== 'ALL' && s.level !== levelFilter) return false;
-        if (langFilter !== 'ALL' && s.lang !== langFilter) return false;
+    let filtered = AppState.responseLog.filter(log => {
+        if (levelFilter !== 'ALL' && log.level !== levelFilter) return false;
+        if (langFilter !== 'ALL' && log.lang !== langFilter) return false;
         return true;
     });
 
     let csvContent = "data:text/csv;charset=utf-8,Date,Student Name,Grade,Language,Reading Level,Tier,Accuracy %,WCPM,Comprehension %\n";
 
-    filtered.forEach(s => {
-        csvContent += `2026-07-22,"${s.name}","${s.grade}","${s.lang}","${s.level}","${s.tier}",${s.accuracy},${s.wcpm},${s.compScore}\n`;
+    filtered.forEach(log => {
+        csvContent += `${log.date},"${log.name}","${log.grade}","${log.lang}","${log.level}","${log.tier}",${log.accuracy},${log.wcpm},${log.compScore}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "Miko_ORF_Assessment_Log.csv");
+    link.setAttribute("download", `Miko_ORF_${AppState.config.grade.replace(/\s+/g, '_')}_Log.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
 
 // App Initialization
+loadAppState();
 initDemoControls();
 initSpeechRecognitionEngine();
 renderTeacherHome();

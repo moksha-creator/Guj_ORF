@@ -68,14 +68,14 @@
                 <div class="header-left">
                     <span class="app-icon text-primary"><span class="material-icons-round">auto_stories</span></span>
                     <div>
-                        <h1 class="fredoka-text">Miko Reading Check</h1>
-                        <p class="subtitle text-muted">Gujarat Government Schools • Smartboard Edition</p>
+                        <h1 class="fredoka-text" id="home-school-title">Government Primary School No. 4</h1>
+                        <p class="subtitle text-muted" id="home-district-subtitle">Ahmedabad • Primary Block 1</p>
                     </div>
                 </div>
                 <div class="header-right">
                     <div class="language-track-badge">
                         <span class="material-icons-round" style="font-size: 18px;">translate</span>
-                        <span>Gujarati / English</span>
+                        <span id="home-lang-track-label">Gujarati / English</span>
                     </div>
                     <button id="btn-teacher-dashboard-trigger" class="btn-icon" title="Teacher Settings" onclick="openTeacherSettingsModal()">
                         <span class="material-icons-round">settings</span>
@@ -87,25 +87,25 @@
                 <!-- Progress Header Banner -->
                 <div class="card progress-banner">
                     <div class="progress-info">
-                        <span class="progress-title">Monthly Progress</span>
-                        <h2 class="fredoka-text text-primary" id="progress-text-count">38 / 40 Students Completed</h2>
+                        <span class="progress-title">Monthly Assessment Coverage</span>
+                        <h2 class="fredoka-text text-primary" id="progress-text-count">0 / 40 Students Completed</h2>
                     </div>
                     <div class="progress-bar-large-container">
-                        <div id="progress-bar-fill-large" class="progress-bar-fill-large" style="width: 95%;"></div>
+                        <div id="progress-bar-fill-large" class="progress-bar-fill-large" style="width: 0%;"></div>
                     </div>
                 </div>
 
                 <!-- Up Next Card -->
                 <div class="up-next-section">
                     <div class="card up-next-card">
-                        <div class="up-next-header-badge">UP NEXT</div>
+                        <div class="up-next-header-badge">UP NEXT FOR ASSESSMENT</div>
                         
                         <div class="student-avatar-box">
                             <span class="material-icons-round">face</span>
                         </div>
                         
                         <h2 class="fredoka-text student-name" id="up-next-student-name">Aarav Patel</h2>
-                        <p class="text-muted student-subtext">Roll No. 04 • Grade 1-A</p>
+                        <p class="text-muted student-subtext" id="up-next-student-subtext">Roll No. 01 • Grade 1-A</p>
 
                         <div class="action-buttons-row">
                             <button class="btn-primary btn-large" onclick="triggerStartSession()">
@@ -255,15 +255,15 @@
                 
                 <div class="session-summary-stats">
                     <div class="stat-box">
-                        <span class="stat-number text-primary" id="summary-stat-assessed">38</span>
+                        <span class="stat-number text-primary" id="summary-stat-assessed">0</span>
                         <span class="stat-label">Students Assessed</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number text-secondary" id="summary-stat-wcpm">42</span>
+                        <span class="stat-number text-secondary" id="summary-stat-wcpm">0</span>
                         <span class="stat-label">Avg WCPM</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number text-success" id="summary-stat-absent">2</span>
+                        <span class="stat-number text-success" id="summary-stat-absent">0</span>
                         <span class="stat-label">Absent</span>
                     </div>
                 </div>
@@ -313,7 +313,7 @@
                     <div class="student-select-card card">
                         <label for="rep-student-selector" class="rep-label">Select Student:</label>
                         <select id="rep-student-selector" class="demo-select rep-select" onchange="renderStudentReport(this.value)">
-                            <!-- Populated dynamically with 40 students -->
+                            <!-- Populated dynamically -->
                         </select>
                     </div>
 
@@ -327,49 +327,44 @@
                     <div class="rep-stats-grid">
                         <div class="card stat-card">
                             <span class="stat-card-title">TOTAL STUDENTS</span>
-                            <h2 class="fredoka-text text-primary">40</h2>
+                            <h2 class="fredoka-text text-primary" id="class-rep-stat-total">40</h2>
                         </div>
                         <div class="card stat-card">
                             <span class="stat-card-title">ASSESSED</span>
-                            <h2 class="fredoka-text text-success">38</h2>
+                            <h2 class="fredoka-text text-success" id="class-rep-stat-assessed">0</h2>
                         </div>
                         <div class="card stat-card">
                             <span class="stat-card-title">PENDING</span>
-                            <h2 class="fredoka-text text-secondary">0</h2>
+                            <h2 class="fredoka-text text-secondary" id="class-rep-stat-pending">40</h2>
                         </div>
                         <div class="card stat-card">
                             <span class="stat-card-title">ABSENT</span>
-                            <h2 class="fredoka-text text-muted">2</h2>
+                            <h2 class="fredoka-text text-muted" id="class-rep-stat-absent">0</h2>
                         </div>
                     </div>
 
                     <div class="card coverage-banner-card">
                         <div class="coverage-header">
                             <span class="coverage-title">CURRENT CYCLE COVERAGE</span>
-                            <span class="coverage-count">38 / 40 Students Assessed (95%)</span>
+                            <span class="coverage-count" id="class-rep-coverage-label">0 / 40 Students Assessed (0%)</span>
                         </div>
                         <div class="progress-bar-large-container">
-                            <div class="progress-bar-fill-large" style="width: 95%;"></div>
+                            <div class="progress-bar-fill-large" id="class-rep-coverage-fill" style="width: 0%;"></div>
                         </div>
                     </div>
 
                     <div class="rep-grid-two-col">
                         <div class="card">
                             <h3 class="fredoka-text" style="margin-bottom: 16px;">Reading Level Distribution</h3>
-                            <div class="level-dist-bars">
-                                <div class="dist-row"><span>Level 1 (Balvatika)</span><div class="dist-bar"><div style="width: 10%; background: #EF5350;"></div></div><span>4</span></div>
-                                <div class="dist-row"><span>Level 2 (Grade 1)</span><div class="dist-bar"><div style="width: 45%; background: #FF9800;"></div></div><span>18</span></div>
-                                <div class="dist-row"><span>Level 3 (Grade 2)</span><div class="dist-bar"><div style="width: 30%; background: #2E7D32;"></div></div><span>12</span></div>
-                                <div class="dist-row"><span>Level 4 (Grade 3)</span><div class="dist-bar"><div style="width: 15%; background: #3F51B5;"></div></div><span>6</span></div>
+                            <div class="level-dist-bars" id="class-rep-level-dist-container">
+                                <!-- Populated dynamically -->
                             </div>
                         </div>
 
                         <div class="card">
                             <h3 class="fredoka-text" style="margin-bottom: 16px;">Classroom Insights</h3>
-                            <ul class="insights-list">
-                                <li>✨ <strong>Level 2 Majority:</strong> Most students (45%) are successfully reading at Level 2.</li>
-                                <li>📈 <strong>Fluency Improvement:</strong> Average WCPM increased by 14% this month.</li>
-                                <li>⚠️ <strong>Attention Needed:</strong> 4 students require reassessment support at Level 1.</li>
+                            <ul class="insights-list" id="class-rep-insights-list">
+                                <!-- Populated dynamically -->
                             </ul>
                         </div>
                     </div>
@@ -429,7 +424,7 @@
                                     <th>Accuracy</th>
                                     <th>WCPM</th>
                                     <th>Comp Score</th>
-                                    <th>Transition</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -501,21 +496,40 @@
                 <div class="modal-body" style="text-align: left;">
                     <div class="form-group" style="margin-bottom: 16px;">
                         <label class="rep-label">District & Block:</label>
-                        <select class="demo-select" style="width: 100%;">
-                            <option>Ahmedabad • Primary Block 1</option>
-                            <option>Gandhinagar • Block A</option>
-                            <option>Surat • Primary Division</option>
+                        <select id="setup-district-select" class="demo-select" style="width: 100%;">
+                            <option value="Ahmedabad • Primary Block 1">Ahmedabad • Primary Block 1</option>
+                            <option value="Gandhinagar • Block A">Gandhinagar • Block A</option>
+                            <option value="Surat • Primary Division">Surat • Primary Division</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 16px;">
                         <label class="rep-label">School Name:</label>
-                        <input type="text" class="demo-select" value="Government Primary School No. 4" style="width: 100%;">
+                        <input type="text" id="setup-school-input" class="demo-select" value="Government Primary School No. 4" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="rep-label">Grade Level:</label>
+                        <select id="setup-grade-select" class="demo-select" style="width: 100%;">
+                            <option value="Grade 1">Grade 1 (Level 2)</option>
+                            <option value="Balvatika">Balvatika (Level 1)</option>
+                            <option value="Grade 2">Grade 2 (Level 3)</option>
+                            <option value="Grade 3">Grade 3 (Level 4)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="rep-label">Language Track:</label>
+                        <select id="setup-lang-select" class="demo-select" style="width: 100%;">
+                            <option value="Gujarati / English">Gujarati / English Dual Track</option>
+                            <option value="Gujarati">Gujarati Medium</option>
+                            <option value="English">English Medium</option>
+                        </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 24px;">
-                        <label class="rep-label">Language Track:</label>
-                        <select class="demo-select" style="width: 100%;">
-                            <option>Gujarati / English Dual Track</option>
-                            <option>Gujarati Medium</option>
+                        <label class="rep-label">Class Roster Size:</label>
+                        <select id="setup-roster-size-select" class="demo-select" style="width: 100%;">
+                            <option value="1">1 Student (Testing Roster)</option>
+                            <option value="5">5 Students (Small Roster)</option>
+                            <option value="25">25 Students (Standard Class)</option>
+                            <option value="40" selected>40 Students (Full Class)</option>
                         </select>
                     </div>
                     <button class="btn-primary btn-large" style="width: 100%;" onclick="completeInitialSetupFlow()">
