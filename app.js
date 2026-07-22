@@ -1077,6 +1077,16 @@ function renderCurrentActivity() {
     if (counterBadge) counterBadge.innerText = `Sample ${studentSampleCount} of 3`;
     if (instructText) instructText.innerText = templateData.instruction;
 
+    // Rule: Hide WCPM Badge for L1 (Balvatika) & L2 (Grade 1); Show ONLY for L3 (Grade 2) & L4 (Grade 3)
+    const wcpmBadge = document.getElementById('activity-wcpm-badge');
+    if (wcpmBadge) {
+        if (currentLevel === 'L1' || currentLevel === 'L2') {
+            wcpmBadge.style.display = 'none';
+        } else {
+            wcpmBadge.style.display = 'inline-flex';
+        }
+    }
+
     const container = document.getElementById('reading-card-container');
     if (!container) return;
     container.innerHTML = '';
@@ -1408,7 +1418,7 @@ function completeAssessmentSampleStep() {
         const activeStudent = AppState.students[currentStudentIndex];
         if (activeStudent) {
             activeStudent.status = 'done';
-            activeStudent.wcpm = currentSessionWCPM > 0 ? currentSessionWCPM : Math.floor(Math.random()*20 + 35);
+            activeStudent.wcpm = (currentLevel === 'L1' || currentLevel === 'L2') ? 0 : (currentSessionWCPM > 0 ? currentSessionWCPM : Math.floor(Math.random()*20 + 35));
             activeStudent.accuracy = Math.floor(Math.random()*12 + 88);
             activeStudent.compScore = 100;
             activeStudent.assessments = (activeStudent.assessments || 0) + 1;
@@ -1491,7 +1501,7 @@ function triggerCelebrationConfetti() {
 
     if (assEl) assEl.innerText = assessed;
     if (absEl) absEl.innerText = absent;
-    if (wcpmEl) wcpmEl.innerText = currentSessionWCPM > 0 ? currentSessionWCPM : 42;
+    if (wcpmEl) wcpmEl.innerText = (currentLevel === 'L1' || currentLevel === 'L2') ? 'N/A' : (currentSessionWCPM > 0 ? currentSessionWCPM : 42);
 
     for (let i = 0; i < 40; i++) {
         const c = document.createElement('div');
@@ -1614,6 +1624,9 @@ function renderStudentReport(studentId) {
         </div>
     ` : '';
 
+    const isWCPMApplicable = (student.level === 'L3' || student.level === 'L4');
+    const wcpmDisplayStr = isWCPMApplicable ? `${student.wcpm || 42} WCPM` : 'N/A (Accuracy Only)';
+
     container.innerHTML = `
         <div class="card" style="display: flex; flex-direction: column; gap: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -1642,7 +1655,7 @@ function renderStudentReport(studentId) {
                 </div>
                 <div class="card stat-card">
                     <span class="stat-card-title">READING RATE</span>
-                    <h2 class="fredoka-text text-primary">${student.wcpm || 42} WCPM</h2>
+                    <h2 class="fredoka-text text-primary" style="font-size: ${isWCPMApplicable ? '1.5rem' : '1.1rem'}">${wcpmDisplayStr}</h2>
                 </div>
                 <div class="card stat-card">
                     <span class="stat-card-title">COMPREHENSION</span>
@@ -1749,6 +1762,9 @@ function renderResponseLog() {
     });
 
     filtered.forEach(log => {
+        const isWCPMApplicable = (log.level === 'L3' || log.level === 'L4');
+        const wcpmLogStr = isWCPMApplicable ? `${log.wcpm} WCPM` : 'N/A';
+
         const trEl = document.createElement('tr');
         trEl.innerHTML = `
             <td>${log.date}</td>
@@ -1757,7 +1773,7 @@ function renderResponseLog() {
             <td>${log.level}</td>
             <td>${log.tier}</td>
             <td><strong class="text-success">${log.accuracy}%</strong></td>
-            <td>${log.wcpm} WCPM</td>
+            <td>${wcpmLogStr}</td>
             <td>${log.compScore}%</td>
             <td><span class="badge-status badge-green">${log.transition || 'Advanced'}</span></td>
             <td>
@@ -1783,7 +1799,9 @@ function exportFilteredCSV() {
     let csvContent = "data:text/csv;charset=utf-8,Date,Student Name,Grade,Language,Reading Level,Tier,Accuracy %,WCPM,Comprehension %\n";
 
     filtered.forEach(log => {
-        csvContent += `${log.date},"${log.name}","${log.grade}","${log.lang}","${log.level}","${log.tier}",${log.accuracy},${log.wcpm},${log.compScore}\n`;
+        const isWCPMApplicable = (log.level === 'L3' || log.level === 'L4');
+        const valWCPM = isWCPMApplicable ? log.wcpm : "N/A";
+        csvContent += `${log.date},"${log.name}","${log.grade}","${log.lang}","${log.level}","${log.tier}",${log.accuracy},${valWCPM},${log.compScore}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
