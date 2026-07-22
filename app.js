@@ -251,7 +251,24 @@ function renderCurrentActivity() {
         `;
     }
     else if (currentTemplate === 'WORD_READ_SET_TEXT') {
-        container.innerHTML = `<div class="display-word-text" style="font-size: 44px;" id="target-text-display">${sample.text}</div>`;
+        // Robot speech bubble + 5-card layout UI
+        let cardsHtml = sample.items.map((item, idx) => `
+            <div class="word-set-card theme-${item.colorTheme}" id="set-card-${idx}">
+                <div class="card-number-badge">${idx + 1}</div>
+                <div class="card-illustration-area">
+                    <span class="emoji-icon">${item.image}</span>
+                </div>
+                <div class="card-word-footer">${item.word}</div>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="robot-speech-container">
+                <div class="robot-avatar">🤖</div>
+                <div class="speech-bubble">Read all the words in order.</div>
+            </div>
+            <div class="word-set-cards-grid">${cardsHtml}</div>
+        `;
     }
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
         let optionsHtml = sample.options.map(opt => `
@@ -322,7 +339,7 @@ function simulateWordSpeech() {
     const sampleList = templateData[currentTier] || templateData.tier1;
     const sample = sampleList[sampleIndex % sampleList.length];
 
-    if (currentTemplate === 'WORD_READ_TEXT' || currentTemplate === 'WORD_READ_SET_TEXT') {
+    if (currentTemplate === 'WORD_READ_TEXT') {
         const el = document.getElementById('target-text-display');
         if (el) {
             el.classList.add('highlight-green');
@@ -330,6 +347,24 @@ function simulateWordSpeech() {
                 completeAssessmentSampleStep();
             }, 1000);
         }
+    }
+    else if (currentTemplate === 'WORD_READ_SET_TEXT') {
+        // Highlight 5 cards sequentially!
+        let cardIndex = 0;
+        if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
+
+        simulatedSpeechTimeout = setInterval(() => {
+            if (cardIndex < 5) {
+                const card = document.getElementById(`set-card-${cardIndex}`);
+                if (card) card.classList.add('highlight-read');
+                cardIndex++;
+            } else {
+                clearInterval(simulatedSpeechTimeout);
+                setTimeout(() => {
+                    completeAssessmentSampleStep();
+                }, 1000);
+            }
+        }, 350);
     }
     else if (currentTemplate === 'WORD_IMAGE_NAMING') {
         const revealed = document.getElementById('image-word-revealed');

@@ -34,21 +34,93 @@ const PROTOTYPE_DATA = {
       },
       WORD_READ_SET_TEXT: {
         title: "Batch Word Reading",
-        instruction: "Read all words in sequence.",
+        instruction: "Read all the words in order.",
         tier1: [
-          { text: "Sun  Ball  Tree  Cat  Book" },
-          { text: "Red  Big  Box  Dog  Cup" },
-          { text: "Run  Pen  Hat  Bed  Fish" }
+          {
+            items: [
+              { word: "Sun", image: "☀️", colorTheme: "yellow" },
+              { word: "Ball", image: "⚽", colorTheme: "green" },
+              { word: "Tree", image: "🌳", colorTheme: "blue" },
+              { word: "Cat", image: "🐱", colorTheme: "purple" },
+              { word: "Book", image: "📚", colorTheme: "pink" }
+            ]
+          },
+          {
+            items: [
+              { word: "Red", image: "🔴", colorTheme: "yellow" },
+              { word: "Big", image: "🐘", colorTheme: "green" },
+              { word: "Box", image: "📦", colorTheme: "blue" },
+              { word: "Dog", image: "🐶", colorTheme: "purple" },
+              { word: "Cup", image: "☕", colorTheme: "pink" }
+            ]
+          },
+          {
+            items: [
+              { word: "Run", image: "🏃", colorTheme: "yellow" },
+              { word: "Pen", image: "🖊️", colorTheme: "green" },
+              { word: "Hat", image: "👒", colorTheme: "blue" },
+              { word: "Bed", image: "🛏️", colorTheme: "purple" },
+              { word: "Fish", image: "🐟", colorTheme: "pink" }
+            ]
+          }
         ],
         tier2: [
-          { text: "Sun  Ball  Tree  Cat  Book" },
-          { text: "Red  Big  Box  Dog  Cup" },
-          { text: "Run  Pen  Hat  Bed  Fish" }
+          {
+            items: [
+              { word: "Sun", image: "☀️", colorTheme: "yellow" },
+              { word: "Ball", image: "⚽", colorTheme: "green" },
+              { word: "Tree", image: "🌳", colorTheme: "blue" },
+              { word: "Cat", image: "🐱", colorTheme: "purple" },
+              { word: "Book", image: "📚", colorTheme: "pink" }
+            ]
+          },
+          {
+            items: [
+              { word: "Red", image: "🔴", colorTheme: "yellow" },
+              { word: "Big", image: "🐘", colorTheme: "green" },
+              { word: "Box", image: "📦", colorTheme: "blue" },
+              { word: "Dog", image: "🐶", colorTheme: "purple" },
+              { word: "Cup", image: "☕", colorTheme: "pink" }
+            ]
+          },
+          {
+            items: [
+              { word: "Run", image: "🏃", colorTheme: "yellow" },
+              { word: "Pen", image: "🖊️", colorTheme: "green" },
+              { word: "Hat", image: "👒", colorTheme: "blue" },
+              { word: "Bed", image: "🛏️", colorTheme: "purple" },
+              { word: "Fish", image: "🐟", colorTheme: "pink" }
+            ]
+          }
         ],
         tier3: [
-          { text: "Sun  Ball  Tree  Cat  Book" },
-          { text: "Red  Big  Box  Dog  Cup" },
-          { text: "Run  Pen  Hat  Bed  Fish" }
+          {
+            items: [
+              { word: "Sun", image: "☀️", colorTheme: "yellow" },
+              { word: "Ball", image: "⚽", colorTheme: "green" },
+              { word: "Tree", image: "🌳", colorTheme: "blue" },
+              { word: "Cat", image: "🐱", colorTheme: "purple" },
+              { word: "Book", image: "📚", colorTheme: "pink" }
+            ]
+          },
+          {
+            items: [
+              { word: "Red", image: "🔴", colorTheme: "yellow" },
+              { word: "Big", image: "🐘", colorTheme: "green" },
+              { word: "Box", image: "📦", colorTheme: "blue" },
+              { word: "Dog", image: "🐶", colorTheme: "purple" },
+              { word: "Cup", image: "☕", colorTheme: "pink" }
+            ]
+          },
+          {
+            items: [
+              { word: "Run", image: "🏃", colorTheme: "yellow" },
+              { word: "Pen", image: "🖊️", colorTheme: "green" },
+              { word: "Hat", image: "👒", colorTheme: "blue" },
+              { word: "Bed", image: "🛏️", colorTheme: "purple" },
+              { word: "Fish", image: "🐟", colorTheme: "pink" }
+            ]
+          }
         ]
       },
       WORD_READ_MINIMAL_PAIR: {

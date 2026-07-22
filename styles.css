@@ -322,7 +322,7 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
 
 /* --- Screen 3: Assessment Activity --- */
 .activity-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
 }
 .activity-meta { display: flex; gap: 8px; }
 .badge-pill {
@@ -333,14 +333,139 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0,
 .teacher-live-controls { display: flex; gap: 10px; }
 
 .activity-body {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px;
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 
-.activity-instruction-text { color: var(--md-sys-color-on-surface); font-size: 1.4rem; text-align: center; }
+/* Robot Speech Bubble */
+.robot-speech-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.robot-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #E8EAF6; display: flex; align-items: center; justify-content: center;
+    color: var(--md-sys-color-primary); font-size: 28px; border: 2px solid #C5CAE9;
+}
+.speech-bubble {
+    background: #F3E8FF; border: 1.5px solid #D8B4FE; color: #581C87;
+    padding: 10px 20px; border-radius: 18px; font-weight: 700; font-size: 1.1rem;
+    position: relative; box-shadow: 0 2px 8px rgba(147, 51, 234, 0.08);
+}
+.speech-bubble::before {
+    content: ''; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+    border-width: 6px 8px 6px 0; border-style: solid; border-color: transparent #D8B4FE transparent transparent;
+}
 
 .reading-card-container {
-    width: 100%; max-width: 860px; min-height: 220px; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center; padding: 32px;
+    width: 100%; max-width: 960px; min-height: 240px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 24px;
+}
+
+/* 5-Card Word Set Grid for WORD_READ_SET_TEXT */
+.word-set-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 920px;
+    margin: 12px 0;
+}
+
+.word-set-card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    border: 2px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.word-set-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-number-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #1E293B;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    z-index: 10;
+}
+
+.card-illustration-area {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 12px 16px 12px;
+    background: #FFFFFF;
+}
+
+.card-illustration-area .emoji-icon {
+    font-size: 64px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08));
+}
+
+.card-word-footer {
+    width: 100%;
+    padding: 12px 8px;
+    text-align: center;
+    font-family: var(--md-typeface-brand);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #0F172A;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Card Color Themes */
+.word-set-card.theme-yellow { border-color: #FDE047; }
+.word-set-card.theme-yellow .card-number-badge { background: #FEF08A; }
+.word-set-card.theme-yellow .card-word-footer { background: #FEF9C3; }
+
+.word-set-card.theme-green { border-color: #86EFAC; }
+.word-set-card.theme-green .card-number-badge { background: #BBF7D0; }
+.word-set-card.theme-green .card-word-footer { background: #DCFCE7; }
+
+.word-set-card.theme-blue { border-color: #93C5FD; }
+.word-set-card.theme-blue .card-number-badge { background: #BFDBFE; }
+.word-set-card.theme-blue .card-word-footer { background: #DBEAFE; }
+
+.word-set-card.theme-purple { border-color: #C084FC; }
+.word-set-card.theme-purple .card-number-badge { background: #E9D5FF; }
+.word-set-card.theme-purple .card-word-footer { background: #F3E8FF; }
+
+.word-set-card.theme-pink { border-color: #F472B6; }
+.word-set-card.theme-pink .card-number-badge { background: #FBCFE8; }
+.word-set-card.theme-pink .card-word-footer { background: #FCE7F3; }
+
+/* Highlighted Green Card State */
+.word-set-card.highlight-read {
+    border-color: #22C55E !important;
+    transform: scale(1.06);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4) !important;
+}
+.word-set-card.highlight-read .card-word-footer {
+    background: #22C55E !important;
+    color: white !important;
 }
 
 /* Template UI Constructs */
