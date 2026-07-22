@@ -77,7 +77,7 @@
                         <span class="material-icons-round" style="font-size: 18px;">translate</span>
                         <span>Gujarati / English</span>
                     </div>
-                    <button id="btn-teacher-dashboard-trigger" class="btn-icon" title="Teacher Settings">
+                    <button id="btn-teacher-dashboard-trigger" class="btn-icon" title="Teacher Settings" onclick="openTeacherSettingsModal()">
                         <span class="material-icons-round">settings</span>
                     </button>
                 </div>
@@ -88,10 +88,10 @@
                 <div class="card progress-banner">
                     <div class="progress-info">
                         <span class="progress-title">Monthly Progress</span>
-                        <h2 class="fredoka-text text-primary" id="progress-text-count">18 / 40 Students Completed</h2>
+                        <h2 class="fredoka-text text-primary" id="progress-text-count">38 / 40 Students Completed</h2>
                     </div>
                     <div class="progress-bar-large-container">
-                        <div id="progress-bar-fill-large" class="progress-bar-fill-large" style="width: 45%;"></div>
+                        <div id="progress-bar-fill-large" class="progress-bar-fill-large" style="width: 95%;"></div>
                     </div>
                 </div>
 
@@ -267,12 +267,238 @@
             </div>
         </div>
 
+        <!-- Screen 5: Teacher 3-Tab Reporting Module -->
+        <div id="screen-05-reporting" class="screen hidden reporting-screen">
+            <header class="top-bar">
+                <div class="header-left">
+                    <button class="btn-secondary" onclick="renderTeacherHome()">
+                        <span class="material-icons-round">arrow_back</span> Back to Home
+                    </button>
+                    <div>
+                        <h1 class="fredoka-text">Teacher Reporting Dashboard</h1>
+                        <p class="subtitle text-muted">Gujarat Primary ORF Fluency Analytics</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn-primary" onclick="exportFilteredCSV()">
+                        <span class="material-icons-round">download</span> Export CSV
+                    </button>
+                </div>
+            </header>
+
+            <!-- 3 Tabs Navigation Bar -->
+            <div class="reporting-tabs-nav">
+                <button class="rep-tab-btn active" id="tab-btn-student" onclick="switchReportingTab('student')">
+                    <span class="material-icons-round">person</span> Student Report
+                </button>
+                <button class="rep-tab-btn" id="tab-btn-class" onclick="switchReportingTab('class')">
+                    <span class="material-icons-round">groups</span> Class Report
+                </button>
+                <button class="rep-tab-btn" id="tab-btn-log" onclick="switchReportingTab('log')">
+                    <span class="material-icons-round">receipt_long</span> Response Log
+                </button>
+            </div>
+
+            <main class="reporting-body">
+
+                <!-- Tab 1: Student Report View -->
+                <div id="rep-tab-content-student" class="rep-tab-content active">
+                    <div class="student-select-card card">
+                        <label for="rep-student-selector" class="rep-label">Select Student:</label>
+                        <select id="rep-student-selector" class="demo-select rep-select" onchange="renderStudentReport(this.value)">
+                            <!-- Populated dynamically with 40 students -->
+                        </select>
+                    </div>
+
+                    <div class="rep-grid-layout" id="student-report-details-container">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Tab 2: Class Report View -->
+                <div id="rep-tab-content-class" class="rep-tab-content hidden">
+                    <div class="rep-stats-grid">
+                        <div class="card stat-card">
+                            <span class="stat-card-title">TOTAL STUDENTS</span>
+                            <h2 class="fredoka-text text-primary">40</h2>
+                        </div>
+                        <div class="card stat-card">
+                            <span class="stat-card-title">ASSESSED</span>
+                            <h2 class="fredoka-text text-success">38</h2>
+                        </div>
+                        <div class="card stat-card">
+                            <span class="stat-card-title">PENDING</span>
+                            <h2 class="fredoka-text text-secondary">0</h2>
+                        </div>
+                        <div class="card stat-card">
+                            <span class="stat-card-title">ABSENT</span>
+                            <h2 class="fredoka-text text-muted">2</h2>
+                        </div>
+                    </div>
+
+                    <div class="card coverage-banner-card">
+                        <div class="coverage-header">
+                            <span class="coverage-title">CURRENT CYCLE COVERAGE</span>
+                            <span class="coverage-count">38 / 40 Students Assessed (95%)</span>
+                        </div>
+                        <div class="progress-bar-large-container">
+                            <div class="progress-bar-fill-large" style="width: 95%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="rep-grid-two-col">
+                        <div class="card">
+                            <h3 class="fredoka-text" style="margin-bottom: 16px;">Reading Level Distribution</h3>
+                            <div class="level-dist-bars">
+                                <div class="dist-row"><span>Level 1 (Balvatika)</span><div class="dist-bar"><div style="width: 10%; background: #EF5350;"></div></div><span>4</span></div>
+                                <div class="dist-row"><span>Level 2 (Grade 1)</span><div class="dist-bar"><div style="width: 45%; background: #FF9800;"></div></div><span>18</span></div>
+                                <div class="dist-row"><span>Level 3 (Grade 2)</span><div class="dist-bar"><div style="width: 30%; background: #2E7D32;"></div></div><span>12</span></div>
+                                <div class="dist-row"><span>Level 4 (Grade 3)</span><div class="dist-bar"><div style="width: 15%; background: #3F51B5;"></div></div><span>6</span></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="fredoka-text" style="margin-bottom: 16px;">Classroom Insights</h3>
+                            <ul class="insights-list">
+                                <li>✨ <strong>Level 2 Majority:</strong> Most students (45%) are successfully reading at Level 2.</li>
+                                <li>📈 <strong>Fluency Improvement:</strong> Average WCPM increased by 14% this month.</li>
+                                <li>⚠️ <strong>Attention Needed:</strong> 4 students require reassessment support at Level 1.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 20px;">
+                        <h3 class="fredoka-text" style="margin-bottom: 16px;">Students Requiring Attention</h3>
+                        <table class="rep-table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Grade</th>
+                                    <th>Level</th>
+                                    <th>Attention Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attention-students-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Response Log View -->
+                <div id="rep-tab-content-log" class="rep-tab-content hidden">
+                    <div class="card log-filters-card">
+                        <div class="filters-row">
+                            <div class="filter-group">
+                                <label>Filter Level:</label>
+                                <select id="filter-log-level" class="demo-select" onchange="renderResponseLog()">
+                                    <option value="ALL">All Levels</option>
+                                    <option value="L1">Level 1</option>
+                                    <option value="L2">Level 2</option>
+                                    <option value="L3">Level 3</option>
+                                    <option value="L4">Level 4</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Language:</label>
+                                <select id="filter-log-lang" class="demo-select" onchange="renderResponseLog()">
+                                    <option value="ALL">All Languages</option>
+                                    <option value="Gujarati">Gujarati</option>
+                                    <option value="English">English</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card table-wrapper-card">
+                        <table class="rep-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Student</th>
+                                    <th>Language</th>
+                                    <th>Level</th>
+                                    <th>Tier</th>
+                                    <th>Accuracy</th>
+                                    <th>WCPM</th>
+                                    <th>Comp Score</th>
+                                    <th>Transition</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="response-log-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
         <!-- Animated Progression Simulation Toast Modal -->
         <div id="progression-toast" class="progression-toast hidden">
             <div class="toast-card" id="toast-card">
                 <span class="material-icons-round toast-icon" id="toast-icon">north_east</span>
                 <div class="toast-title" id="toast-title">Advance</div>
                 <div class="toast-subtitle" id="toast-subtitle">L1 ↓ L2</div>
+            </div>
+        </div>
+
+        <!-- Teacher Settings Modal -->
+        <div id="modal-teacher-settings" class="modal-backdrop hidden">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 class="fredoka-text">Teacher Settings</h2>
+                    <button class="btn-icon" onclick="closeTeacherSettingsModal()"><span class="material-icons-round">close</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-options-grid">
+                        <div class="settings-option-card" onclick="openReportingFromSettings()">
+                            <span class="material-icons-round option-icon text-primary">assessment</span>
+                            <h3>Reporting Dashboard</h3>
+                            <p class="text-muted">View individual student progress, class overview, and export response logs.</p>
+                        </div>
+                        <div class="settings-option-card" onclick="triggerResetConfiguration()">
+                            <span class="material-icons-round option-icon text-secondary">restart_alt</span>
+                            <h3>Reset Configuration</h3>
+                            <p class="text-muted">Return app to initial setup flow and re-configure school settings.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Initial Setup Onboarding Modal -->
+        <div id="modal-onboarding-setup" class="modal-backdrop hidden">
+            <div class="modal-card" style="max-width: 520px;">
+                <div class="modal-header">
+                    <h2 class="fredoka-text">Miko Reading Check Setup</h2>
+                </div>
+                <div class="modal-body" style="text-align: left;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="rep-label">District & Block:</label>
+                        <select class="demo-select" style="width: 100%;">
+                            <option>Ahmedabad • Primary Block 1</option>
+                            <option>Gandhinagar • Block A</option>
+                            <option>Surat • Primary Division</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="rep-label">School Name:</label>
+                        <input type="text" class="demo-select" value="Government Primary School No. 4" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label class="rep-label">Language Track:</label>
+                        <select class="demo-select" style="width: 100%;">
+                            <option>Gujarati / English Dual Track</option>
+                            <option>Gujarati Medium</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary btn-large" style="width: 100%;" onclick="completeInitialSetupFlow()">
+                        <span class="material-icons-round">check_circle</span> Complete Setup
+                    </button>
+                </div>
             </div>
         </div>
 

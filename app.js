@@ -6,7 +6,8 @@ const screens = {
     TRANSITION: document.getElementById('screen-02-transition'),
     ACTIVITY: document.getElementById('screen-03-activity'),
     COMPREHENSION: document.getElementById('screen-03b-comprehension'),
-    END: document.getElementById('screen-04-end')
+    END: document.getElementById('screen-04-end'),
+    REPORTING: document.getElementById('screen-05-reporting')
 };
 
 // Demo State
@@ -37,12 +38,12 @@ let micPermissionRequested = false;
 
 // Roster Mock Data for Home Screen
 let rosterStudents = [
-    { name: "Aarav Patel", status: "waiting", id: "04" },
-    { name: "Meera Shah", status: "waiting", id: "05" },
-    { name: "Kunal Joshi", status: "waiting", id: "06" },
-    { name: "Diya Parikh", status: "done", id: "01" },
-    { name: "Riya Mehta", status: "done", id: "02" },
-    { name: "Vihaan Sharma", status: "done", id: "03" }
+    { name: "Aarav Patel", status: "waiting", id: "s1" },
+    { name: "Meera Shah", status: "waiting", id: "s2" },
+    { name: "Kunal Joshi", status: "waiting", id: "s3" },
+    { name: "Diya Parikh", status: "done", id: "s4" },
+    { name: "Riya Mehta", status: "done", id: "s5" },
+    { name: "Vihaan Sharma", status: "done", id: "s6" }
 ];
 let currentStudentIndex = 0;
 
@@ -715,7 +716,7 @@ function renderCurrentActivity() {
     else if (currentTemplate === 'WORD_READ_MINIMAL_PAIR') {
         const targetWord = sample.target || "sun";
         const optionsList = sample.options || ["sun", "sub"];
-        const imgDisplay = sample.image || (targetWord === "sun" ? "☀️" : targetWord === "pin" ? "🖊️" : "🐱");
+        const imgDisplay = sample.image || (targetWord === "sun" ? "☀️" : targetWord === "pen" ? "🖊️" : "🐱");
         
         currentTargetWordList = [targetWord];
 
@@ -1036,6 +1037,229 @@ function returnToHomeFromComplete() {
     rosterStudents.forEach(s => s.status = 'waiting');
     currentStudentIndex = 0;
     renderTeacherHome();
+}
+
+// ==========================================
+// TEACHER SETTINGS MODAL & RESET CONFIG
+// ==========================================
+function openTeacherSettingsModal() {
+    const modal = document.getElementById('modal-teacher-settings');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeTeacherSettingsModal() {
+    const modal = document.getElementById('modal-teacher-settings');
+    if (modal) modal.classList.add('hidden');
+}
+
+function openReportingFromSettings() {
+    closeTeacherSettingsModal();
+    showScreen(screens.REPORTING);
+    populateStudentSelector();
+    renderStudentReport('s1');
+    renderClassReport();
+    renderResponseLog();
+}
+
+function triggerResetConfiguration() {
+    if (confirm("Are you sure you want to reset app configuration and return to the initial setup flow?")) {
+        closeTeacherSettingsModal();
+        const onboardingModal = document.getElementById('modal-onboarding-setup');
+        if (onboardingModal) onboardingModal.classList.remove('hidden');
+    }
+}
+
+function completeInitialSetupFlow() {
+    const onboardingModal = document.getElementById('modal-onboarding-setup');
+    if (onboardingModal) onboardingModal.classList.add('hidden');
+    renderTeacherHome();
+}
+
+// ==========================================
+// SCREEN 5: 3-TAB TEACHER REPORTING MODULE
+// ==========================================
+function switchReportingTab(tabName) {
+    const tabs = ['student', 'class', 'log'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const content = document.getElementById(`rep-tab-content-${t}`);
+        if (btn && content) {
+            if (t === tabName) {
+                btn.classList.add('active');
+                content.classList.remove('hidden');
+            } else {
+                btn.classList.remove('active');
+                content.classList.add('hidden');
+            }
+        }
+    });
+}
+
+function populateStudentSelector() {
+    const selector = document.getElementById('rep-student-selector');
+    if (!selector) return;
+    selector.innerHTML = '';
+
+    MOCK_REPORTING_STUDENTS.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.innerText = `${s.name} (${s.grade} • ${s.level})`;
+        selector.appendChild(opt);
+    });
+}
+
+function renderStudentReport(studentId) {
+    const container = document.getElementById('student-report-details-container');
+    if (!container) return;
+
+    const student = MOCK_REPORTING_STUDENTS.find(s => s.id === studentId) || MOCK_REPORTING_STUDENTS[0];
+
+    const journeyHtml = student.journey.map((step, idx) => `
+        <div style="display: inline-flex; align-items: center; gap: 8px;">
+            <span style="background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 1.1rem;">${step}</span>
+            ${idx < student.journey.length - 1 ? '<span class="material-icons-round" style="color: #94A3B8;">north_east</span>' : ''}
+        </div>
+    `).join(' ');
+
+    const flagHtml = student.flag ? `
+        <div style="background: #FEE2E2; color: #B91C1C; padding: 12px 20px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+            <span class="material-icons-round">warning</span> ${student.flag}
+        </div>
+    ` : '';
+
+    container.innerHTML = `
+        <div class="card" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2 class="fredoka-text">${student.name}</h2>
+                    <p class="text-muted">${student.grade} • ${student.lang} Track</p>
+                </div>
+                <span class="badge-pill" style="font-size: 1rem;">${student.level} • ${student.tier}</span>
+            </div>
+
+            <div style="border-top: 1px solid #E2E8F0; padding-top: 16px;">
+                <span class="rep-label" style="font-size: 0.85rem; color: #64748B;">READING JOURNEY</span>
+                <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
+                    ${journeyHtml}
+                </div>
+            </div>
+
+            ${flagHtml}
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="rep-stats-grid">
+                <div class="card stat-card">
+                    <span class="stat-card-title">READING ACCURACY</span>
+                    <h2 class="fredoka-text text-success">${student.accuracy}%</h2>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-card-title">READING RATE</span>
+                    <h2 class="fredoka-text text-primary">${student.wcpm} WCPM</h2>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-card-title">COMPREHENSION</span>
+                    <h2 class="fredoka-text text-secondary">${student.compScore}%</h2>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-card-title">ASSESSMENTS</span>
+                    <h2 class="fredoka-text text-muted">${student.assessments}</h2>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="fredoka-text" style="margin-bottom: 12px;">Performance Sparkline Trends</h3>
+                <div style="height: 100px; background: #F8FAFC; border-radius: 12px; border: 1px dashed #CBD5E1; display: flex; align-items: flex-end; justify-content: space-between; padding: 16px 32px;">
+                    <div style="height: 40%; width: 14%; background: #93C5FD; border-radius: 4px;" title="Session 1"></div>
+                    <div style="height: 60%; width: 14%; background: #93C5FD; border-radius: 4px;" title="Session 2"></div>
+                    <div style="height: 75%; width: 14%; background: #93C5FD; border-radius: 4px;" title="Session 3"></div>
+                    <div style="height: 85%; width: 14%; background: #3B82F6; border-radius: 4px;" title="Session 4"></div>
+                    <div style="height: ${student.accuracy}%; width: 14%; background: #1D4ED8; border-radius: 4px;" title="Current Session"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderClassReport() {
+    const tbody = document.getElementById('attention-students-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const attentionList = MOCK_REPORTING_STUDENTS.filter(s => s.flag !== null);
+
+    attentionList.forEach(s => {
+        const tr = document.createElement('tr');
+        const badgeClass = s.flag.includes('Not') ? 'badge-amber' : s.flag.includes('Stuck') ? 'badge-red' : 'badge-amber';
+        tr.innerHTML = `
+            <td><strong>${s.name}</strong></td>
+            <td>${s.grade}</td>
+            <td><span class="badge-pill">${s.level}</span></td>
+            <td><span class="badge-status ${badgeClass}">${s.flag}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderResponseLog() {
+    const tbody = document.getElementById('response-log-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const levelFilter = document.getElementById('filter-log-level') ? document.getElementById('filter-log-level').value : 'ALL';
+    const langFilter = document.getElementById('filter-log-lang') ? document.getElementById('filter-log-lang').value : 'ALL';
+
+    let filtered = MOCK_REPORTING_STUDENTS.filter(s => {
+        if (levelFilter !== 'ALL' && s.level !== levelFilter) return false;
+        if (langFilter !== 'ALL' && s.lang !== langFilter) return false;
+        return true;
+    });
+
+    filtered.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>2026-07-22</td>
+            <td><strong>${s.name}</strong></td>
+            <td>${s.lang}</td>
+            <td>${s.level}</td>
+            <td>${s.tier}</td>
+            <td><strong class="text-success">${s.accuracy}%</strong></td>
+            <td>${s.wcpm} WCPM</td>
+            <td>${s.compScore}%</td>
+            <td><span class="badge-status badge-green">Advanced</span></td>
+            <td>
+                <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="alert('Playing audio recording for ${s.name}...')">
+                    <span class="material-icons-round" style="font-size: 16px;">play_arrow</span> Play
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function exportFilteredCSV() {
+    const levelFilter = document.getElementById('filter-log-level') ? document.getElementById('filter-log-level').value : 'ALL';
+    const langFilter = document.getElementById('filter-log-lang') ? document.getElementById('filter-log-lang').value : 'ALL';
+
+    let filtered = MOCK_REPORTING_STUDENTS.filter(s => {
+        if (levelFilter !== 'ALL' && s.level !== levelFilter) return false;
+        if (langFilter !== 'ALL' && s.lang !== langFilter) return false;
+        return true;
+    });
+
+    let csvContent = "data:text/csv;charset=utf-8,Date,Student Name,Grade,Language,Reading Level,Tier,Accuracy %,WCPM,Comprehension %\n";
+
+    filtered.forEach(s => {
+        csvContent += `2026-07-22,"${s.name}","${s.grade}","${s.lang}","${s.level}","${s.tier}",${s.accuracy},${s.wcpm},${s.compScore}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Miko_ORF_Assessment_Log.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // App Initialization

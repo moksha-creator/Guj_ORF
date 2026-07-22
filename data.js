@@ -452,3 +452,47 @@ const PROTOTYPE_DATA = {
     }
   }
 };
+
+// 40 Student Mock Data for Reporting Module
+const MOCK_REPORTING_STUDENTS = [
+  { id: "s1", name: "Aarav Patel", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L1", "L2", "L2", "L3"], accuracy: 92, wcpm: 48, compScore: 100, assessments: 6, flag: null },
+  { id: "s2", name: "Meera Shah", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "3 days ago", journey: ["L1", "L1", "L2"], accuracy: 88, wcpm: 34, compScore: 80, assessments: 4, flag: null },
+  { id: "s3", name: "Kunal Joshi", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "1 week ago", journey: ["L1", "L1"], accuracy: 64, wcpm: 18, compScore: 60, assessments: 3, flag: "Stuck at Level 1" },
+  { id: "s4", name: "Diya Parikh", grade: "Grade 1-B", lang: "Gujarati", level: "L4", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 98, wcpm: 72, compScore: 100, assessments: 8, flag: null },
+  { id: "s5", name: "Riya Mehta", grade: "Grade 1-B", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2", "L3"], accuracy: 90, wcpm: 42, compScore: 90, assessments: 5, flag: null },
+  { id: "s6", name: "Vihaan Sharma", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L1", "L2"], accuracy: 85, wcpm: 31, compScore: 75, assessments: 4, flag: null },
+  { id: "s7", name: "Ananya Desai", grade: "Grade 1-A", lang: "English", level: "L2", tier: "Tier 1", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 82, wcpm: 29, compScore: 70, assessments: 3, flag: null },
+  { id: "s8", name: "Dev Trivedi", grade: "Grade 1-B", lang: "Gujarati", level: "L1", tier: "Tier 2", lastAssessed: "2 weeks ago", journey: ["L1"], accuracy: 58, wcpm: 14, compScore: 50, assessments: 2, flag: "Not Assessed Recently" },
+  { id: "s9", name: "Isha Solanki", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L2", "L3"], accuracy: 91, wcpm: 46, compScore: 85, assessments: 4, flag: null },
+  { id: "s10", name: "Kabir Vora", grade: "Grade 1-B", lang: "English", level: "L2", tier: "Tier 3", lastAssessed: "3 days ago", journey: ["L1", "L2"], accuracy: 89, wcpm: 38, compScore: 60, assessments: 4, flag: "Low Comprehension" },
+  { id: "s11", name: "Manav Bhatia", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "1 month ago", journey: ["L1"], accuracy: 52, wcpm: 12, compScore: 40, assessments: 1, flag: "Not Assessed Recently" },
+  { id: "s12", name: "Navya Chaudhari", grade: "Grade 1-A", lang: "Gujarati", level: "L4", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 96, wcpm: 68, compScore: 100, assessments: 7, flag: null },
+  { id: "s13", name: "Parth Soni", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "6 days ago", journey: ["L1", "L2"], accuracy: 80, wcpm: 28, compScore: 80, assessments: 3, flag: null },
+  { id: "s14", name: "Saanvi Parmar", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "2 days ago", journey: ["L2", "L3"], accuracy: 94, wcpm: 50, compScore: 90, assessments: 5, flag: null },
+  { id: "s15", name: "Tanish Kothari", grade: "Grade 1-B", lang: "English", level: "L2", tier: "Tier 2", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 84, wcpm: 30, compScore: 75, assessments: 3, flag: null },
+  { id: "s16", name: "Yashvi Zala", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 3", lastAssessed: "3 days ago", journey: ["L1"], accuracy: 70, wcpm: 22, compScore: 65, assessments: 3, flag: "Review Required" },
+  { id: "s17", name: "Aditya Barot", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2"], accuracy: 87, wcpm: 35, compScore: 85, assessments: 4, flag: null },
+  { id: "s18", name: "Bhavya Dave", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "2 days ago", journey: ["L2", "L3"], accuracy: 93, wcpm: 49, compScore: 95, assessments: 5, flag: null },
+  { id: "s19", name: "Charmi Vyas", grade: "Grade 1-B", lang: "English", level: "L4", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 97, wcpm: 70, compScore: 100, assessments: 6, flag: null },
+  { id: "s20", name: "Dharmi Rathod", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 2", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 83, wcpm: 32, compScore: 70, assessments: 3, flag: null },
+  { id: "s21", name: "Eshan Macwan", grade: "Grade 1-B", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "1 week ago", journey: ["L1"], accuracy: 60, wcpm: 16, compScore: 50, assessments: 2, flag: "Stuck at Level 1" },
+  { id: "s22", name: "Falguni Pandva", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L1", "L2"], accuracy: 86, wcpm: 33, compScore: 80, assessments: 4, flag: null },
+  { id: "s23", name: "Gaurav Jadeha", grade: "Grade 1-B", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "3 days ago", journey: ["L1", "L2", "L3"], accuracy: 90, wcpm: 45, compScore: 90, assessments: 5, flag: null },
+  { id: "s24", name: "Hetal Chavda", grade: "Grade 1-A", lang: "English", level: "L2", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 81, wcpm: 28, compScore: 75, assessments: 3, flag: null },
+  { id: "s25", name: "Ishaan Bhati", grade: "Grade 1-B", lang: "Gujarati", level: "L4", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L3", "L4"], accuracy: 95, wcpm: 66, compScore: 95, assessments: 6, flag: null },
+  { id: "s26", name: "Jiya Vaghela", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "2 days ago", journey: ["L1", "L2"], accuracy: 88, wcpm: 36, compScore: 85, assessments: 4, flag: null },
+  { id: "s27", name: "Kavya Shrimali", grade: "Grade 1-B", lang: "Gujarati", level: "L3", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L2", "L3"], accuracy: 92, wcpm: 47, compScore: 90, assessments: 5, flag: null },
+  { id: "s28", name: "Luv Dabhi", grade: "Grade 1-A", lang: "English", level: "L1", tier: "Tier 2", lastAssessed: "3 weeks ago", journey: ["L1"], accuracy: 55, wcpm: 15, compScore: 45, assessments: 2, flag: "Not Assessed Recently" },
+  { id: "s29", name: "Mahi Gohil", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 2", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 84, wcpm: 30, compScore: 75, assessments: 3, flag: null },
+  { id: "s30", name: "Nikhil Panchal", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2", "L3"], accuracy: 91, wcpm: 44, compScore: 90, assessments: 4, flag: null },
+  { id: "s31", name: "Om Vania", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 86, wcpm: 34, compScore: 80, assessments: 3, flag: null },
+  { id: "s32", name: "Pooja Damor", grade: "Grade 1-A", lang: "Gujarati", level: "L4", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 99, wcpm: 75, compScore: 100, assessments: 7, flag: null },
+  { id: "s33", name: "Rohan Makwana", grade: "Grade 1-B", lang: "English", level: "L2", tier: "Tier 2", lastAssessed: "2 days ago", journey: ["L1", "L2"], accuracy: 85, wcpm: 33, compScore: 70, assessments: 4, flag: null },
+  { id: "s34", name: "Shruti Thakar", grade: "Grade 1-A", lang: "Gujarati", level: "L3", tier: "Tier 2", lastAssessed: "Yesterday", journey: ["L2", "L3"], accuracy: 93, wcpm: 51, compScore: 95, assessments: 5, flag: null },
+  { id: "s35", name: "Tushti Upadhyay", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "4 days ago", journey: ["L1", "L2"], accuracy: 87, wcpm: 37, compScore: 85, assessments: 3, flag: null },
+  { id: "s36", name: "Urvi Garange", grade: "Grade 1-A", lang: "Gujarati", level: "L1", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1"], accuracy: 68, wcpm: 20, compScore: 60, assessments: 2, flag: null },
+  { id: "s37", name: "Vatsal Sisodiya", grade: "Grade 1-B", lang: "Gujarati", level: "L2", tier: "Tier 3", lastAssessed: "3 days ago", journey: ["L1", "L2"], accuracy: 83, wcpm: 31, compScore: 75, assessments: 3, flag: null },
+  { id: "s38", name: "Yash Katara", grade: "Grade 1-A", lang: "English", level: "L3", tier: "Tier 1", lastAssessed: "Yesterday", journey: ["L1", "L2", "L3"], accuracy: 92, wcpm: 48, compScore: 90, assessments: 5, flag: null },
+  { id: "s39", name: "Zoya Merchant", grade: "Grade 1-B", lang: "Gujarati", level: "L4", tier: "Tier 3", lastAssessed: "Yesterday", journey: ["L2", "L3", "L4"], accuracy: 97, wcpm: 71, compScore: 100, assessments: 8, flag: null },
+  { id: "s40", name: "Dhairya Sanghavi", grade: "Grade 1-A", lang: "Gujarati", level: "L2", tier: "Tier 1", lastAssessed: "5 days ago", journey: ["L1", "L2"], accuracy: 85, wcpm: 33, compScore: 80, assessments: 4, flag: null }
+];
