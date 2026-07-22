@@ -150,6 +150,9 @@
                     <span class="badge-pill" id="activity-level-badge">Balvatika (L1)</span>
                     <span class="badge-pill" id="activity-template-badge">WORD_READ_TEXT</span>
                     <span class="badge-pill" id="activity-sample-counter" style="background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary);">Sample 1 of 3</span>
+                    <span class="badge-pill" id="activity-wcpm-badge" style="background: #FEF3C7; color: #B45309; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-icons-round" style="font-size: 16px;">speed</span> <span id="wcpm-val-display">0</span> WCPM
+                    </span>
                 </div>
                 <div class="teacher-live-controls">
                     <!-- 3-Minute Assessment Countdown Timer -->
@@ -256,7 +259,11 @@
                         <span class="stat-label">Students Assessed</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-number text-secondary" id="summary-stat-absent">2</span>
+                        <span class="stat-number text-secondary" id="summary-stat-wcpm">42</span>
+                        <span class="stat-label">Avg WCPM</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number text-success" id="summary-stat-absent">2</span>
                         <span class="stat-label">Absent</span>
                     </div>
                 </div>

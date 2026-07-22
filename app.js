@@ -36,6 +36,30 @@ let lastSpeechTimestamp = Date.now();
 let silenceCheckerInterval = null;
 let micPermissionRequested = false;
 
+// Live WCPM (Words Correct Per Minute) Metrics Engine
+let sessionStartTime = Date.now();
+let sessionCorrectWordsCount = 0;
+let currentSessionWCPM = 0;
+
+function resetWCPMTracker() {
+    sessionStartTime = Date.now();
+    sessionCorrectWordsCount = 0;
+    currentSessionWCPM = 0;
+    updateLiveWCPMDisplay();
+}
+
+function incrementCorrectWordWCPM() {
+    sessionCorrectWordsCount++;
+    const elapsedMins = (Date.now() - sessionStartTime) / 60000;
+    currentSessionWCPM = Math.round(sessionCorrectWordsCount / Math.max(0.08, elapsedMins));
+    updateLiveWCPMDisplay();
+}
+
+function updateLiveWCPMDisplay() {
+    const el = document.getElementById('wcpm-val-display');
+    if (el) el.innerText = currentSessionWCPM;
+}
+
 // ----------------------------------------------------
 // WEB AUDIO API SOUND EFFECTS (SFX) ENGINE
 // ----------------------------------------------------
@@ -241,6 +265,7 @@ function showScreen(targetScreen) {
 function startAssessmentTimer() {
     if (assessmentTimerInterval) clearInterval(assessmentTimerInterval);
     assessmentTimerSeconds = 180; // Reset to 3 minutes
+    resetWCPMTracker(); // Reset WCPM tracker on timer start!
     updateTimerBadgesDisplay();
 
     assessmentTimerInterval = setInterval(() => {
@@ -499,6 +524,7 @@ function processSpokenTranscriptStream(spokenText) {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             const el = document.getElementById('target-text-display');
             if (el) el.classList.add('highlight-green');
             updateMicUI('processing');
@@ -512,6 +538,7 @@ function processSpokenTranscriptStream(spokenText) {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             const revealed = document.getElementById('image-word-revealed');
             if (revealed) revealed.classList.remove('hidden');
             updateMicUI('processing');
@@ -529,6 +556,7 @@ function processSpokenTranscriptStream(spokenText) {
                 if (card && !card.classList.contains('highlight-read')) {
                     card.classList.add('highlight-read');
                     playSFX('word_tick');
+                    incrementCorrectWordWCPM();
                 }
             }
         });
@@ -550,6 +578,7 @@ function processSpokenTranscriptStream(spokenText) {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             const targetOptEl = document.getElementById(`min-option-${target}`);
             if (targetOptEl) targetOptEl.classList.add('correct');
             updateMicUI('processing');
@@ -563,6 +592,7 @@ function processSpokenTranscriptStream(spokenText) {
         const target = currentTargetWordList[0].toLowerCase();
         if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             const blank = document.getElementById('cloze-blank-target');
             if (blank) {
                 blank.innerText = target;
@@ -608,6 +638,7 @@ function processSpokenTranscriptStream(spokenText) {
                 span.classList.add('green');
                 span.classList.remove('missed');
                 playSFX('word_tick');
+                incrementCorrectWordWCPM();
             }
             currentMatchedWordIndex = foundIdx + 1;
             updateReadingCursor(currentMatchedWordIndex);
@@ -1042,6 +1073,7 @@ function simulateWordSpeech() {
         const el = document.getElementById('target-text-display');
         if (el) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             el.classList.add('highlight-green');
             updateMicUI('processing');
             isStepTransitioning = true;
@@ -1064,6 +1096,7 @@ function simulateWordSpeech() {
                 const card = document.getElementById(`set-card-${cardIndex}`);
                 if (card) {
                     playSFX('word_tick');
+                    incrementCorrectWordWCPM();
                     card.classList.add('highlight-read');
                 }
                 cardIndex++;
@@ -1083,6 +1116,7 @@ function simulateWordSpeech() {
         const targetOptEl = document.getElementById(`min-option-${targetWord.toLowerCase()}`);
         if (targetOptEl) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             targetOptEl.classList.add('correct');
             updateMicUI('processing');
             isStepTransitioning = true;
@@ -1096,6 +1130,7 @@ function simulateWordSpeech() {
         const revealed = document.getElementById('image-word-revealed');
         if (revealed) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             revealed.classList.remove('hidden');
             updateMicUI('processing');
             isStepTransitioning = true;
@@ -1109,6 +1144,7 @@ function simulateWordSpeech() {
         const blank = document.getElementById('cloze-blank-target');
         if (blank) {
             playSFX('word_tick');
+            incrementCorrectWordWCPM();
             blank.innerText = sample.target;
             blank.style.color = '#2E7D32';
             updateMicUI('processing');
@@ -1134,6 +1170,7 @@ function simulateWordSpeech() {
                 const span = document.getElementById(`word-${wordIdx}`);
                 if (span) {
                     playSFX('word_tick');
+                    incrementCorrectWordWCPM();
                     span.classList.add('green');
                     span.classList.remove('missed');
                 }
@@ -1163,6 +1200,7 @@ function selectMinimalPair(elem, selected, target) {
     if (isStepTransitioning) return;
     isStepTransitioning = true;
     playSFX('word_tick');
+    incrementCorrectWordWCPM();
     document.querySelectorAll('.minimal-pair-option').forEach(el => el.classList.remove('correct'));
     elem.classList.add('correct');
     updateLiveTranscriptText(selected);
@@ -1245,8 +1283,11 @@ function triggerCelebrationConfetti() {
 
     const assEl = document.getElementById('summary-stat-assessed');
     const absEl = document.getElementById('summary-stat-absent');
+    const wcpmEl = document.getElementById('summary-stat-wcpm');
+
     if (assEl) assEl.innerText = assessed || 38;
     if (absEl) absEl.innerText = absent || 2;
+    if (wcpmEl) wcpmEl.innerText = currentSessionWCPM > 0 ? currentSessionWCPM : 42;
 
     for (let i = 0; i < 40; i++) {
         const c = document.createElement('div');
@@ -1442,7 +1483,6 @@ function renderResponseLog() {
     });
 
     filtered.forEach(s => {
-        const tr = document.getElementById(`log-row-${s.id}`);
         const trEl = document.createElement('tr');
         trEl.innerHTML = `
             <td>2026-07-22</td>
