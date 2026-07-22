@@ -576,33 +576,41 @@ function processSpokenTranscriptStream(spokenText) {
         }
     }
     else if (currentTemplate.includes('SENTENCE') || currentTemplate.includes('PASSAGE')) {
-        for (let i = currentMatchedWordIndex; i < currentTargetWordList.length; i++) {
-            const targetWord = currentTargetWordList[i].toLowerCase().replace(/[^\w]/g, '');
-            
-            let foundIdx = -1;
-            for (let lookahead = i; lookahead < Math.min(i + 3, currentTargetWordList.length); lookahead++) {
-                const futureTarget = currentTargetWordList[lookahead].toLowerCase().replace(/[^\w]/g, '');
-                if (spokenTokens.some(st => st === futureTarget || st.includes(futureTarget))) {
-                    foundIdx = lookahead;
-                    break;
-                }
-            }
+        let foundIdx = -1;
+        const lookaheadLimit = Math.min(currentMatchedWordIndex + 3, currentTargetWordList.length);
 
-            if (foundIdx !== -1) {
-                for (let skip = currentMatchedWordIndex; skip < foundIdx; skip++) {
-                    const skippedSpan = document.getElementById(`word-${skip}`);
-                    if (skippedSpan) skippedSpan.classList.add('missed');
-                }
+        for (let lookahead = currentMatchedWordIndex; lookahead < lookaheadLimit; lookahead++) {
+            const futureTarget = currentTargetWordList[lookahead].toLowerCase().replace(/[^\w]/g, '');
+            if (!futureTarget) continue;
 
-                const span = document.getElementById(`word-${foundIdx}`);
-                if (span && !span.classList.contains('green')) {
-                    span.classList.add('green');
-                    playSFX('word_tick');
+            const isMatch = spokenTokens.some(st => {
+                if (st.length === 0) return false;
+                if (futureTarget.length <= 2) {
+                    return st === futureTarget;
                 }
-                currentMatchedWordIndex = foundIdx + 1;
-                updateReadingCursor(currentMatchedWordIndex);
+                return st === futureTarget || (st.length >= 3 && st.startsWith(futureTarget));
+            });
+
+            if (isMatch) {
+                foundIdx = lookahead;
                 break;
             }
+        }
+
+        if (foundIdx !== -1) {
+            for (let skip = currentMatchedWordIndex; skip < foundIdx; skip++) {
+                const skippedSpan = document.getElementById(`word-${skip}`);
+                if (skippedSpan) skippedSpan.classList.add('missed');
+            }
+
+            const span = document.getElementById(`word-${foundIdx}`);
+            if (span && !span.classList.contains('green')) {
+                span.classList.add('green');
+                span.classList.remove('missed');
+                playSFX('word_tick');
+            }
+            currentMatchedWordIndex = foundIdx + 1;
+            updateReadingCursor(currentMatchedWordIndex);
         }
 
         if (currentMatchedWordIndex > 0 && currentMatchedWordIndex >= currentTargetWordList.length) {
@@ -1127,8 +1135,10 @@ function simulateWordSpeech() {
                 if (span) {
                     playSFX('word_tick');
                     span.classList.add('green');
+                    span.classList.remove('missed');
                 }
                 wordIdx++;
+                currentMatchedWordIndex = wordIdx;
                 updateReadingCursor(wordIdx);
             } else {
                 clearInterval(simulatedSpeechTimeout);
@@ -1145,7 +1155,7 @@ function simulateWordSpeech() {
                     }, 1000);
                 }
             }
-        }, 180);
+        }, 300);
     }
 }
 
@@ -1432,8 +1442,9 @@ function renderResponseLog() {
     });
 
     filtered.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+        const tr = document.getElementById(`log-row-${s.id}`);
+        const trEl = document.createElement('tr');
+        trEl.innerHTML = `
             <td>2026-07-22</td>
             <td><strong>${s.name}</strong></td>
             <td>${s.lang}</td>
@@ -1449,7 +1460,7 @@ function renderResponseLog() {
                 </button>
             </td>
         `;
-        tbody.appendChild(tr);
+        tbody.appendChild(trEl);
     });
 }
 
