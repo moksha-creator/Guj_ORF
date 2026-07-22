@@ -59,7 +59,11 @@ function initDefaultAppState(customConfig) {
             grade: AppState.config.grade,
             lang: AppState.config.languageTrack,
             level: base.level || 'L2',
-            tier: base.tier || 'tier1',
+            readingTier: 1,
+            compTier: 0,
+            stageType: 'LEVEL',
+            stageDisplay: base.level || 'L2',
+            tier: base.tier || 'Tier 1',
             status: i < Math.floor(count * 0.8) ? 'done' : i === Math.floor(count * 0.8) ? 'waiting' : 'absent',
             accuracy: base.accuracy || 88,
             wcpm: base.wcpm || 40,
@@ -136,6 +140,120 @@ function incrementCorrectWordWCPM() {
 function updateLiveWCPMDisplay() {
     const el = document.getElementById('wcpm-val-display');
     if (el) el.innerText = currentSessionWCPM;
+}
+
+// ----------------------------------------------------
+// AUTOMATIC ASSESSMENT PROGRESSION ENGINE & CEILING RULES
+// ----------------------------------------------------
+function getGradeCeilingLevel(gradeStr) {
+    if (!gradeStr) return "L2";
+    if (gradeStr.includes("Balvatika")) return "L1";
+    if (gradeStr.includes("1")) return "L2";
+    if (gradeStr.includes("2")) return "L3";
+    if (gradeStr.includes("3")) return "L4";
+    return "L4";
+}
+
+function calculateAutomaticProgression(student, result) {
+    const gradeCeiling = getGradeCeilingLevel(student.grade || AppState.config.grade);
+    const accuracy = result.accuracy; // %
+    const wcpm = result.wcpm;
+    const compScore = result.compScore; // %
+
+    let action = "Stay"; // Advance | Stay | Move Down
+    let currLevel = student.level || "L1";
+    let currReadingTier = student.readingTier || 1; // 1, 2, 3
+    let currCompTier = student.compTier || 0; // 0, 1, 2, 3
+    let stageType = student.stageType || "LEVEL"; // LEVEL | READING_TIER | COMP_TIER
+
+    // 1. Evaluate Promotion Rules
+    if (stageType === "COMP_TIER") {
+        if (compScore >= 80) action = "Advance";
+        else if (compScore >= 60) action = "Stay";
+        else action = "Move Down";
+    }
+    else if (currLevel === "L1" || currLevel === "L2") {
+        if (accuracy >= 90) action = "Advance";
+        else if (accuracy >= 75) action = "Stay";
+        else action = "Move Down";
+    }
+    else if (currLevel === "L3") {
+        if (accuracy >= 90 && wcpm >= 40 && compScore >= 80) action = "Advance";
+        else if (accuracy >= 75 || (wcpm >= 22 && wcpm <= 39)) action = "Stay";
+        else action = "Move Down";
+    }
+    else if (currLevel === "L4") {
+        if (accuracy >= 90 && wcpm >= 55 && compScore >= 80) action = "Advance";
+        else if (accuracy >= 75 || (wcpm >= 35 && wcpm <= 54)) action = "Stay";
+        else action = "Move Down";
+    }
+
+    // 2. Apply Grade Ceiling & Tier Progression
+    const levelOrder = ["L1", "L2", "L3", "L4"];
+    const levelIdx = levelOrder.indexOf(currLevel);
+    const ceilingIdx = levelOrder.indexOf(gradeCeiling);
+
+    if (action === "Advance") {
+        if (stageType === "LEVEL") {
+            if (levelIdx < ceilingIdx) {
+                // Advance to next reading level
+                student.level = levelOrder[levelIdx + 1];
+            } else {
+                // Ceiling reached! Switch to Reading Tier 2
+                student.stageType = "READING_TIER";
+                student.readingTier = 2;
+            }
+        } else if (stageType === "READING_TIER") {
+            if (currReadingTier < 3) {
+                student.readingTier = currReadingTier + 1;
+            } else {
+                // Reading Tier 3 Mastered! Begin Comprehension Tier 1
+                student.stageType = "COMP_TIER";
+                student.compTier = 1;
+            }
+        } else if (stageType === "COMP_TIER") {
+            if (currCompTier < 3) {
+                student.compTier = currCompTier + 1;
+            }
+        }
+    }
+    else if (action === "Move Down") {
+        if (stageType === "COMP_TIER") {
+            if (currCompTier > 1) {
+                student.compTier = currCompTier - 1;
+            } else {
+                student.stageType = "READING_TIER";
+                student.readingTier = 3;
+            }
+        } else if (stageType === "READING_TIER") {
+            if (currReadingTier > 1) {
+                student.readingTier = currReadingTier - 1;
+            } else {
+                student.stageType = "LEVEL";
+                if (levelIdx > 0) student.level = levelOrder[levelIdx - 1];
+            }
+        } else if (stageType === "LEVEL") {
+            if (levelIdx > 0) {
+                student.level = levelOrder[levelIdx - 1];
+            }
+        }
+    }
+
+    // Format Stage Label
+    let stageDisplay = student.level;
+    if (student.stageType === "READING_TIER") stageDisplay += ` • Tier ${student.readingTier}`;
+    if (student.stageType === "COMP_TIER") stageDisplay += ` • Comp Tier ${student.compTier}`;
+
+    student.stageDisplay = stageDisplay;
+    student.tier = (student.stageType === "COMP_TIER") ? `Comp T${student.compTier}` : `Tier ${student.readingTier || 1}`;
+
+    // Update Journey Log
+    if (!student.journey) student.journey = [student.level];
+    if (student.journey[student.journey.length - 1] !== stageDisplay) {
+        student.journey.push(stageDisplay);
+    }
+
+    return { action, stageDisplay };
 }
 
 // ----------------------------------------------------
@@ -798,65 +916,51 @@ function populateTemplatesForLevel(level) {
 
 // Simulate Progression (Advance, Stay, Move Down)
 function simulateProgression(action) {
+    const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0];
+    if (!activeStudent) return;
+
+    let prevLevel = activeStudent.level;
+    let mockResult = { accuracy: 92, wcpm: 45, compScore: 90 };
+
+    if (action === 'Advance') {
+        mockResult = { accuracy: 95, wcpm: 48, compScore: 95 };
+    } else if (action === 'Stay') {
+        mockResult = { accuracy: 82, wcpm: 30, compScore: 70 };
+    } else if (action === 'Move Down') {
+        mockResult = { accuracy: 65, wcpm: 15, compScore: 50 };
+    }
+
+    const { action: outcome, stageDisplay } = calculateAutomaticProgression(activeStudent, mockResult);
+
+    saveAppState();
+
     const toast = document.getElementById('progression-toast');
     const icon = document.getElementById('toast-icon');
     const title = document.getElementById('toast-title');
     const subtitle = document.getElementById('toast-subtitle');
 
-    let prevLvl = currentLevel;
-    let prevTier = currentTier;
-
-    if (action === 'Advance') {
+    if (outcome === 'Advance') {
         playSFX('level_up');
-        icon.innerText = 'north_east';
-        icon.style.color = '#7ED957';
-        title.innerText = 'Advancing Progression';
-
-        if (currentLevel === 'L1') { currentLevel = 'L2'; }
-        else if (currentLevel === 'L2') { currentLevel = 'L3'; }
-        else if (currentLevel === 'L3') { currentLevel = 'L4'; }
-        else if (currentTier === 'tier1') { currentTier = 'tier2'; }
-        else if (currentTier === 'tier2') { currentTier = 'tier3'; }
-
-        subtitle.innerText = `${prevLvl} (${prevTier})  ➔  ${currentLevel} (${currentTier})`;
-    } 
-    else if (action === 'Stay') {
+        if (icon) { icon.innerText = 'north_east'; icon.style.color = '#7ED957'; }
+        if (title) title.innerText = 'Advancing Progression';
+    } else if (outcome === 'Stay') {
         playSFX('tap');
-        icon.innerText = 'remove';
-        icon.style.color = '#FF9800';
-        title.innerText = 'Maintaining Level';
-        subtitle.innerText = `Continue practicing at ${currentLevel} (${currentTier})`;
-    } 
-    else if (action === 'Move Down') {
+        if (icon) { icon.innerText = 'remove'; icon.style.color = '#FF9800'; }
+        if (title) title.innerText = 'Maintaining Stage';
+    } else if (outcome === 'Move Down') {
         playSFX('tap');
-        icon.innerText = 'south_east';
-        icon.style.color = '#EF5350';
-        title.innerText = 'Adjusting Support';
-
-        if (currentLevel === 'L4') { currentLevel = 'L3'; }
-        else if (currentLevel === 'L3') { currentLevel = 'L2'; }
-        else if (currentLevel === 'L2') { currentLevel = 'L1'; }
-        else if (currentTier === 'tier3') { currentTier = 'tier2'; }
-        else if (currentTier === 'tier2') { currentTier = 'tier1'; }
-
-        subtitle.innerText = `${prevLvl} (${prevTier})  ➔  ${currentLevel} (${currentTier})`;
+        if (icon) { icon.innerText = 'south_east'; icon.style.color = '#EF5350'; }
+        if (title) title.innerText = 'Adjusting Support';
     }
 
-    const levelSelect = document.getElementById('demo-level-select');
-    const tierSelect = document.getElementById('demo-tier-select');
-    if (levelSelect) levelSelect.value = currentLevel;
-    if (tierSelect) tierSelect.value = currentTier;
+    if (subtitle) subtitle.innerText = `${prevLevel}  ➔  ${stageDisplay}`;
 
+    currentLevel = activeStudent.level;
     populateTemplatesForLevel(currentLevel);
-
-    sampleIndex = 0;
-    studentSampleCount = 1;
 
     if (toast) {
         toast.classList.remove('hidden');
-        setTimeout(() => {
-            toast.classList.add('hidden');
-        }, 2800);
+        setTimeout(() => { toast.classList.add('hidden'); }, 2800);
     }
 
     if (screens.ACTIVITY.classList.contains('active') || screens.COMPREHENSION.classList.contains('active')) {
@@ -901,9 +1005,11 @@ function renderTeacherHome() {
 
     if (activeStudent) {
         currentStudentIndex = AppState.students.findIndex(s => s.id === activeStudent.id);
+        currentLevel = activeStudent.level || "L1"; // Auto-set active student's level!
         const heroContent = document.getElementById('hero-card-content');
         const heroActions = document.getElementById('hero-card-actions');
         const avatarPath = activeStudent.avatarImg || `assets/kid_avatar_${(currentStudentIndex % 4) + 1}.jpg`;
+        const stageText = activeStudent.stageDisplay || activeStudent.level || "L1";
 
         if (heroContent) {
             heroContent.style.display = 'flex';
@@ -912,7 +1018,7 @@ function renderTeacherHome() {
                     <img src="${avatarPath}" alt="${activeStudent.name}" class="hero-avatar-img">
                 </div>
                 <div class="hero-student-info">
-                    <span class="badge-pill hero-level-badge" id="hero-student-level-badge">${activeStudent.level} (${AppState.config.grade})</span>
+                    <span class="badge-pill hero-level-badge" id="hero-student-level-badge">${stageText} (${AppState.config.grade})</span>
                     <h2 class="fredoka-text hero-student-name" id="up-next-student-name">${activeStudent.name}</h2>
                     <p class="text-muted hero-student-details" id="up-next-student-subtext">Roll No. ${currentStudentIndex + 1 < 10 ? '0' : ''}${currentStudentIndex + 1} • ${activeStudent.grade || AppState.config.grade} • ${AppState.config.languageTrack} Track</p>
                 </div>
@@ -972,6 +1078,7 @@ function renderTeacherHome() {
             const statusClass = s.status === 'done' ? 'done' : isHero ? 'waiting' : s.status === 'absent' ? 'absent' : 'pending';
             const statusText = s.status === 'done' ? '🟢 Completed' : isHero ? '🔵 Up Next' : s.status === 'absent' ? '🟠 Absent' : '⚪ Pending';
             const avatarPath = s.avatarImg || `assets/kid_avatar_${(idx % 4) + 1}.jpg`;
+            const stageBadgeText = s.stageDisplay || s.level || "L1";
 
             item.innerHTML = `
                 <div class="queue-student-left">
@@ -982,7 +1089,7 @@ function renderTeacherHome() {
                     </div>
                 </div>
                 <div class="queue-student-right">
-                    <span class="badge-pill" style="font-size: 0.75rem; padding: 2px 8px;">${s.level}</span>
+                    <span class="badge-pill" style="font-size: 0.75rem; padding: 2px 8px;">${stageBadgeText}</span>
                     <span class="q-badge ${statusClass}">${statusText}</span>
                 </div>
             `;
@@ -1003,6 +1110,8 @@ function triggerStartSession() {
     studentSampleCount = 1;
     sampleIndex = 0;
     const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0] || { name: 'Aarav Patel' };
+    currentLevel = activeStudent.level || "L1"; // Auto-set active student level!
+    populateTemplatesForLevel(currentLevel);
     startTransitionScreen(activeStudent.name);
 }
 
@@ -1058,6 +1167,11 @@ function renderCurrentActivity() {
     if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
     isStepTransitioning = false;
     clearLiveTranscript();
+
+    const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0];
+    if (activeStudent) {
+        currentLevel = activeStudent.level || "L1";
+    }
 
     const levelData = PROTOTYPE_DATA[currentLevel];
     if (!levelData) return;
@@ -1399,7 +1513,7 @@ function selectMinimalPair(elem, selected, target) {
     }, 1000);
 }
 
-// 3-Sample Progression per Student Session
+// Automatic 3-Sample Progression Engine
 function completeAssessmentSampleStep() {
     playSFX('success_chime');
     if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
@@ -1414,14 +1528,20 @@ function completeAssessmentSampleStep() {
         sampleIndex++;
         studentSampleCount = 1;
 
-        // Update active student status in unified AppState!
         const activeStudent = AppState.students[currentStudentIndex];
         if (activeStudent) {
             activeStudent.status = 'done';
             activeStudent.wcpm = (currentLevel === 'L1' || currentLevel === 'L2') ? 0 : (currentSessionWCPM > 0 ? currentSessionWCPM : Math.floor(Math.random()*20 + 35));
-            activeStudent.accuracy = Math.floor(Math.random()*12 + 88);
-            activeStudent.compScore = 100;
+            activeStudent.accuracy = Math.floor(Math.random()*10 + 90);
+            activeStudent.compScore = 90;
             activeStudent.assessments = (activeStudent.assessments || 0) + 1;
+
+            // Automatically Compute Next Progression Stage
+            const { action: outcome, stageDisplay } = calculateAutomaticProgression(activeStudent, {
+                accuracy: activeStudent.accuracy,
+                wcpm: activeStudent.wcpm,
+                compScore: activeStudent.compScore
+            });
 
             // Log session into unified responseLog
             AppState.responseLog.unshift({
@@ -1431,12 +1551,12 @@ function completeAssessmentSampleStep() {
                 avatarImg: activeStudent.avatarImg,
                 grade: activeStudent.grade || AppState.config.grade,
                 lang: activeStudent.lang || AppState.config.languageTrack,
-                level: currentLevel,
-                tier: currentTier,
+                level: activeStudent.level,
+                tier: activeStudent.tier,
                 accuracy: activeStudent.accuracy,
                 wcpm: activeStudent.wcpm,
                 compScore: activeStudent.compScore,
-                transition: "Advanced"
+                transition: outcome
             });
 
             saveAppState();
@@ -1448,7 +1568,7 @@ function completeAssessmentSampleStep() {
         const countEl = document.getElementById('countdown');
 
         if (greetingEl) greetingEl.innerText = "Great Reading!";
-        if (subEl) subEl.innerText = "You're done for today 🌟";
+        if (subEl) subEl.innerText = `Session Complete 🌟 (${activeStudent ? activeStudent.stageDisplay : 'Finished'})`;
         if (countEl) countEl.innerText = "✓";
 
         setTimeout(() => {
@@ -1600,7 +1720,7 @@ function populateStudentSelector() {
     AppState.students.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
-        opt.innerText = `${s.name} (${s.grade} • ${s.level})`;
+        opt.innerText = `${s.name} (${s.grade} • ${s.stageDisplay || s.level})`;
         selector.appendChild(opt);
     });
 }
@@ -1611,9 +1731,9 @@ function renderStudentReport(studentId) {
 
     const student = AppState.students.find(s => s.id === studentId) || AppState.students[0] || { name: 'Aarav Patel', grade: AppState.config.grade, lang: AppState.config.languageTrack, level: 'L2', tier: 'tier1', accuracy: 92, wcpm: 44, compScore: 100, assessments: 1, journey: ['L1', 'L2'], flag: null };
 
-    const journeyHtml = (student.journey || ['L1', 'L2']).map((step, idx) => `
+    const journeyHtml = (student.journey || [student.level || 'L1']).map((step, idx) => `
         <div style="display: inline-flex; align-items: center; gap: 8px;">
-            <span style="background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 1.1rem;">${step}</span>
+            <span style="background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 1.05rem;">${step}</span>
             ${idx < student.journey.length - 1 ? '<span class="material-icons-round" style="color: #94A3B8;">north_east</span>' : ''}
         </div>
     `).join(' ');
@@ -1634,11 +1754,11 @@ function renderStudentReport(studentId) {
                     <h2 class="fredoka-text">${student.name}</h2>
                     <p class="text-muted">${student.grade || AppState.config.grade} • ${student.lang || AppState.config.languageTrack} Track</p>
                 </div>
-                <span class="badge-pill" style="font-size: 1rem;">${student.level} • ${student.tier}</span>
+                <span class="badge-pill" style="font-size: 1rem;">${student.stageDisplay || student.level}</span>
             </div>
 
             <div style="border-top: 1px solid #E2E8F0; padding-top: 16px;">
-                <span class="rep-label" style="font-size: 0.85rem; color: #64748B;">READING JOURNEY</span>
+                <span class="rep-label" style="font-size: 0.85rem; color: #64748B;">READING JOURNEY & PROGRESSION</span>
                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
                     ${journeyHtml}
                 </div>
@@ -1739,7 +1859,7 @@ function renderClassReport() {
             tr.innerHTML = `
                 <td><strong>${s.name}</strong></td>
                 <td>${s.grade || AppState.config.grade}</td>
-                <td><span class="badge-pill">${s.level}</span></td>
+                <td><span class="badge-pill">${s.stageDisplay || s.level}</span></td>
                 <td><span class="badge-status ${badgeClass}">${s.flag || 'Review Needed'}</span></td>
             `;
             tbody.appendChild(tr);
