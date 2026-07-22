@@ -128,18 +128,18 @@ const PROTOTYPE_DATA = {
         instruction: "Say the correct word for this picture out loud.",
         tier1: [
           { image: "☀️", options: ["sun", "sub"], target: "sun" },
-          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🖊️", options: ["pen", "pan"], target: "pen" },
           { image: "🐱", options: ["cat", "bat"], target: "cat" }
         ],
         tier2: [
-          { image: "☀️", options: ["sun", "sub"], target: "sun" },
-          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
-          { image: "🐱", options: ["cat", "bat"], target: "cat" }
+          { image: "⚽", options: ["ball", "bell"], target: "ball" },
+          { image: "🎩", options: ["hat", "hot"], target: "hat" },
+          { image: "🐶", options: ["dog", "dot"], target: "dog" }
         ],
         tier3: [
-          { image: "☀️", options: ["sun", "sub"], target: "sun" },
-          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
-          { image: "🐱", options: ["cat", "bat"], target: "cat" }
+          { image: "🐟", options: ["fish", "dish"], target: "fish" },
+          { image: "🏃", options: ["run", "sun"], target: "run" },
+          { image: "🛏️", options: ["bed", "red"], target: "bed" }
         ]
       }
     }
@@ -173,18 +173,18 @@ const PROTOTYPE_DATA = {
         instruction: "Say the correct word for this picture out loud.",
         tier1: [
           { image: "☀️", options: ["sun", "sub"], target: "sun" },
-          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
+          { image: "🖊️", options: ["pen", "pan"], target: "pen" },
           { image: "🐱", options: ["cat", "bat"], target: "cat" }
         ],
         tier2: [
-          { image: "☀️", options: ["sun", "sub"], target: "sun" },
-          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
-          { image: "🐱", options: ["cat", "bat"], target: "cat" }
+          { image: "⚽", options: ["ball", "bell"], target: "ball" },
+          { image: "🎩", options: ["hat", "hot"], target: "hat" },
+          { image: "🐶", options: ["dog", "dot"], target: "dog" }
         ],
         tier3: [
-          { image: "☀️", options: ["sun", "sub"], target: "sun" },
-          { image: "🖊️", options: ["pin", "bin"], target: "pin" },
-          { image: "🐱", options: ["cat", "bat"], target: "cat" }
+          { image: "🐟", options: ["fish", "dish"], target: "fish" },
+          { image: "🏃", options: ["run", "sun"], target: "run" },
+          { image: "🛏️", options: ["bed", "red"], target: "bed" }
         ]
       },
       SENTENCE_READ_TEXT_IMAGE: {
