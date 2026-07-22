@@ -38,9 +38,12 @@ let currentStudentIndex = 0;
 
 // Screen Router
 function showScreen(targetScreen) {
+    if (!targetScreen) return;
     Object.values(screens).forEach(s => {
-        s.classList.remove('active');
-        s.classList.add('hidden');
+        if (s) {
+            s.classList.remove('active');
+            s.classList.add('hidden');
+        }
     });
     targetScreen.classList.remove('hidden');
     targetScreen.classList.add('active');
@@ -66,50 +69,54 @@ function clearLiveTranscript() {
 
 // Initialize Speech Recognition Engine
 function initSpeechRecognitionEngine() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-        speechRecognition = new SpeechRecognition();
-        speechRecognition.continuous = true;
-        speechRecognition.interimResults = true;
-        speechRecognition.lang = 'en-IN'; // English (India)
+    try {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            speechRecognition = new SpeechRecognition();
+            speechRecognition.continuous = true;
+            speechRecognition.interimResults = true;
+            speechRecognition.lang = 'en-IN'; // English (India)
 
-        speechRecognition.onstart = () => {
-            isRealListening = true;
-            updateMicUI('listening');
-        };
+            speechRecognition.onstart = () => {
+                isRealListening = true;
+                updateMicUI('listening');
+            };
 
-        speechRecognition.onresult = (event) => {
-            let interimTranscript = '';
-            let finalTranscript = '';
+            speechRecognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
 
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
                 }
-            }
 
-            const spokenText = (finalTranscript + ' ' + interimTranscript).trim();
-            updateLiveTranscriptText(spokenText);
-            processSpokenTranscript(spokenText.toLowerCase());
-        };
+                const spokenText = (finalTranscript + ' ' + interimTranscript).trim();
+                updateLiveTranscriptText(spokenText);
+                processSpokenTranscript(spokenText.toLowerCase());
+            };
 
-        speechRecognition.onerror = (event) => {
-            console.log("Speech recognition error:", event.error);
-            if (event.error !== 'no-speech') {
-                updateMicUI('error');
-            }
-        };
+            speechRecognition.onerror = (event) => {
+                console.log("Speech recognition error:", event.error);
+                if (event.error !== 'no-speech') {
+                    updateMicUI('error');
+                }
+            };
 
-        speechRecognition.onend = () => {
-            if (isRealListening && screens.ACTIVITY.classList.contains('active')) {
-                try { speechRecognition.start(); } catch (e) {}
-            } else {
-                isRealListening = false;
-                updateMicUI('idle');
-            }
-        };
+            speechRecognition.onend = () => {
+                if (isRealListening && screens.ACTIVITY && screens.ACTIVITY.classList.contains('active')) {
+                    try { speechRecognition.start(); } catch (e) {}
+                } else {
+                    isRealListening = false;
+                    updateMicUI('idle');
+                }
+            };
+        }
+    } catch (err) {
+        console.warn("Speech recognition initialization failed:", err);
     }
 }
 
@@ -121,7 +128,7 @@ function startRealSpeechRecognition() {
             isRealListening = true;
             updateMicUI('listening');
         } catch (e) {
-            console.log("Recognition start error:", e);
+            console.warn("Recognition start error:", e);
         }
     }
 }
@@ -263,26 +270,34 @@ function initDemoControls() {
     const tierSelect = document.getElementById('demo-tier-select');
     const templateSelect = document.getElementById('demo-template-select');
 
+    if (!levelSelect || !tierSelect || !templateSelect) return;
+
     levelSelect.onchange = (e) => {
         currentLevel = e.target.value;
         sampleIndex = 0;
         studentSampleCount = 1;
         populateTemplatesForLevel(currentLevel);
-        renderCurrentActivity();
+        if (screens.ACTIVITY.classList.contains('active')) {
+            renderCurrentActivity();
+        }
     };
 
     tierSelect.onchange = (e) => {
         currentTier = e.target.value;
         sampleIndex = 0;
         studentSampleCount = 1;
-        renderCurrentActivity();
+        if (screens.ACTIVITY.classList.contains('active')) {
+            renderCurrentActivity();
+        }
     };
 
     templateSelect.onchange = (e) => {
         currentTemplate = e.target.value;
         sampleIndex = 0;
         studentSampleCount = 1;
-        renderCurrentActivity();
+        if (screens.ACTIVITY.classList.contains('active')) {
+            renderCurrentActivity();
+        }
     };
 
     populateTemplatesForLevel(currentLevel);
@@ -290,6 +305,7 @@ function initDemoControls() {
 
 function populateTemplatesForLevel(level) {
     const templateSelect = document.getElementById('demo-template-select');
+    if (!templateSelect) return;
     templateSelect.innerHTML = '';
 
     const levelObj = PROTOTYPE_DATA[level];
@@ -351,18 +367,23 @@ function simulateProgression(action) {
     }
 
     // Sync Dropdowns
-    document.getElementById('demo-level-select').value = currentLevel;
-    document.getElementById('demo-tier-select').value = currentTier;
+    const levelSelect = document.getElementById('demo-level-select');
+    const tierSelect = document.getElementById('demo-tier-select');
+    if (levelSelect) levelSelect.value = currentLevel;
+    if (tierSelect) tierSelect.value = currentTier;
+
     populateTemplatesForLevel(currentLevel);
 
     sampleIndex = 0;
     studentSampleCount = 1;
 
     // Show Toast
-    toast.classList.remove('hidden');
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 2800);
+    if (toast) {
+        toast.classList.remove('hidden');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 2800);
+    }
 
     // If currently on activity screen, re-render
     if (screens.ACTIVITY.classList.contains('active') || screens.COMPREHENSION.classList.contains('active')) {
@@ -380,17 +401,20 @@ function renderTeacherHome() {
     
     // Update Up Next Student
     const student = rosterStudents[currentStudentIndex] || rosterStudents[0];
-    document.getElementById('up-next-student-name').innerText = student.name;
+    const nameEl = document.getElementById('up-next-student-name');
+    if (nameEl) nameEl.innerText = student.name;
 
     // Render Queue Strip
     const strip = document.getElementById('queue-chips-strip');
-    strip.innerHTML = '';
-    rosterStudents.forEach(s => {
-        const chip = document.createElement('div');
-        chip.className = `chip-item ${s.status}`;
-        chip.innerText = s.name;
-        strip.appendChild(chip);
-    });
+    if (strip) {
+        strip.innerHTML = '';
+        rosterStudents.forEach(s => {
+            const chip = document.createElement('div');
+            chip.className = `chip-item ${s.status}`;
+            chip.innerText = s.name;
+            strip.appendChild(chip);
+        });
+    }
 }
 
 function markCurrentStudentAbsent() {
@@ -415,22 +439,31 @@ function startTransitionScreen(studentName) {
     stopRealSpeechRecognition();
     clearLiveTranscript();
     showScreen(screens.TRANSITION);
-    document.getElementById('transition-greeting').innerText = studentName;
-    document.getElementById('transition-subheading').innerText = "Please come forward";
+
+    const greetingEl = document.getElementById('transition-greeting');
+    const subEl = document.getElementById('transition-subheading');
+    const countEl = document.getElementById('countdown');
+
+    if (greetingEl) greetingEl.innerText = studentName;
+    if (subEl) subEl.innerText = "Please come forward";
 
     let count = 3;
-    document.getElementById('countdown').innerText = count;
+    if (countEl) countEl.innerText = count;
 
     if (activeCountdownInterval) clearInterval(activeCountdownInterval);
 
     activeCountdownInterval = setInterval(() => {
         count--;
         if (count > 0) {
-            document.getElementById('countdown').innerText = count;
+            if (countEl) countEl.innerText = count;
         } else {
             clearInterval(activeCountdownInterval);
-            renderCurrentActivity();
-            showScreen(screens.ACTIVITY);
+            try {
+                renderCurrentActivity();
+            } catch (err) {
+                console.error("Error rendering activity:", err);
+                showScreen(screens.ACTIVITY);
+            }
         }
     }, 1000);
 }
@@ -450,15 +483,23 @@ function renderCurrentActivity() {
     showScreen(screens.ACTIVITY);
 
     // Update Badges, Counter & Instruction
-    document.getElementById('activity-level-badge').innerText = levelData.name;
-    document.getElementById('activity-template-badge').innerText = currentTemplate;
-    document.getElementById('activity-sample-counter').innerText = `Sample ${studentSampleCount} of 3`;
-    document.getElementById('activity-instruction-text').innerText = templateData.instruction;
+    const lvlBadge = document.getElementById('activity-level-badge');
+    const tmplBadge = document.getElementById('activity-template-badge');
+    const counterBadge = document.getElementById('activity-sample-counter');
+    const instructText = document.getElementById('activity-instruction-text');
+
+    if (lvlBadge) lvlBadge.innerText = levelData.name;
+    if (tmplBadge) tmplBadge.innerText = currentTemplate;
+    if (counterBadge) counterBadge.innerText = `Sample ${studentSampleCount} of 3`;
+    if (instructText) instructText.innerText = templateData.instruction;
 
     const container = document.getElementById('reading-card-container');
+    if (!container) return;
     container.innerHTML = '';
 
-    const sampleList = templateData[currentTier] || templateData.tier1;
+    const sampleList = templateData[currentTier] || templateData.tier1 || Object.values(templateData)[0];
+    if (!sampleList || sampleList.length === 0) return;
+
     const sample = sampleList[sampleIndex % sampleList.length];
 
     // Reset Target Word List & Match Index
@@ -547,8 +588,12 @@ function renderCurrentActivity() {
         `;
     }
 
-    // Auto-start Speech Recognition on Screen 3
-    startRealSpeechRecognition();
+    // Auto-start Speech Recognition on Screen 3 safely
+    try {
+        startRealSpeechRecognition();
+    } catch (e) {
+        console.warn("Auto-start speech recognition failed:", e);
+    }
 }
 
 // Dedicated Comprehension Screen (Screen 3b)
@@ -558,11 +603,16 @@ function showComprehensionPage(sample) {
     showScreen(screens.COMPREHENSION);
 
     const levelData = PROTOTYPE_DATA[currentLevel];
-    document.getElementById('comp-level-badge').innerText = levelData ? levelData.name : currentLevel;
-    document.getElementById('comp-sample-counter').innerText = `Sample ${studentSampleCount} of 3`;
-    document.getElementById('comp-page-question-text').innerText = sample.question;
+    const lvlBadge = document.getElementById('comp-level-badge');
+    const counterBadge = document.getElementById('comp-sample-counter');
+    const qText = document.getElementById('comp-page-question-text');
+
+    if (lvlBadge) lvlBadge.innerText = levelData ? levelData.name : currentLevel;
+    if (counterBadge) counterBadge.innerText = `Sample ${studentSampleCount} of 3`;
+    if (qText) qText.innerText = sample.question;
 
     const grid = document.getElementById('comp-page-options-grid');
+    if (!grid) return;
     grid.innerHTML = '';
 
     sample.options.forEach(opt => {
@@ -584,8 +634,12 @@ function showComprehensionPage(sample) {
 function simulateWordSpeech() {
     updateMicUI('listening');
     const levelData = PROTOTYPE_DATA[currentLevel];
-    const templateData = levelData.templates[currentTemplate];
-    const sampleList = templateData[currentTier] || templateData.tier1;
+    const templateData = levelData ? levelData.templates[currentTemplate] : null;
+    if (!templateData) return;
+
+    const sampleList = templateData[currentTier] || templateData.tier1 || Object.values(templateData)[0];
+    if (!sampleList) return;
+
     const sample = sampleList[sampleIndex % sampleList.length];
 
     if (currentTemplate === 'WORD_READ_TEXT') {
@@ -705,9 +759,13 @@ function completeAssessmentSampleStep() {
 
         // Show completion screen or transition back
         showScreen(screens.TRANSITION);
-        document.getElementById('transition-greeting').innerText = "Great Reading!";
-        document.getElementById('transition-subheading').innerText = "You're done for today 🌟";
-        document.getElementById('countdown').innerText = "✓";
+        const greetingEl = document.getElementById('transition-greeting');
+        const subEl = document.getElementById('transition-subheading');
+        const countEl = document.getElementById('countdown');
+
+        if (greetingEl) greetingEl.innerText = "Great Reading!";
+        if (subEl) subEl.innerText = "You're done for today 🌟";
+        if (countEl) countEl.innerText = "✓";
 
         setTimeout(() => {
             currentStudentIndex++;
@@ -725,7 +783,9 @@ function completeAssessmentSampleStep() {
 function pauseSession() {
     stopRealSpeechRecognition();
     alert("Session Paused. Click OK to resume.");
-    startRealSpeechRecognition();
+    if (screens.ACTIVITY.classList.contains('active')) {
+        startRealSpeechRecognition();
+    }
 }
 
 function endAssessmentSessionPrompt() {
@@ -741,12 +801,16 @@ function triggerCelebrationConfetti() {
     stopRealSpeechRecognition();
     clearLiveTranscript();
     const container = document.getElementById('confetti-container');
+    if (!container) return;
     container.innerHTML = '';
+
     const assessed = rosterStudents.filter(s => s.status === 'done').length;
     const absent = rosterStudents.filter(s => s.status === 'absent').length;
 
-    document.getElementById('summary-stat-assessed').innerText = assessed || 38;
-    document.getElementById('summary-stat-absent').innerText = absent || 2;
+    const assEl = document.getElementById('summary-stat-assessed');
+    const absEl = document.getElementById('summary-stat-absent');
+    if (assEl) assEl.innerText = assessed || 38;
+    if (absEl) absEl.innerText = absent || 2;
 
     for (let i = 0; i < 40; i++) {
         const c = document.createElement('div');
