@@ -108,21 +108,21 @@ const PROTOTYPE_DATA = {
       },
       SENTENCE_READ_CLOZE_ORAL: {
         title: "Cloze Oral Sentence Completion",
-        instruction: "Read the sentence and supply the missing word out loud.",
+        instruction: "Look at the picture clue and say the missing word out loud.",
         tier1: [
-          { display: "The sun is _____.", target: "bright", fullText: "The sun is bright" },
-          { display: "A cat says _____.", target: "meow", fullText: "A cat says meow" },
-          { display: "Birds fly in the _____.", target: "sky", fullText: "Birds fly in the sky" }
+          { display: "The sun is _____.", target: "bright", image: "☀️", fullText: "The sun is bright" },
+          { display: "A cat says _____.", target: "meow", image: "🐱", fullText: "A cat says meow" },
+          { display: "Birds fly in the _____.", target: "sky", image: "☁️", fullText: "Birds fly in the sky" }
         ],
         tier2: [
-          { display: "The sun is _____.", target: "bright", fullText: "The sun is bright" },
-          { display: "A cat says _____.", target: "meow", fullText: "A cat says meow" },
-          { display: "Birds fly in the _____.", target: "sky", fullText: "Birds fly in the sky" }
+          { display: "The sun is _____.", target: "bright", image: "☀️", fullText: "The sun is bright" },
+          { display: "A cat says _____.", target: "meow", image: "🐱", fullText: "A cat says meow" },
+          { display: "Birds fly in the _____.", target: "sky", image: "☁️", fullText: "Birds fly in the sky" }
         ],
         tier3: [
-          { display: "The sun is _____.", target: "bright", fullText: "The sun is bright" },
-          { display: "A cat says _____.", target: "meow", fullText: "A cat says meow" },
-          { display: "Birds fly in the _____.", target: "sky", fullText: "Birds fly in the sky" }
+          { display: "The sun is _____.", target: "bright", image: "☀️", fullText: "The sun is bright" },
+          { display: "A cat says _____.", target: "meow", image: "🐱", fullText: "A cat says meow" },
+          { display: "Birds fly in the _____.", target: "sky", image: "☁️", fullText: "Birds fly in the sky" }
         ]
       }
     }
@@ -153,21 +153,21 @@ const PROTOTYPE_DATA = {
       },
       SENTENCE_READ_CLOZE_ORAL: {
         title: "Cloze Oral Sentence Completion",
-        instruction: "Read the sentence and supply the missing word out loud.",
+        instruction: "Look at the picture clue and say the missing word out loud.",
         tier1: [
-          { display: "The cat is _____ on the mat.", target: "sleeping", fullText: "The cat is sleeping on the mat" },
-          { display: "The bird can _____ high.", target: "fly", fullText: "The bird can fly high" },
-          { display: "I have a red _____ to play.", target: "ball", fullText: "I have a red ball to play" }
+          { display: "The cat is _____ on the mat.", target: "sleeping", image: "😴", fullText: "The cat is sleeping on the mat" },
+          { display: "The bird can _____ high in the sky.", target: "fly", image: "🕊️", fullText: "The bird can fly high in the sky" },
+          { display: "I have a red _____ to play.", target: "ball", image: "⚽", fullText: "I have a red ball to play" }
         ],
         tier2: [
-          { display: "The cat is _____ on the mat.", target: "sleeping", fullText: "The cat is sleeping on the mat" },
-          { display: "The bird can _____ high.", target: "fly", fullText: "The bird can fly high" },
-          { display: "I have a red _____ to play.", target: "ball", fullText: "I have a red ball to play" }
+          { display: "The cat is _____ on the mat.", target: "sleeping", image: "😴", fullText: "The cat is sleeping on the mat" },
+          { display: "The bird can _____ high in the sky.", target: "fly", image: "🕊️", fullText: "The bird can fly high in the sky" },
+          { display: "I have a red _____ to play.", target: "ball", image: "⚽", fullText: "I have a red ball to play" }
         ],
         tier3: [
-          { display: "The cat is _____ on the mat.", target: "sleeping", fullText: "The cat is sleeping on the mat" },
-          { display: "The bird can _____ high.", target: "fly", fullText: "The bird can fly high" },
-          { display: "I have a red _____ to play.", target: "ball", fullText: "I have a red ball to play" }
+          { display: "The cat is _____ on the mat.", target: "sleeping", image: "😴", fullText: "The cat is sleeping on the mat" },
+          { display: "The bird can _____ high in the sky.", target: "fly", image: "🕊️", fullText: "The bird can fly high in the sky" },
+          { display: "I have a red _____ to play.", target: "ball", image: "⚽", fullText: "I have a red ball to play" }
         ]
       },
       WORD_READ_MINIMAL_PAIR: {
@@ -281,17 +281,17 @@ const PROTOTYPE_DATA = {
       },
       SENTENCE_READ_CLOZE_ORAL: {
         title: "Cloze Oral Sentence Completion",
-        instruction: "Read the sentence and supply the missing word out loud.",
+        instruction: "Look at the picture clue and say the missing word out loud.",
         tier1: [
-          { display: "Riya planted a _____ in a pot.", target: "seed", fullText: "Riya planted a seed in a pot" },
-          { display: "The puppy chased the red _____.", target: "ball", fullText: "The puppy chased the red ball" },
-          { display: "They saw three _____ swimming.", target: "ducks", fullText: "They saw three ducks swimming" }
+          { display: "Riya planted a _____ in a pot.", target: "seed", image: "🌱", fullText: "Riya planted a seed in a pot" },
+          { display: "The puppy chased the red _____.", target: "ball", image: "⚽", fullText: "The puppy chased the red ball" },
+          { display: "They saw three _____ swimming.", target: "ducks", image: "🦆", fullText: "They saw three ducks swimming" }
         ],
         tier2: [
-          { display: "Riya planted a _____ in a pot.", target: "seed", fullText: "Riya planted a seed in a pot" }
+          { display: "Riya planted a _____ in a pot.", target: "seed", image: "🌱", fullText: "Riya planted a seed in a pot" }
         ],
         tier3: [
-          { display: "Riya planted a _____ in a pot.", target: "seed", fullText: "Riya planted a seed in a pot" }
+          { display: "Riya planted a _____ in a pot.", target: "seed", image: "🌱", fullText: "Riya planted a seed in a pot" }
         ]
       }
     }
@@ -373,17 +373,17 @@ const PROTOTYPE_DATA = {
       },
       SENTENCE_READ_CLOZE_ORAL: {
         title: "Cloze Oral Sentence Completion",
-        instruction: "Read the sentence and supply the missing word out loud.",
+        instruction: "Look at the picture clue and say the missing word out loud.",
         tier1: [
-          { display: "Sunlight can generate clean _____.", target: "electricity", fullText: "Sunlight can generate clean electricity" },
-          { display: "The cubs splashed _____ in the stream.", target: "playfully", fullText: "The cubs splashed playfully in the stream" },
-          { display: "They celebrated a prosperous _____ festival.", target: "harvest", fullText: "They celebrated a prosperous harvest festival" }
+          { display: "Sunlight can generate clean _____.", target: "electricity", image: "⚡", fullText: "Sunlight can generate clean electricity" },
+          { display: "The cubs splashed _____ in the stream.", target: "playfully", image: "🌊", fullText: "The cubs splashed playfully in the stream" },
+          { display: "They celebrated a prosperous _____ festival.", target: "harvest", image: "🌾", fullText: "They celebrated a prosperous harvest festival" }
         ],
         tier2: [
-          { display: "Sunlight can generate clean _____.", target: "electricity", fullText: "Sunlight can generate clean electricity" }
+          { display: "Sunlight can generate clean _____.", target: "electricity", image: "⚡", fullText: "Sunlight can generate clean electricity" }
         ],
         tier3: [
-          { display: "Sunlight can generate clean _____.", target: "electricity", fullText: "Sunlight can generate clean electricity" }
+          { display: "Sunlight can generate clean _____.", target: "electricity", image: "⚡", fullText: "Sunlight can generate clean electricity" }
         ]
       }
     }

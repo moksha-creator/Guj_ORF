@@ -1163,11 +1163,15 @@ function renderCurrentActivity() {
     }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
         currentTargetWordList = [sample.target];
+        const imgClue = sample.image || (sample.target === "sleeping" ? "😴" : sample.target === "fly" ? "🕊️" : sample.target === "ball" ? "⚽" : "☀️");
         container.innerHTML = `
-            <div class="cloze-sentence-display">
-                ${sample.display} <span class="cloze-blank-box" id="cloze-blank-target">?</span>
+            <div class="display-image-word" style="margin-bottom: 24px;">
+                <div class="image-emoji" style="font-size: 100px; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.15)); animation: popScale 0.4s ease;">${imgClue}</div>
             </div>
-            <div class="text-muted" style="margin-top: 20px; font-size: 1rem;">(Target word: <strong>${sample.target}</strong>)</div>
+            <div class="cloze-sentence-display">
+                ${sample.display.replace('_____', '<span class="cloze-blank-box" id="cloze-blank-target">?</span>')}
+            </div>
+            <div class="text-muted" style="margin-top: 16px; font-size: 0.95rem;">(Say the word for the picture clue out loud)</div>
         `;
     }
     else if (currentTemplate === 'PASSAGE_READ_COMP' || currentTemplate === 'PASSAGE_READ_ADVANCED') {
