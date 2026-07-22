@@ -12,8 +12,8 @@
         
         <!-- Screen 00: Configuration -->
         <div id="screen-00-config" class="screen">
-            <h1 style="margin-bottom: 24px;">ORF Setup</h1>
-            <p style="margin-bottom: 32px; color: var(--text-muted);">One-time class configuration.</p>
+            <h1 class="fredoka-text" style="margin-bottom: 24px;">ORF Setup</h1>
+            <p class="subtitle text-muted" style="margin-bottom: 32px;">One-time class configuration.</p>
             
             <div style="display:flex; gap: 32px; flex-wrap: wrap;">
                 <div class="card" style="flex:1; min-width: 300px;">
@@ -59,14 +59,26 @@
 
         <!-- Screen 01: Home / Roster Redesign -->
         <div id="screen-01-home" class="screen">
-            <div class="top-bar">
-                <h2>Reading Check - Grade 1</h2>
-                <div>
-                    <p>Today's Progress</p>
-                    <div class="progress-bar-container"><div id="progress-bar-fill" class="progress-bar-fill"></div></div>
+            <header class="top-bar">
+                <div class="header-left">
+                    <span class="app-icon text-primary"><span class="material-icons-round">auto_stories</span></span>
+                    <div>
+                        <h1 class="fredoka-text">Miko Reading</h1>
+                        <p class="subtitle text-muted">Gujarat Government Schools</p>
+                    </div>
                 </div>
-                <button id="btn-teacher-dashboard-trigger" class="btn-invisible">⚙️</button>
-            </div>
+                <div class="header-right">
+                    <div class="progress-section">
+                        <span class="progress-label text-muted">Today's Progress</span>
+                        <div class="progress-bar-container">
+                            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
+                    <button id="btn-teacher-dashboard-trigger" class="btn-icon" aria-label="Teacher dashboard">
+                        <span class="material-icons-round">settings</span>
+                    </button>
+                </div>
+            </header>
             
             <div id="up-next-section" class="up-next-section">
                 <!-- Injected via JS -->
@@ -78,10 +90,15 @@
         </div>
 
         <!-- Screen 02: Transition Redesign -->
-        <div id="screen-02-transition" class="screen hidden" style="justify-content: center; align-items: center; text-align: center;">
-            <h1 id="transition-greeting" style="font-size: 5rem; color: var(--primary); margin-bottom: 24px;"></h1>
-            <h2 style="font-size: 4rem;">Let's read together.</h2>
-            <div id="countdown" style="font-size: 10rem; font-weight: 900; color: var(--accent); margin-top: 48px;">3</div>
+        <div id="screen-02-transition" class="screen hidden countdown-screen">
+            <div class="countdown-card">
+                <h1 id="transition-greeting" class="fredoka-text text-primary"></h1>
+                <h2 class="fredoka-text text-secondary">Let's read together.</h2>
+                <div class="countdown-wrapper">
+                    <div id="countdown" class="fredoka-text">3</div>
+                    <svg class="countdown-circle"><circle cx="90" cy="90" r="80"></circle></svg>
+                </div>
+            </div>
         </div>
 
         <!-- Screen 03: Activity Redesign -->
@@ -92,17 +109,26 @@
         <!-- Screen 04: Celebration Redesign -->
         <div id="screen-04-end" class="screen hidden" style="justify-content: center; align-items: center; text-align: center;">
             <div id="confetti-container"></div>
-            <h1 style="font-size: 8rem; color: var(--success); margin-bottom: 24px;">Great Reading!</h1>
-            <h2 style="font-size: 4rem;">See you next time!</h2>
+            <div class="card" style="padding: 64px; text-align: center;">
+                <span class="material-icons-round text-success" style="font-size: 96px; margin-bottom: 24px;">stars</span>
+                <h1 class="fredoka-text text-success" style="margin-bottom: 24px;">Great Reading!</h1>
+                <h2 class="fredoka-text">See you next time!</h2>
+                <button id="btn-results-continue" class="btn-primary" style="margin-top: 48px;" onclick="renderHome()">Continue</button>
+            </div>
         </div>
         
         <!-- Teacher Dashboard Modal Redesign -->
         <div id="teacher-dashboard-modal" class="modal hidden">
             <div class="modal-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
-                    <h2>Teacher Dashboard</h2>
-                    <button id="btn-close-dashboard" class="btn-secondary">Close</button>
-                </div>
+                <header class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+                    <div class="modal-title-wrapper" style="display:flex; align-items:center; gap: 12px;">
+                        <span class="material-icons-round text-primary" style="font-size: 32px;">admin_panel_settings</span>
+                        <h2 class="fredoka-text">Teacher Dashboard</h2>
+                    </div>
+                    <button id="btn-close-dashboard" class="btn-icon-close" aria-label="Close">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </header>
                 
                 <div class="tab-nav">
                     <button class="tab-btn active" onclick="switchDashboardTab('class')">Class Report</button>

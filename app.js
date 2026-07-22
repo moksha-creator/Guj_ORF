@@ -604,7 +604,6 @@ function triggerCelebration() {
         c.style.backgroundColor = ['#7ED957', '#FFC857', '#5B7CFA'][Math.floor(Math.random()*3)];
         container.appendChild(c);
     }
-    setTimeout(() => { renderHome(); }, 4000);
 }
 
 // Init App

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miko Reading Check</title>
+    <!-- Google Fonts for Child-friendly and clean interface -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Material Icons Round -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app-container">
+        <div id="session-controls" class="session-controls hidden">
+            <button id="btn-pause-session" class="btn-secondary" onclick="toggleSessionPause()">Pause Assessment</button>
+            <button class="btn-secondary" onclick="endAssessmentSessionPrompt()">End Assessment</button>
+        </div>
+        
+        <!-- Screen 01: Home / Roster -->
+        <div id="screen-01-home" class="screen">
+            <header class="top-bar">
+                <div class="header-left">
+                    <span class="app-icon text-primary"><span class="material-icons-round">auto_stories</span></span>
+                    <div>
+                        <h1>Miko Reading</h1>
+                        <p class="subtitle text-muted">Grade 1-5 • Gujarat Government Schools</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="progress-section">
+                        <span class="progress-label text-muted">Today's Progress</span>
+                        <div class="progress-bar-container">
+                            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                        </div>
+                        <span id="progress-bar-text" class="text-muted" style="font-size:0.85rem"></span>
+                    </div>
+                    <button id="btn-teacher-dashboard-trigger" class="btn-icon" aria-label="Teacher dashboard">
+                        <span class="material-icons-round">settings</span>
+                    </button>
+                </div>
+            </header>
+            
+            <main class="home-main">
+                <div id="up-next-section" class="up-next-section">
+                    <!-- Injected via JS -->
+                </div>
+                
+            </main>
+        </div>
+
+        <!-- Screen 01b: Subject Selection -->
+        <div id="screen-01b-subject" class="screen hidden">
+            <header class="top-bar-simple">
+                <button class="btn-back" onclick="goToHome()"><span class="material-icons-round">arrow_back</span> Back</button>
+            </header>
+            <main class="selection-container">
+                <div class="selection-title-area">
+                    <h2 class="fredoka-text">Choose a Subject / વિષય પસંદ કરો</h2>
+                    <p class="text-muted">What are we reading today?</p>
+                </div>
+                <div class="subjects-grid">
+                    <!-- English (Active) -->
+                    <div class="subject-card english" onclick="selectSubject('english')">
+                        <div class="subject-card-icon"><span class="material-icons-round">translate</span></div>
+                        <div class="subject-card-info">
+                            <h3>English</h3>
+                            <p>Read fun English words & stories</p>
+                        </div>
+                        <div class="subject-card-badge">Let's Read!</div>
+                    </div>
+                    <!-- Gujarati (Coming Soon) -->
+                    <div class="subject-card gujarati disabled" onclick="selectSubject('gujarati')">
+                        <div class="subject-card-icon"><span class="material-icons-round">menu_book</span></div>
+                        <div class="subject-card-info">
+                            <h3>ગુજરાતી (Gujarati)</h3>
+                            <p>નવી વાર્તાઓ વાંચન</p>
+                        </div>
+                        <div class="subject-card-badge badge-secondary">Soon / ટૂંક સમયમાં</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Screen 01c: Chapter Selection -->
+        <div id="screen-01c-chapter" class="screen hidden">
+            <header class="top-bar-simple">
+                <button class="btn-back" onclick="goToSubjects()"><span class="material-icons-round">arrow_back</span> Back</button>
+            </header>
+            <main class="selection-container">
+                <div class="selection-title-area">
+                    <h2 class="fredoka-text">Select a Chapter / પ્રકરણ પસંદ કરો</h2>
+                    <p class="text-muted" id="chapter-subtitle-text">Choose your reading adventure!</p>
+                </div>
+                
+                <div class="chapters-grid" id="chapters-grid">
+                    <!-- Chapters will be dynamically generated by JS -->
+                </div>
+            </main>
+        </div>
+
+        <!-- Screen 02: Transition Countdown -->
+        <div id="screen-02-transition" class="screen hidden countdown-screen">
+            <div class="countdown-card">
+                <h1 id="transition-greeting" class="fredoka-text">Hi Student!</h1>
+                <h2 id="transition-subtitle" class="fredoka-text text-secondary">Get ready to read...</h2>
+                <div class="countdown-wrapper">
+                    <div id="countdown" class="fredoka-text">3</div>
+                    <svg class="countdown-circle">
+                        <circle cx="90" cy="90" r="80"></circle>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 03: Activity Reading/Vocab -->
+        <div id="screen-03-activity" class="screen hidden activity-screen">
+            <!-- Dynamic Content Injected Here -->
+        </div>
+
+        <!-- Screen 04: Celebration / Results -->
+        <div id="screen-04-end" class="screen hidden end-screen">
+            <div id="confetti-container"></div>
+            <div class="celebration-card">
+                <div class="star-burst">
+                    <span class="material-icons-round star-pulse-1">star</span>
+                    <span class="material-icons-round star-pulse-2">star</span>
+                    <span class="material-icons-round star-pulse-3">star</span>
+                </div>
+                <h1 class="fredoka-text text-success" id="end-title">Excellent Reading!</h1>
+                <h2 class="fredoka-text" id="end-subtitle">You read like a star!</h2>
+                
+                <div class="results-stats-container" id="results-stats-container">
+                    <!-- Stats summary card goes here -->
+                </div>
+                
+                <div class="action-row">
+                    <button id="btn-results-continue" class="btn-primary btn-large">
+                        <span>Continue</span> <span class="material-icons-round">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Teacher Dashboard Modal -->
+        <div id="teacher-dashboard-modal" class="modal hidden">
+            <div class="modal-content">
+                <header class="modal-header">
+                    <div class="modal-title-wrapper">
+                        <span class="material-icons-round text-primary modal-icon">admin_panel_settings</span>
+                        <h2>Teacher Dashboard</h2>
+                    </div>
+                    <button id="btn-close-dashboard" class="btn-icon-close" aria-label="Close">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </header>
+                
+                <div class="dashboard-stats" id="dashboard-stats">
+                    <!-- Stats injected via JS -->
+                </div>
+
+                <div class="dashboard-controls">
+                    <h3 class="dashboard-subtitle">Student Level Administration</h3>
+                    <p class="text-muted dashboard-desc">Adjust student reading levels to customize their experience.</p>
+                </div>
+                
+                <div id="dashboard-content" class="dashboard-list">
+                    <!-- Student Cards injected via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Miko Global Avatar (Always Visible, Conversational Assistant) -->
+    <div id="miko-global" class="hidden">
+        <div class="miko-speech-bubble">
+            <div id="miko-bubble-text">Hi! Let's read together!</div>
+        </div>
+        <div class="miko-avatar-container">
+            <img src="assets/miko.png" alt="Miko The Guide">
+        </div>
+    </div>
+
+    <!-- Audio for SFX -->
+    <audio id="sfx-success" src="assets/sfx-success.mp3"></audio>
+    <audio id="sfx-pop" src="assets/sfx-pop.mp3"></audio>
+    <audio id="sfx-chime" src="assets/sfx-chime.mp3"></audio>
+
+    <script src="data.js"></script>
+    <script src="storage.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

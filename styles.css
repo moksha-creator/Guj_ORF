@@ -1,19 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
 
 :root {
-    --bg-color: #F6FBFF;
-    --primary: #5B7CFA;
-    --success: #7ED957;
-    --accent: #FFC857;
-    --card-bg: #FFFFFF;
-    --text-color: #243042;
-    --text-muted: #6B7280;
-    --radius-lg: 24px;
-    --radius-pill: 50px;
-    --spacing-base: 32px;
+    /* M3 Color Scheme (Light Theme) */
+    --md-sys-color-primary: #3F51B5;
+    --md-sys-color-primary-container: #E8EAF6;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-secondary: #009688;
+    --md-sys-color-secondary-container: #E0F2F1;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-tertiary: #FF9800;
+    --md-sys-color-success: #4CAF50;
+    --md-sys-color-success-container: #E8F5E9;
+    --md-sys-color-background: #F8FAFC;
+    --md-sys-color-surface: #FFFFFF;
+    --md-sys-color-surface-variant: #F1F5F9;
+    --md-sys-color-on-background: #0F172A;
+    --md-sys-color-on-surface: #1E293B;
+    --md-sys-color-on-surface-variant: #64748B;
+    --md-sys-color-outline: #CBD5E1;
+    
+    /* Map old vars to M3 for backward compatibility in our logic */
+    --bg-color: var(--md-sys-color-background);
+    --primary: var(--md-sys-color-primary);
+    --success: var(--md-sys-color-success);
+    --accent: var(--md-sys-color-tertiary);
+    --card-bg: var(--md-sys-color-surface);
+    --text-color: var(--md-sys-color-on-surface);
+    --text-muted: var(--md-sys-color-on-surface-variant);
+    
+    --md-typeface-brand: 'Fredoka', sans-serif;
+    --md-typeface-plain: 'Outfit', sans-serif;
+    
+    --radius-lg: 28px;
+    --radius-pill: 9999px;
+    --spacing-base: 24px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--md-typeface-plain); }
 
 body {
     background-color: var(--bg-color);
@@ -27,34 +51,56 @@ body {
 .screen.active { display: flex; }
 
 /* --- Typography --- */
-h1 { font-size: 3rem; font-weight: 900; }
-h2 { font-size: 2.5rem; font-weight: 700; }
-p { font-size: 1.5rem; }
+h1, h2, h3, h4, .fredoka-text { font-family: var(--md-typeface-brand); font-weight: 600; }
+h1 { font-size: 2.5rem; line-height: 1.2; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+p { font-size: 1.1rem; line-height: 1.5; }
+.text-muted { color: var(--md-sys-color-on-surface-variant); }
+.text-primary { color: var(--md-sys-color-primary); }
 
 /* --- Cards --- */
-.card {
-    background: var(--card-bg);
+.card, .reading-card {
+    background: var(--md-sys-color-surface);
     border-radius: var(--radius-lg);
     padding: var(--spacing-base);
-    box-shadow: 0 8px 16px rgba(36, 48, 66, 0.05); /* Soft flat shadow */
+    border: 1px solid var(--md-sys-color-outline);
+    box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 /* --- Buttons --- */
 button {
-    font-size: 28px; font-weight: 900; border: none; cursor: pointer;
-    border-radius: var(--radius-pill); padding: 16px 32px;
-    transition: transform 0.1s ease;
+    font-family: var(--md-typeface-brand); font-weight: 500; font-size: 1.25rem;
+    border: none; cursor: pointer; border-radius: var(--radius-pill);
+    padding: 14px 28px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); outline: none;
 }
-button:active { transform: scale(0.95); }
-.btn-primary { background-color: var(--primary); color: white; }
-.btn-secondary { background-color: #E5E7EB; color: var(--text-color); }
+button:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
+button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+.btn-primary { background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.btn-primary:hover { background-color: #35449B; }
+.btn-secondary { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface); border: 1px solid var(--md-sys-color-outline); }
+.btn-secondary:hover { background-color: var(--md-sys-color-outline); }
 .btn-invisible { position: absolute; top: 0; right: 0; width: 80px; height: 80px; opacity: 0; cursor: pointer; z-index: 100; }
 
 /* --- Home Screen --- */
-#screen-01-home { padding: 48px; }
-.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }
-.progress-bar-container { width: 300px; height: 24px; background: #E5E7EB; border-radius: 12px; overflow: hidden; margin-top: 8px;}
-.progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.3s; }
+#screen-01-home { padding: 24px; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--md-sys-color-surface-variant); }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.app-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: var(--md-sys-color-primary-container); border-radius: var(--radius-lg); }
+.app-icon span { font-size: 32px; }
+.subtitle { font-size: 0.95rem; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 20px; }
+.progress-section { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.progress-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.progress-bar-container { width: 240px; height: 12px; background: var(--md-sys-color-surface-variant); border-radius: var(--radius-pill); overflow: hidden; border: 1px solid var(--md-sys-color-outline); }
+.progress-bar-fill { height: 100%; background: var(--success); width: 0%; border-radius: var(--radius-pill); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.btn-icon { width: 56px; height: 56px; border-radius: 50%; padding: 0; background-color: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); box-shadow: var(--elevation-1); }
+.btn-icon:hover { background-color: var(--md-sys-color-surface-variant); }
+.btn-icon-close { width: 48px; height: 48px; border-radius: 50%; padding: 0; background-color: transparent; color: var(--md-sys-color-on-surface-variant); display: flex; align-items: center; justify-content: center; }
+.btn-icon-close:hover { background-color: var(--md-sys-color-surface-variant); }
 
 .up-next-section { flex: 1; display: flex; justify-content: center; align-items: center; }
 .up-next-card { width: 600px; text-align: center; }
@@ -101,6 +147,16 @@ button:active { transform: scale(0.95); }
     70% { box-shadow: 0 0 0 40px rgba(255, 200, 87, 0); }
     100% { box-shadow: 0 0 0 0 rgba(255, 200, 87, 0); }
 }
+
+/* --- Transition Screen Countdown --- */
+.countdown-screen { justify-content: center; align-items: center; }
+.countdown-card { background: var(--md-sys-color-surface); padding: 48px; border-radius: var(--radius-lg); box-shadow: var(--elevation-2); text-align: center; max-width: 480px; width: 100%; }
+.countdown-card h1 { font-size: 3rem; margin-bottom: 8px; }
+.countdown-card h2 { font-size: 1.75rem; margin-bottom: 32px; }
+.countdown-wrapper { position: relative; width: 180px; height: 180px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+#countdown { font-size: 6rem; font-weight: 700; color: var(--md-sys-color-tertiary); z-index: 10; }
+.countdown-circle { position: absolute; top: 0; left: 0; width: 180px; height: 180px; transform: rotate(-90deg); }
+.countdown-circle circle { width: 100%; height: 100%; fill: transparent; stroke: var(--md-sys-color-surface-variant); stroke-width: 12; }
 
 /* --- Miko Global Avatar --- */
 #miko-global {
