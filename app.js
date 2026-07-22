@@ -405,7 +405,9 @@ function renderHome() {
     if (nextStudent) {
         upNextSection.innerHTML = `
             <div class="card up-next-card">
-                <div class="avatar-placeholder"></div>
+                <div class="avatar-placeholder" style="width: 80px; height: 80px; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; background: var(--md-sys-color-primary-container); border-radius: 50%;">
+                    <span class="material-icons-round" style="font-size: 48px; color: var(--md-sys-color-primary);">face</span>
+                </div>
                 <h2>${nextStudent.name}</h2>
                 <p>Roll No. ${nextStudent.id}</p>
                 <div style="display:flex; gap:16px; justify-content:center;">
