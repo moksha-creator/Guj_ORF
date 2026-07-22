@@ -964,6 +964,7 @@ function showComprehensionPage(sample) {
     if (simulatedSpeechTimeout) clearInterval(simulatedSpeechTimeout);
     stopRealSpeechRecognition();
     clearLiveTranscript();
+    isStepTransitioning = false; // Reset lock so option buttons can be tapped!
     showScreen(screens.COMPREHENSION);
 
     const levelData = PROTOTYPE_DATA[currentLevel];
