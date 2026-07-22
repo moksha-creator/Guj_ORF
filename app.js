@@ -1007,7 +1007,7 @@ function triggerStartSession() {
 }
 
 // ==========================================
-// SCREEN 2: TRANSITION SCREEN
+// SCREEN 2: TRANSITION SCREEN WITH AI KID AVATAR
 // ==========================================
 function startTransitionScreen(studentName) {
     isStepTransitioning = false;
@@ -1016,11 +1016,17 @@ function startTransitionScreen(studentName) {
     clearLiveTranscript();
     showScreen(screens.TRANSITION);
 
+    const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0] || { name: studentName, avatarImg: 'assets/kid_avatar_1.jpg' };
+    const avatarEl = document.getElementById('transition-student-avatar');
+    if (avatarEl) {
+        avatarEl.src = activeStudent.avatarImg || `assets/kid_avatar_${(currentStudentIndex % 4) + 1}.jpg`;
+    }
+
     const greetingEl = document.getElementById('transition-greeting');
     const subEl = document.getElementById('transition-subheading');
     const countEl = document.getElementById('countdown');
 
-    if (greetingEl) greetingEl.innerText = studentName;
+    if (greetingEl) greetingEl.innerText = activeStudent.name;
     if (subEl) subEl.innerText = "Please come forward";
 
     let count = 3;
