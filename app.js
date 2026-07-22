@@ -32,7 +32,7 @@ let currentMatchedWordIndex = 0;
 // Speech Error Handling & Silence Tracker
 let lastSpeechTimestamp = Date.now();
 let silenceCheckerInterval = null;
-let wordStuckTimer = null;
+let micPermissionRequested = false;
 
 // Roster Mock Data for Home Screen
 let rosterStudents = [
@@ -160,7 +160,7 @@ function hideSilencePrompt() {
 }
 
 // ----------------------------------------------------
-// REAL WEB SPEECH RECONGNITION & STREAMING ENGINE
+// REAL WEB SPEECH RECOGNITION & STREAMING ASR ENGINE
 // ----------------------------------------------------
 function initSpeechRecognitionEngine() {
     try {
@@ -169,7 +169,7 @@ function initSpeechRecognitionEngine() {
             speechRecognition = new SpeechRecognition();
             speechRecognition.continuous = true;
             speechRecognition.interimResults = true;
-            speechRecognition.lang = 'en-IN'; // English (India)
+            speechRecognition.lang = 'en-US'; // Standard English recognition
 
             speechRecognition.onstart = () => {
                 isRealListening = true;
@@ -182,14 +182,15 @@ function initSpeechRecognitionEngine() {
                 let finalTranscript = '';
 
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcriptPiece = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
+                        finalTranscript += transcriptPiece + ' ';
                     } else {
-                        interimTranscript += event.results[i][0].transcript;
+                        interimTranscript += transcriptPiece;
                     }
                 }
 
-                const spokenText = (finalTranscript + ' ' + interimTranscript).trim();
+                const spokenText = (finalTranscript + interimTranscript).trim();
                 if (spokenText.length > 0) {
                     updateLiveTranscriptText(spokenText);
                     processSpokenTranscriptStream(spokenText.toLowerCase());
@@ -198,7 +199,9 @@ function initSpeechRecognitionEngine() {
 
             speechRecognition.onerror = (event) => {
                 console.log("Speech recognition error:", event.error);
-                if (event.error !== 'no-speech') {
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    updateMicUI('permission-denied');
+                } else if (event.error !== 'no-speech') {
                     updateMicUI('error');
                 }
             };
@@ -211,6 +214,9 @@ function initSpeechRecognitionEngine() {
                     updateMicUI('idle');
                 }
             };
+        } else {
+            console.warn("Web Speech API not supported in this browser environment.");
+            updateMicUI('unsupported');
         }
     } catch (err) {
         console.warn("Speech recognition initialization failed:", err);
@@ -219,6 +225,26 @@ function initSpeechRecognitionEngine() {
 
 function startRealSpeechRecognition() {
     if (!speechRecognition) initSpeechRecognitionEngine();
+
+    // Explicitly request microphone stream permission from browser
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !micPermissionRequested) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                micPermissionRequested = true;
+                // Stop temporary mic stream once permission is granted
+                stream.getTracks().forEach(track => track.stop());
+                launchRecognitionInstance();
+            })
+            .catch(err => {
+                console.warn("Microphone permission denied:", err);
+                updateMicUI('permission-denied');
+            });
+    } else {
+        launchRecognitionInstance();
+    }
+}
+
+function launchRecognitionInstance() {
     if (speechRecognition && !isRealListening) {
         try {
             speechRecognition.start();
@@ -257,11 +283,19 @@ function updateMicUI(state) {
 
     if (state === 'listening') {
         indicator.className = 'listening-indicator listening-active';
-        label.innerText = 'Listening... Speak clearly';
+        label.innerText = 'Listening... Read out loud';
         if (dots) dots.style.display = 'flex';
     } else if (state === 'processing') {
         indicator.className = 'listening-indicator processing';
         label.innerText = 'Processing speech...';
+    } else if (state === 'permission-denied') {
+        indicator.className = 'listening-indicator';
+        label.innerText = 'Microphone permission blocked. Please allow mic in browser address bar.';
+        if (dots) dots.style.display = 'none';
+    } else if (state === 'unsupported') {
+        indicator.className = 'listening-indicator';
+        label.innerText = 'Use Chrome/Edge for Web Speech ASR';
+        if (dots) dots.style.display = 'none';
     } else {
         indicator.className = 'listening-indicator';
         label.innerText = 'Tap mic to start listening';
@@ -279,7 +313,7 @@ function processSpokenTranscriptStream(spokenText) {
 
     if (currentTemplate === 'WORD_READ_TEXT') {
         const target = currentTargetWordList[0].toLowerCase();
-        if (spokenText.includes(target)) {
+        if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
             const el = document.getElementById('target-text-display');
             if (el) el.classList.add('highlight-green');
             updateMicUI('processing');
@@ -290,7 +324,7 @@ function processSpokenTranscriptStream(spokenText) {
     }
     else if (currentTemplate === 'WORD_IMAGE_NAMING') {
         const target = currentTargetWordList[0].toLowerCase();
-        if (spokenText.includes(target)) {
+        if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
             const revealed = document.getElementById('image-word-revealed');
             if (revealed) revealed.classList.remove('hidden');
             updateMicUI('processing');
@@ -303,7 +337,7 @@ function processSpokenTranscriptStream(spokenText) {
         // Match against 5 card words with skip tolerance
         currentTargetWordList.forEach((w, idx) => {
             const target = w.toLowerCase();
-            if (spokenTokens.some(st => st.includes(target))) {
+            if (spokenTokens.some(st => st === target || st.includes(target))) {
                 const card = document.getElementById(`set-card-${idx}`);
                 if (card) card.classList.add('highlight-read');
             }
@@ -323,7 +357,7 @@ function processSpokenTranscriptStream(spokenText) {
     }
     else if (currentTemplate === 'SENTENCE_READ_CLOZE_ORAL') {
         const target = currentTargetWordList[0].toLowerCase();
-        if (spokenText.includes(target)) {
+        if (spokenTokens.some(st => st === target || spokenText.includes(target))) {
             const blank = document.getElementById('cloze-blank-target');
             if (blank) {
                 blank.innerText = target;
