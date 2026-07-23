@@ -131,6 +131,9 @@ body {
 .btn-demo-action.advance { background: #2E7D32; color: white; }
 .btn-demo-action.stay { background: #E65100; color: white; }
 .btn-demo-action.move-down { background: #C62828; color: white; }
+#btn-reset-demo-auto { background: #475569; color: white; margin-left: 4px; }
+#btn-reset-demo-auto:hover { background: #64748B; }
+.demo-badge { transition: background-color 0.25s ease; }
 
 /* --- App Container & Layout --- */
 #app-container {

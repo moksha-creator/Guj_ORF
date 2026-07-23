@@ -12,16 +12,17 @@
     <!-- Persistent Developer Demo Controls Bar -->
     <header id="demo-controls-bar">
         <div class="demo-controls-wrapper">
-            <div class="demo-badge">
-                <span class="material-icons-round">build_circle</span>
-                <span>DEMO CONTROLS</span>
+            <div class="demo-badge" id="demo-mode-badge">
+                <span class="material-icons-round" id="demo-mode-icon">autorenew</span>
+                <span id="demo-mode-text">AUTO MODE</span>
             </div>
             
             <div class="demo-selectors">
                 <div class="demo-control-group">
                     <label for="demo-level-select">Reading Level:</label>
                     <select id="demo-level-select" class="demo-select">
-                        <option value="L1" selected>Balvatika (L1)</option>
+                        <option value="AUTO" selected>⚡ Auto (Student Level)</option>
+                        <option value="L1">Balvatika (L1)</option>
                         <option value="L2">Grade 1 (L2)</option>
                         <option value="L3">Grade 2 (L3)</option>
                         <option value="L4">Grade 3 (L4)</option>
@@ -31,18 +32,23 @@
                 <div class="demo-control-group">
                     <label for="demo-template-select">Template:</label>
                     <select id="demo-template-select" class="demo-select">
-                        <!-- Dynamic options based on level -->
+                        <option value="AUTO" selected>⚡ Auto (Engine Template)</option>
                     </select>
                 </div>
 
                 <div class="demo-control-group">
                     <label for="demo-tier-select">Tier:</label>
                     <select id="demo-tier-select" class="demo-select">
-                        <option value="tier1" selected>Tier 1</option>
+                        <option value="AUTO" selected>⚡ Auto (Student Tier)</option>
+                        <option value="tier1">Tier 1</option>
                         <option value="tier2">Tier 2</option>
                         <option value="tier3">Tier 3</option>
                     </select>
                 </div>
+
+                <button class="btn-demo-action" id="btn-reset-demo-auto" onclick="resetDemoControlsToAuto()" title="Reset all selectors to Automatic Mode">
+                    <span class="material-icons-round" style="font-size: 16px;">restart_alt</span> Reset to Auto
+                </button>
             </div>
 
             <div class="demo-actions">
@@ -64,295 +70,276 @@
 
         <!-- Screen 1: Teacher Home (Streamlined Dashboard) -->
         <div id="screen-01-home" class="screen active">
-            <header class="top-bar-clean">
-                <div class="header-left">
-                    <span class="app-icon-sm text-primary"><span class="material-icons-round">school</span></span>
+            <header class="app-header-compact">
+                <div class="header-brand">
+                    <div class="logo-circle">🤖</div>
                     <div>
-                        <h2 class="fredoka-text header-school-title" id="home-school-title">Government Primary School No. 4</h2>
-                        <p class="subtitle text-muted" id="home-district-subtitle">Ahmedabad • Primary Block 1 • Grade 1</p>
+                        <h1 class="app-title fredoka-text" id="home-school-title">Government Primary School No. 4</h1>
+                        <div class="app-subtitle" id="home-district-subtitle">Ahmedabad • Primary Block 1 • Grade 1</div>
                     </div>
                 </div>
-                <div class="header-right">
-                    <div class="language-track-badge">
-                        <span class="material-icons-round" style="font-size: 18px;">translate</span>
-                        <span id="home-lang-track-label">Gujarati / English</span>
-                    </div>
-                    <button id="btn-teacher-dashboard-trigger" class="btn-icon" title="Teacher Settings" onclick="openTeacherSettingsModal()">
+                <div class="header-actions">
+                    <span class="badge-pill" id="home-lang-track-label" style="margin-right: 8px;">Gujarati / English</span>
+                    <button class="btn-secondary btn-icon" onclick="openTeacherSettingsModal()" title="Teacher Settings & Reporting">
                         <span class="material-icons-round">settings</span>
                     </button>
                 </div>
             </header>
 
-            <main class="dashboard-main-layout">
-
-                <!-- Assessment Progress Bar -->
-                <div class="card compact-progress-card">
-                    <div class="progress-info-row">
-                        <span class="progress-title-sm">Assessment Progress</span>
-                        <span class="progress-count-sm" id="progress-text-count">32 / 40 Students (80%)</span>
+            <main class="home-main-content">
+                <!-- Assessment Progress Banner -->
+                <div class="card card-progress-banner">
+                    <div class="progress-banner-header">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round text-primary">analytics</span>
+                            <span class="banner-title fredoka-text">Today's Class Progress</span>
+                        </div>
+                        <span class="banner-count" id="progress-text-count">32 / 40 Students (80%)</span>
                     </div>
-                    <div class="progress-bar-container-sm">
-                        <div id="progress-bar-fill-large" class="progress-bar-fill-sm" style="width: 80%;"></div>
+                    <div class="progress-bar-large">
+                        <div class="progress-bar-fill-large" id="progress-bar-fill-large" style="width: 80%;"></div>
                     </div>
                 </div>
 
-                <!-- Main 2-Column Split Layout: Currently Assessing (Hero) + Assessment Queue -->
-                <div class="dashboard-split-layout">
-                    
-                    <!-- Currently Assessing Hero Card -->
-                    <div class="card hero-student-card" id="hero-student-card">
-                        <div class="hero-header-badge">
-                            <span class="material-icons-round" style="font-size: 16px;">graphic_eq</span> CURRENTLY ASSESSING
-                        </div>
-
-                        <div class="hero-student-body" id="hero-card-content">
-                            <div class="hero-avatar">
-                                <img src="assets/kid_avatar_1.jpg" alt="Student" class="hero-avatar-img">
-                            </div>
-                            <div class="hero-student-info">
-                                <span class="badge-pill hero-level-badge" id="hero-student-level-badge">Level 2 (Grade 1)</span>
-                                <h2 class="fredoka-text hero-student-name" id="up-next-student-name">Aarav Patel</h2>
-                                <p class="text-muted hero-student-details" id="up-next-student-subtext">Roll No. 04 • Grade 1-A • Gujarati Track</p>
-                            </div>
-                        </div>
-
-                        <div class="hero-action-buttons" id="hero-card-actions">
-                            <button class="btn-primary btn-hero-start" onclick="triggerStartSession()">
-                                <span class="material-icons-round" style="font-size: 28px;">play_circle</span> Start Assessment
-                            </button>
-                            <button class="btn-secondary btn-hero-absent" onclick="markCurrentStudentAbsent()">
-                                <span class="material-icons-round">person_off</span> Mark Absent
-                            </button>
-                        </div>
+                <!-- Hero Card: Up Next Student -->
+                <div class="card card-up-next-hero" id="up-next-hero-card">
+                    <div class="hero-header-badge">
+                        <span class="material-icons-round" style="font-size: 18px;">play_circle_filled</span>
+                        <span>CURRENTLY ASSESSING</span>
                     </div>
-
-                    <!-- Assessment Queue Card -->
-                    <div class="card roster-queue-card">
-                        <div class="queue-card-header">
-                            <span class="queue-title-text"><span class="material-icons-round" style="font-size: 18px; vertical-align: middle;">format_list_bulleted</span> Assessment Queue</span>
-                            <span class="text-muted" style="font-size: 0.85rem;" id="queue-remaining-badge">8 remaining</span>
-                        </div>
-                        <div class="roster-queue-grid" id="queue-chips-strip">
-                            <!-- Student Cards Injected via JS -->
-                        </div>
+                    <div class="hero-card-body" id="hero-card-content">
+                        <!-- Rendered dynamically -->
                     </div>
-
+                    <div class="hero-card-actions-strip" id="hero-card-actions">
+                        <!-- Rendered dynamically -->
+                    </div>
                 </div>
 
+                <!-- Classroom Assessment Queue -->
+                <div class="card card-queue-section">
+                    <div class="queue-header">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round text-muted">format_list_bulleted</span>
+                            <h3 class="fredoka-text" style="font-size: 1.2rem;">Classroom Roster Queue</h3>
+                        </div>
+                        <span class="badge-pill" id="queue-remaining-badge">8 remaining</span>
+                    </div>
+                    <div class="queue-grid-container" id="queue-chips-strip">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
             </main>
         </div>
 
-        <!-- Screen 2: Transition Screen with 3D AI Kid Avatar -->
-        <div id="screen-02-transition" class="screen hidden countdown-screen">
-            <div class="countdown-card">
-                <div class="transition-avatar-container">
+        <!-- Screen 2: Transition / Welcome Screen -->
+        <div id="screen-02-transition" class="screen transition-screen hidden">
+            <div class="transition-card">
+                <div id="transition-student-avatar-box" style="margin-bottom: 16px;">
                     <img id="transition-student-avatar" src="assets/kid_avatar_1.jpg" alt="Student Avatar" class="transition-avatar-img">
                 </div>
-                <h1 id="transition-greeting" class="fredoka-text text-primary">Aarav Patel</h1>
-                <h2 class="fredoka-text text-secondary" id="transition-subheading">Please come forward</h2>
-                
-                <div class="countdown-wrapper">
-                    <div id="countdown" class="fredoka-text">3</div>
-                    <svg class="countdown-circle">
-                        <circle cx="70" cy="70" r="60"></circle>
+                <h1 id="transition-greeting" class="fredoka-text" style="font-size: 3rem; color: #1E293B;">Aarav Patel</h1>
+                <p id="transition-subheading" style="font-size: 1.5rem; color: #64748B; margin-bottom: 32px;">Please come forward</p>
+                <div class="countdown-circle">
+                    <svg class="countdown-svg" viewBox="0 0 100 100">
+                        <circle class="countdown-bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="countdown-ring" cx="50" cy="50" r="45"></circle>
                     </svg>
+                    <span id="countdown" class="fredoka-text">3</span>
                 </div>
             </div>
         </div>
 
-        <!-- Screen 3: Assessment Activity -->
-        <div id="screen-03-activity" class="screen hidden activity-screen">
-            <header class="activity-header">
-                <div class="activity-meta">
-                    <span class="badge-pill" id="activity-level-badge">Balvatika (L1)</span>
-                    <span class="badge-pill" id="activity-template-badge">WORD_READ_TEXT</span>
-                    <span class="badge-pill" id="activity-sample-counter" style="background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary);">Sample 1 of 3</span>
-                    <span class="badge-pill" id="activity-wcpm-badge" style="background: #FEF3C7; color: #B45309; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                        <span class="material-icons-round" style="font-size: 16px;">speed</span> <span id="wcpm-val-display">0</span> WCPM
-                    </span>
+        <!-- Screen 3: Main Reading Assessment Screen -->
+        <div id="screen-03-activity" class="screen activity-screen hidden">
+            <!-- Smartboard Header Bar -->
+            <header class="smartboard-header">
+                <div class="header-left">
+                    <span class="badge-level" id="activity-level-badge">Balvatika (L1)</span>
+                    <span class="badge-template" id="activity-template-badge">WORD_READ_TEXT</span>
                 </div>
-                <div class="teacher-live-controls">
-                    <!-- 3-Minute Assessment Countdown Timer -->
+                <div class="header-right">
+                    <span class="badge-sample-counter" id="activity-sample-counter">Sample 1 of 3</span>
+                    <!-- WCPM Rate Badge (Visible for L3 & L4; Hidden for L1 & L2) -->
+                    <div class="live-wcpm-badge" id="activity-wcpm-badge">
+                        <span class="material-icons-round" style="font-size: 18px;">speed</span>
+                        <span>WCPM: <strong id="wcpm-val-display">0</strong></span>
+                    </div>
+                    <!-- 3-Minute Assessment Timer Badge -->
                     <div class="timer-badge neutral" id="assessment-timer-badge">
-                        <span class="material-icons-round">timer</span>
+                        <span class="material-icons-round" style="font-size: 18px;">timer</span>
                         <span id="timer-display-text">3:00</span>
                     </div>
-
-                    <button class="btn-secondary" onclick="pauseSession()">
-                        <span class="material-icons-round">pause</span> Pause
+                    <button class="btn-pause-header" onclick="pauseSession()" title="Pause Assessment">
+                        <span class="material-icons-round">pause</span>
                     </button>
-                    <button class="btn-secondary" onclick="endAssessmentSessionPrompt()">
-                        <span class="material-icons-round">stop</span> End Session
+                    <button class="btn-end-header" onclick="endAssessmentSessionPrompt()" title="End Session">
+                        <span class="material-icons-round">close</span>
                     </button>
                 </div>
             </header>
 
-            <main class="activity-body">
-                <div class="activity-instruction-box">
-                    <h2 id="activity-instruction-text" class="fredoka-text">Read the word out loud.</h2>
+            <!-- Main Interactive Canvas -->
+            <main class="smartboard-canvas">
+                <div class="instruction-banner">
+                    <span class="instruction-icon">📢</span>
+                    <span id="activity-instruction-text">Read the word out loud.</span>
                 </div>
 
-                <!-- Main Activity Display Card -->
-                <div class="card reading-card-container" id="reading-card-container">
-                    <!-- Dynamic Content Injected via JS -->
-                </div>
-
-                <!-- Live Speech Transcript Box -->
-                <div class="live-transcript-box hidden" id="live-transcript-box">
-                    <span class="material-icons-round transcript-icon">record_voice_over</span>
-                    <span class="transcript-text" id="live-transcript-text">Heard: "..."</span>
-                </div>
-
-                <!-- Subtle Silent Pause Prompt (3-5s silence) -->
-                <div class="silence-prompt-toast hidden" id="silence-prompt-toast">
-                    <span class="material-icons-round">sentiment_satisfied</span> Keep reading when you're ready
-                </div>
-
-                <!-- Listening Experience Indicator & Mic -->
-                <div class="listening-experience-box">
-                    <div class="waveform-wrapper">
-                        <div class="waveform-dots" id="waveform-dots">
-                            <span></span><span></span><span></span><span></span><span></span>
-                        </div>
-                        <div class="listening-indicator" id="listening-indicator" onclick="toggleRealSpeechRecognition()" title="Tap to toggle Microphone">
-                            <div class="pulse-ring"></div>
-                            <span class="material-icons-round mic-icon" id="mic-icon-btn">mic</span>
-                        </div>
-                    </div>
-                    <div class="listening-label" id="listening-label">Listening... Speak clearly</div>
-                    <button class="btn-secondary btn-simulate-read" onclick="simulateWordSpeech()">
-                        <span class="material-icons-round">volume_up</span> Simulate Speech
-                    </button>
+                <div class="reading-card" id="reading-card-container">
+                    <!-- Dynamic Activity Content Injected Here -->
                 </div>
             </main>
+
+            <!-- Smartboard Mic & Streaming ASR Status Bar -->
+            <footer class="smartboard-footer">
+                <div class="listening-indicator" id="listening-indicator" onclick="toggleRealSpeechRecognition()">
+                    <span class="mic-icon material-icons-round">mic</span>
+                    <span class="listening-label" id="listening-label">Listening... Read out loud</span>
+                    <div class="waveform-dots" id="waveform-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+
+                <!-- Live ASR Transcript Box -->
+                <div class="live-transcript-box hidden" id="live-transcript-box">
+                    <span class="material-icons-round text-primary" style="font-size: 18px;">graphic_eq</span>
+                    <span id="live-transcript-text">Heard: ""</span>
+                </div>
+
+                <div class="footer-actions">
+                    <button class="btn-sim-speech" onclick="simulateWordSpeech()" title="Simulate ASR voice input for testing">
+                        <span class="material-icons-round">record_voice_over</span> Simulate Speech
+                    </button>
+                    <button class="btn-secondary" onclick="completeAssessmentSampleStep()" style="border-radius: 12px;">
+                        Skip Sample <span class="material-icons-round">chevron_right</span>
+                    </button>
+                </div>
+            </footer>
         </div>
 
-        <!-- Screen 3b: Dedicated Comprehension Question Screen -->
-        <div id="screen-03b-comprehension" class="screen hidden activity-screen">
-            <header class="activity-header">
-                <div class="activity-meta">
-                    <span class="badge-pill" id="comp-level-badge">Grade 2 (L3)</span>
-                    <span class="badge-pill" style="background: #F3E8FF; color: #7E22CE;">COMPREHENSION</span>
-                    <span class="badge-pill" id="comp-sample-counter" style="background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary);">Sample 1 of 3</span>
+        <!-- Screen 3b: Dedicated Comprehension Screen -->
+        <div id="screen-03b-comprehension" class="screen activity-screen hidden">
+            <header class="smartboard-header">
+                <div class="header-left">
+                    <span class="badge-level" id="comp-level-badge">Grade 2 (L3)</span>
+                    <span class="badge-template">COMPREHENSION_QUIZ</span>
                 </div>
-                <div class="teacher-live-controls">
-                    <!-- Shared 3-Minute Assessment Countdown Timer -->
+                <div class="header-right">
+                    <span class="badge-sample-counter" id="comp-sample-counter">Sample 1 of 3</span>
                     <div class="timer-badge neutral" id="comp-timer-badge">
-                        <span class="material-icons-round">timer</span>
+                        <span class="material-icons-round" style="font-size: 18px;">timer</span>
                         <span id="comp-timer-display-text">3:00</span>
                     </div>
-
-                    <button class="btn-secondary" onclick="pauseSession()">
-                        <span class="material-icons-round">pause</span> Pause
-                    </button>
-                    <button class="btn-secondary" onclick="endAssessmentSessionPrompt()">
-                        <span class="material-icons-round">stop</span> End Session
-                    </button>
                 </div>
             </header>
-
-            <main class="activity-body" style="justify-content: center;">
-                <div class="card comprehension-page-card">
-                    <div class="comp-badge-header">
-                        <span class="material-icons-round">quiz</span> COMPREHENSION QUESTION
+            <main class="smartboard-canvas">
+                <div class="instruction-banner">
+                    <span class="instruction-icon">❓</span>
+                    <span>Answer the question about the story you just read.</span>
+                </div>
+                <div class="reading-card" style="max-width: 840px;">
+                    <h2 class="fredoka-text" id="comp-page-question-text" style="font-size: 2.2rem; color: #1E293B; margin-bottom: 28px; text-align: center;">Question text?</h2>
+                    <div class="comp-options-page-grid" id="comp-page-options-grid">
+                        <!-- Injected dynamically -->
                     </div>
-                    <h1 class="fredoka-text comp-question-title" id="comp-page-question-text">Question text</h1>
-                    <div class="comp-options-page-grid" id="comp-page-options-grid"></div>
                 </div>
             </main>
         </div>
 
         <!-- Screen 4: Session Complete Screen -->
-        <div id="screen-04-end" class="screen hidden end-screen">
+        <div id="screen-04-end" class="screen end-screen hidden">
             <div id="confetti-container"></div>
-            <div class="card celebration-card">
-                <span class="material-icons-round text-success celebration-icon">workspace_premium</span>
-                <h1 class="fredoka-text text-success">Today's Session Complete</h1>
-                <p class="text-muted celebration-subtext">All scheduled student assessments finished!</p>
-                
-                <div class="session-summary-stats">
-                    <div class="stat-box">
-                        <span class="stat-number text-primary" id="summary-stat-assessed">0</span>
-                        <span class="stat-label">Students Assessed</span>
+            <div class="card end-card">
+                <div class="star-burst">⭐</div>
+                <h1 class="fredoka-text" style="font-size: 3rem; color: #1E293B; margin-bottom: 8px;">Classroom Assessment Cycle Complete!</h1>
+                <p class="text-muted" style="font-size: 1.3rem; margin-bottom: 24px;">All scheduled oral reading fluency assessments have been evaluated.</p>
+
+                <div class="end-summary-grid">
+                    <div class="summary-stat-box">
+                        <span class="stat-num text-success" id="summary-stat-assessed">32</span>
+                        <span class="stat-label">Assessed</span>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-number text-secondary" id="summary-stat-wcpm">0</span>
+                    <div class="summary-stat-box">
+                        <span class="stat-num text-primary" id="summary-stat-wcpm">42</span>
                         <span class="stat-label">Avg WCPM</span>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-number text-success" id="summary-stat-absent">0</span>
+                    <div class="summary-stat-box">
+                        <span class="stat-num text-muted" id="summary-stat-absent">8</span>
                         <span class="stat-label">Absent</span>
                     </div>
                 </div>
-                
-                <button class="btn-primary btn-large" onclick="returnToHomeFromComplete()">
-                    <span class="material-icons-round">home</span> Return Home
-                </button>
+
+                <div class="end-actions">
+                    <button class="btn-primary" style="padding: 16px 36px; font-size: 1.2rem;" onclick="returnToHomeFromComplete()">
+                        <span class="material-icons-round">home</span> Return to Dashboard
+                    </button>
+                    <button class="btn-secondary" style="padding: 16px 28px; font-size: 1.1rem;" onclick="openReportingFromSettings()">
+                        <span class="material-icons-round">assessment</span> Open Reports
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Screen 5: Teacher 3-Tab Reporting Module -->
-        <div id="screen-05-reporting" class="screen hidden reporting-screen">
-            <header class="top-bar">
-                <div class="header-left">
-                    <button class="btn-secondary" onclick="renderTeacherHome()">
-                        <span class="material-icons-round">arrow_back</span> Back to Home
+        <!-- Screen 5: 3-Tab Teacher Reporting Dashboard -->
+        <div id="screen-05-reporting" class="screen reporting-screen hidden">
+            <header class="app-header-compact">
+                <div class="header-brand">
+                    <button class="btn-secondary btn-icon" onclick="renderTeacherHome()" title="Back to Home">
+                        <span class="material-icons-round">arrow_back</span>
                     </button>
                     <div>
-                        <h1 class="fredoka-text">Teacher Reporting Dashboard</h1>
-                        <p class="subtitle text-muted">Gujarat Primary ORF Fluency Analytics</p>
+                        <h1 class="app-title fredoka-text">Teacher Assessment Reporting</h1>
+                        <div class="app-subtitle">GPS No. 4 • Oral Reading Fluency Insights</div>
                     </div>
                 </div>
-                <div class="header-right">
-                    <button class="btn-primary" onclick="exportFilteredCSV()">
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="exportFilteredCSV()">
                         <span class="material-icons-round">download</span> Export CSV
                     </button>
                 </div>
             </header>
 
-            <!-- 3 Tabs Navigation Bar -->
-            <div class="reporting-tabs-nav">
-                <button class="rep-tab-btn active" id="tab-btn-student" onclick="switchReportingTab('student')">
-                    <span class="material-icons-round">person</span> Student Report
-                </button>
-                <button class="rep-tab-btn" id="tab-btn-class" onclick="switchReportingTab('class')">
-                    <span class="material-icons-round">groups</span> Class Report
-                </button>
-                <button class="rep-tab-btn" id="tab-btn-log" onclick="switchReportingTab('log')">
-                    <span class="material-icons-round">receipt_long</span> Response Log
-                </button>
-            </div>
+            <main class="reporting-main-content">
+                <!-- 3-Tab Navigation Bar -->
+                <div class="rep-tabs-bar">
+                    <button class="rep-tab-btn active" id="tab-btn-student" onclick="switchReportingTab('student')">
+                        <span class="material-icons-round">person</span> Student Diagnostic Profile
+                    </button>
+                    <button class="rep-tab-btn" id="tab-btn-class" onclick="switchReportingTab('class')">
+                        <span class="material-icons-round">groups</span> Class Progress Overview
+                    </button>
+                    <button class="rep-tab-btn" id="tab-btn-log" onclick="switchReportingTab('log')">
+                        <span class="material-icons-round">table_chart</span> Item Response Log
+                    </button>
+                </div>
 
-            <main class="reporting-body">
-
-                <!-- Tab 1: Student Report View -->
-                <div id="rep-tab-content-student" class="rep-tab-content active">
-                    <div class="student-select-card card">
-                        <label for="rep-student-selector" class="rep-label">Select Student:</label>
-                        <select id="rep-student-selector" class="demo-select rep-select" onchange="renderStudentReport(this.value)">
-                            <!-- Populated dynamically -->
+                <!-- TAB 1: STUDENT DIAGNOSTIC PROFILE -->
+                <div class="rep-tab-content" id="rep-tab-content-student">
+                    <div class="rep-student-header-bar">
+                        <label for="rep-student-selector" style="font-weight: 700; color: #475569;">Select Student:</label>
+                        <select id="rep-student-selector" class="rep-select" onchange="renderStudentReport(this.value)">
+                            <!-- Dynamic Options -->
                         </select>
                     </div>
-
-                    <div class="rep-grid-layout" id="student-report-details-container">
-                        <!-- Rendered via JS -->
+                    <div id="student-report-details-container" class="rep-student-grid">
+                        <!-- Rendered Dynamically -->
                     </div>
                 </div>
 
-                <!-- Tab 2: Class Report View -->
-                <div id="rep-tab-content-class" class="rep-tab-content hidden">
-                    <div class="rep-stats-grid">
+                <!-- TAB 2: CLASS PROGRESS OVERVIEW -->
+                <div class="rep-tab-content hidden" id="rep-tab-content-class">
+                    <div class="rep-class-grid">
                         <div class="card stat-card">
-                            <span class="stat-card-title">TOTAL STUDENTS</span>
-                            <h2 class="fredoka-text text-primary" id="class-rep-stat-total">40</h2>
+                            <span class="stat-card-title">TOTAL ROSTER</span>
+                            <h2 class="fredoka-text" id="class-rep-stat-total">40</h2>
                         </div>
                         <div class="card stat-card">
-                            <span class="stat-card-title">ASSESSED</span>
-                            <h2 class="fredoka-text text-success" id="class-rep-stat-assessed">0</h2>
+                            <span class="stat-card-title">ASSESSED TODAY</span>
+                            <h2 class="fredoka-text text-success" id="class-rep-stat-assessed">32</h2>
                         </div>
                         <div class="card stat-card">
-                            <span class="stat-card-title">PENDING</span>
-                            <h2 class="fredoka-text text-secondary" id="class-rep-stat-pending">40</h2>
+                            <span class="stat-card-title">PENDING QUEUE</span>
+                            <h2 class="fredoka-text text-primary" id="class-rep-stat-pending">8</h2>
                         </div>
                         <div class="card stat-card">
                             <span class="stat-card-title">ABSENT</span>
@@ -360,206 +347,220 @@
                         </div>
                     </div>
 
-                    <div class="card coverage-banner-card">
-                        <div class="coverage-header">
-                            <span class="coverage-title">CURRENT CYCLE COVERAGE</span>
-                            <span class="coverage-count" id="class-rep-coverage-label">0 / 40 Students Assessed (0%)</span>
+                    <div class="card" style="margin-top: 20px;">
+                        <h3 class="fredoka-text" style="margin-bottom: 12px;">Classroom Assessment Coverage</h3>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px; font-weight: 600;">
+                            <span id="class-rep-coverage-label">32 / 40 Students Assessed (80%)</span>
+                            <span style="color: #2E7D32;">Target: 100%</span>
                         </div>
-                        <div class="progress-bar-large-container">
-                            <div class="progress-bar-fill-large" id="class-rep-coverage-fill" style="width: 0%;"></div>
+                        <div class="progress-bar-large">
+                            <div class="progress-bar-fill-large" id="class-rep-coverage-fill" style="width: 80%;"></div>
                         </div>
                     </div>
 
-                    <div class="rep-grid-two-col">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
                         <div class="card">
                             <h3 class="fredoka-text" style="margin-bottom: 16px;">Reading Level Distribution</h3>
-                            <div class="level-dist-bars" id="class-rep-level-dist-container">
-                                <!-- Populated dynamically -->
+                            <div class="level-dist-chart" id="class-rep-level-dist-container">
+                                <!-- Dynamic bars -->
                             </div>
                         </div>
-
                         <div class="card">
                             <h3 class="fredoka-text" style="margin-bottom: 16px;">Classroom Insights</h3>
-                            <ul class="insights-list" id="class-rep-insights-list">
-                                <!-- Populated dynamically -->
+                            <ul style="line-height: 1.8; color: #475569;" id="class-rep-insights-list">
+                                <li>✨ <strong>Strongest Area:</strong> Single word recognition accuracy is high across Grade 1.</li>
+                                <li>📈 <strong>Growth Opportunity:</strong> Cloze sentence context prediction needs practice.</li>
+                                <li>⚠️ <strong>Support Needed:</strong> 3 students flagged for low fluency pace (< 20 WCPM).</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="card" style="margin-top: 20px;">
-                        <h3 class="fredoka-text" style="margin-bottom: 16px;">Students Requiring Attention</h3>
+                        <h3 class="fredoka-text" style="margin-bottom: 12px;">Students Requiring Re-Assessment Support</h3>
                         <table class="rep-table">
                             <thead>
                                 <tr>
                                     <th>Student Name</th>
                                     <th>Grade</th>
-                                    <th>Level</th>
-                                    <th>Attention Reason</th>
+                                    <th>Reading Level</th>
+                                    <th>Flag Reason</th>
                                 </tr>
                             </thead>
                             <tbody id="attention-students-tbody">
-                                <!-- Populated dynamically -->
+                                <!-- Dynamic rows -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Tab 3: Response Log View -->
-                <div id="rep-tab-content-log" class="rep-tab-content hidden">
-                    <div class="card log-filters-card">
-                        <div class="filters-row">
-                            <div class="filter-group">
-                                <label>Filter Level:</label>
-                                <select id="filter-log-level" class="demo-select" onchange="renderResponseLog()">
-                                    <option value="ALL">All Levels</option>
-                                    <option value="L1">Level 1</option>
-                                    <option value="L2">Level 2</option>
-                                    <option value="L3">Level 3</option>
-                                    <option value="L4">Level 4</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Language:</label>
-                                <select id="filter-log-lang" class="demo-select" onchange="renderResponseLog()">
-                                    <option value="ALL">All Languages</option>
-                                    <option value="Gujarati">Gujarati</option>
-                                    <option value="English">English</option>
-                                </select>
-                            </div>
+                <!-- TAB 3: ITEM RESPONSE LOG -->
+                <div class="rep-tab-content hidden" id="rep-tab-content-log">
+                    <div class="log-filter-bar">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label for="filter-log-level" style="font-weight: 700;">Filter Level:</label>
+                            <select id="filter-log-level" class="rep-select" onchange="renderResponseLog()">
+                                <option value="ALL">All Levels</option>
+                                <option value="L1">Level 1 (Balvatika)</option>
+                                <option value="L2">Level 2 (Grade 1)</option>
+                                <option value="L3">Level 3 (Grade 2)</option>
+                                <option value="L4">Level 4 (Grade 3)</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label for="filter-log-lang" style="font-weight: 700;">Language:</label>
+                            <select id="filter-log-lang" class="rep-select" onchange="renderResponseLog()">
+                                <option value="ALL">All Languages</option>
+                                <option value="Gujarati / English">Gujarati / English</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="card table-wrapper-card">
+                    <div class="card" style="padding: 0; overflow: hidden;">
                         <table class="rep-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Student</th>
+                                    <th>Student Name</th>
                                     <th>Language</th>
                                     <th>Level</th>
                                     <th>Tier</th>
-                                    <th>Accuracy</th>
+                                    <th>Accuracy %</th>
                                     <th>WCPM</th>
-                                    <th>Comp Score</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
+                                    <th>Comp %</th>
+                                    <th>Transition Outcome</th>
+                                    <th>Audio Recording</th>
                                 </tr>
                             </thead>
                             <tbody id="response-log-tbody">
-                                <!-- Populated dynamically -->
+                                <!-- Dynamic log rows -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-
             </main>
-        </div>
-
-        <!-- Animated Progression Simulation Toast Modal -->
-        <div id="progression-toast" class="progression-toast hidden">
-            <div class="toast-card" id="toast-card">
-                <span class="material-icons-round toast-icon" id="toast-icon">north_east</span>
-                <div class="toast-title" id="toast-title">Advance</div>
-                <div class="toast-subtitle" id="toast-subtitle">L1 ↓ L2</div>
-            </div>
-        </div>
-
-        <!-- Teacher Settings Modal -->
-        <div id="modal-teacher-settings" class="modal-backdrop hidden">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2 class="fredoka-text">Teacher Settings</h2>
-                    <button class="btn-icon" onclick="closeTeacherSettingsModal()"><span class="material-icons-round">close</span></button>
-                </div>
-                <div class="modal-body">
-                    <div class="settings-options-grid" style="margin-bottom: 24px;">
-                        <div class="settings-option-card" onclick="openReportingFromSettings()">
-                            <span class="material-icons-round option-icon text-primary">assessment</span>
-                            <h3>Reporting Dashboard</h3>
-                            <p class="text-muted">View individual student progress, class overview, and export response logs.</p>
-                        </div>
-                        <div class="settings-option-card" onclick="triggerResetConfiguration()">
-                            <span class="material-icons-round option-icon text-secondary">restart_alt</span>
-                            <h3>Reset Configuration</h3>
-                            <p class="text-muted">Return app to initial setup flow and re-configure school settings.</p>
-                        </div>
-                    </div>
-
-                    <!-- Sound Effects Accessibility Controls -->
-                    <div class="card sfx-settings-card" style="text-align: left;">
-                        <h3 class="fredoka-text" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <span class="material-icons-round text-primary">volume_up</span> Sound Effects (SFX)
-                        </h3>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                            <label for="sfx-enable-toggle" style="font-weight: 700;">Enable Audio Feedback:</label>
-                            <input type="checkbox" id="sfx-enable-toggle" checked style="width: 20px; height: 20px; cursor: pointer;" onchange="toggleSFXEnabled(this.checked)">
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-                            <label for="sfx-volume-slider" style="font-weight: 700; width: 140px;">SFX Volume:</label>
-                            <input type="range" id="sfx-volume-slider" min="0" max="1" step="0.1" value="0.5" style="flex: 1; cursor: pointer;" onchange="updateSFXVolume(this.value)">
-                            <span id="sfx-volume-val" style="font-weight: 800; width: 40px;">50%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Initial Setup Onboarding Modal -->
-        <div id="modal-onboarding-setup" class="modal-backdrop hidden">
-            <div class="modal-card" style="max-width: 520px;">
-                <div class="modal-header">
-                    <h2 class="fredoka-text">Miko Reading Check Setup</h2>
-                </div>
-                <div class="modal-body" style="text-align: left;">
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label class="rep-label">District & Block:</label>
-                        <select id="setup-district-select" class="demo-select" style="width: 100%;">
-                            <option value="Ahmedabad • Primary Block 1">Ahmedabad • Primary Block 1</option>
-                            <option value="Gandhinagar • Block A">Gandhinagar • Block A</option>
-                            <option value="Surat • Primary Division">Surat • Primary Division</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label class="rep-label">School Name:</label>
-                        <input type="text" id="setup-school-input" class="demo-select" value="Government Primary School No. 4" style="width: 100%;">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label class="rep-label">Grade Level:</label>
-                        <select id="setup-grade-select" class="demo-select" style="width: 100%;">
-                            <option value="Grade 1">Grade 1 (Level 2)</option>
-                            <option value="Balvatika">Balvatika (Level 1)</option>
-                            <option value="Grade 2">Grade 2 (Level 3)</option>
-                            <option value="Grade 3">Grade 3 (Level 4)</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label class="rep-label">Language Track:</label>
-                        <select id="setup-lang-select" class="demo-select" style="width: 100%;">
-                            <option value="Gujarati / English">Gujarati / English Dual Track</option>
-                            <option value="Gujarati">Gujarati Medium</option>
-                            <option value="English">English Medium</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 24px;">
-                        <label class="rep-label">Class Roster Size:</label>
-                        <select id="setup-roster-size-select" class="demo-select" style="width: 100%;">
-                            <option value="1">1 Student (Testing Roster)</option>
-                            <option value="5">5 Students (Small Roster)</option>
-                            <option value="25">25 Students (Standard Class)</option>
-                            <option value="40" selected>40 Students (Full Class)</option>
-                        </select>
-                    </div>
-                    <button class="btn-primary btn-large" style="width: 100%;" onclick="completeInitialSetupFlow()">
-                        <span class="material-icons-round">check_circle</span> Complete Setup
-                    </button>
-                </div>
-            </div>
         </div>
 
     </div>
 
+    <!-- Toast Notification for Progression Transitions -->
+    <div id="progression-toast" class="progression-toast hidden">
+        <div class="toast-icon-box">
+            <span class="material-icons-round" id="toast-icon">north_east</span>
+        </div>
+        <div>
+            <h4 class="fredoka-text" id="toast-title">Advancing Progression</h4>
+            <p id="toast-subtitle">L1 (Tier 1) ➔ L2 (Tier 1)</p>
+        </div>
+    </div>
+
+    <!-- Silence Detector Toast -->
+    <div id="silence-prompt-toast" class="silence-toast hidden">
+        <span class="material-icons-round">volume_up</span>
+        <span>Teacher Tip: Encourage student to speak out loud</span>
+    </div>
+
+    <!-- Teacher Settings & Roster Config Modal -->
+    <div id="modal-teacher-settings" class="modal-backdrop hidden">
+        <div class="card modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="fredoka-text" style="font-size: 1.8rem;">Teacher Settings & Configuration</h2>
+                <button class="btn-secondary btn-icon" onclick="closeTeacherSettingsModal()">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div>
+                    <h3 class="fredoka-text" style="font-size: 1.2rem; margin-bottom: 8px;">Audio SFX Settings</h3>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
+                            <input type="checkbox" id="sfx-enable-toggle" checked onchange="toggleSFXEnabled(this.checked)"> Enable Soft SFX Chimes
+                        </label>
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <span style="font-size: 0.85rem; color: #64748B;">Volume:</span>
+                            <input type="range" id="sfx-volume-slider" min="0" max="1" step="0.1" value="0.5" oninput="updateSFXVolume(this.value)" style="flex: 1;">
+                            <span id="sfx-volume-val" style="font-size: 0.85rem; font-weight: 700; width: 40px;">50%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #E2E8F0; padding-top: 16px;">
+                    <h3 class="fredoka-text" style="font-size: 1.2rem; margin-bottom: 8px;">Reporting & Data Management</h3>
+                    <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 12px;">View student profiles, class progress trends, or export response logs.</p>
+                    <button class="btn-primary" onclick="openReportingFromSettings()" style="width: 100%;">
+                        <span class="material-icons-round">assessment</span> Open Reporting Dashboard
+                    </button>
+                </div>
+
+                <div style="border-top: 1px solid #E2E8F0; padding-top: 16px;">
+                    <h3 class="fredoka-text" style="font-size: 1.2rem; margin-bottom: 8px; color: #B91C1C;">Reset Configuration</h3>
+                    <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 12px;">Re-run the initial onboarding flow to change district, school name, grade, or roster size.</p>
+                    <button class="btn-secondary" onclick="triggerResetConfiguration()" style="width: 100%; border-color: #FCA5A5; color: #991B1B;">
+                        <span class="material-icons-round">restart_alt</span> Reset & Reconfigure Classroom Setup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Setup Modal -->
+    <div id="modal-onboarding-setup" class="modal-backdrop hidden">
+        <div class="card modal-card" style="max-width: 580px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-size: 48px; margin-bottom: 8px;">🤖</div>
+                <h2 class="fredoka-text" style="font-size: 2rem;">Miko ORF Setup Wizard</h2>
+                <p class="text-muted">Configure your classroom assessment session</p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="font-weight: 700; display: block; margin-bottom: 6px;">District / Block:</label>
+                    <select id="setup-district-select" class="rep-select" style="width: 100%;">
+                        <option value="Ahmedabad • Primary Block 1" selected>Ahmedabad • Primary Block 1</option>
+                        <option value="Surat • Urban Block 2">Surat • Urban Block 2</option>
+                        <option value="Vadodara • Central Block 3">Vadodara • Central Block 3</option>
+                        <option value="Rajkot • Rural Block 4">Rajkot • Rural Block 4</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight: 700; display: block; margin-bottom: 6px;">School Name:</label>
+                    <input type="text" id="setup-school-input" class="rep-select" style="width: 100%;" value="Government Primary School No. 4">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 6px;">Grade Target:</label>
+                        <select id="setup-grade-select" class="rep-select" style="width: 100%;">
+                            <option value="Balvatika">Balvatika (L1 Ceiling)</option>
+                            <option value="Grade 1" selected>Grade 1 (L2 Ceiling)</option>
+                            <option value="Grade 2">Grade 2 (L3 Ceiling)</option>
+                            <option value="Grade 3">Grade 3 (L4 Ceiling)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: 700; display: block; margin-bottom: 6px;">Language Track:</label>
+                        <select id="setup-lang-select" class="rep-select" style="width: 100%;">
+                            <option value="Gujarati / English" selected>Gujarati / English</option>
+                            <option value="English Only">English Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight: 700; display: block; margin-bottom: 6px;">Roster Size:</label>
+                    <select id="setup-roster-size-select" class="rep-select" style="width: 100%;">
+                        <option value="10">10 Students</option>
+                        <option value="25">25 Students</option>
+                        <option value="40" selected>40 Students (Full Roster)</option>
+                    </select>
+                </div>
+                <button class="btn-primary" style="margin-top: 12px; padding: 14px 24px; font-size: 1.1rem;" onclick="completeInitialSetupFlow()">
+                    Save & Start Classroom Assessment Session <span class="material-icons-round">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Prototype Data Engine -->
     <script src="data.js"></script>
-    <script src="storage.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

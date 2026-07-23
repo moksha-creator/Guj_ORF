@@ -854,8 +854,107 @@ function processSpokenTranscriptStream(spokenText) {
 }
 
 // ----------------------------------------------------
-// DEMO CONTROLS & SELECTION HANDLERS
+// DEMO CONTROLS & MANUAL OVERRIDE SELECTION ENGINE
 // ----------------------------------------------------
+let isManualOverrideSession = false;
+
+function resolveActiveAssessmentConfig() {
+    const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0];
+    
+    // Auto values from student state
+    const autoLevel = activeStudent ? (activeStudent.level || "L1") : "L1";
+    let autoTier = "tier1";
+    if (activeStudent) {
+        if (activeStudent.stageType === "COMP_TIER") {
+            autoTier = "tier" + (activeStudent.compTier || 1);
+        } else {
+            autoTier = "tier" + (activeStudent.readingTier || 1);
+        }
+    }
+    
+    const autoLevelObj = PROTOTYPE_DATA[autoLevel];
+    const autoTemplates = autoLevelObj ? Object.keys(autoLevelObj.templates) : ["WORD_READ_TEXT"];
+    const autoTemplate = autoTemplates[0];
+
+    // Read manual dropdown values
+    const levelSelect = document.getElementById('demo-level-select');
+    const templateSelect = document.getElementById('demo-template-select');
+    const tierSelect = document.getElementById('demo-tier-select');
+
+    const manualLevel = (levelSelect && levelSelect.value !== 'AUTO') ? levelSelect.value : null;
+    const manualTemplate = (templateSelect && templateSelect.value !== 'AUTO') ? templateSelect.value : null;
+    const manualTier = (tierSelect && tierSelect.value !== 'AUTO') ? tierSelect.value : null;
+
+    let effectiveLevel = autoLevel;
+    if (manualLevel) {
+        effectiveLevel = manualLevel;
+    } else if (manualTemplate) {
+        const foundLvl = Object.keys(PROTOTYPE_DATA).find(lKey => PROTOTYPE_DATA[lKey].templates && PROTOTYPE_DATA[lKey].templates[manualTemplate]);
+        if (foundLvl) effectiveLevel = foundLvl;
+    }
+
+    const levelObj = PROTOTYPE_DATA[effectiveLevel];
+    const availableTemplates = levelObj ? Object.keys(levelObj.templates) : ["WORD_READ_TEXT"];
+
+    let effectiveTemplate = availableTemplates[0];
+    if (manualTemplate && availableTemplates.includes(manualTemplate)) {
+        effectiveTemplate = manualTemplate;
+    } else if (!manualTemplate && availableTemplates.includes(autoTemplate)) {
+        effectiveTemplate = autoTemplate;
+    }
+
+    const effectiveTier = manualTier || autoTier;
+    const isOverride = (manualLevel !== null || manualTemplate !== null || manualTier !== null);
+
+    return {
+        level: effectiveLevel,
+        template: effectiveTemplate,
+        tier: effectiveTier,
+        isOverride: isOverride,
+        autoLevel,
+        autoTemplate,
+        autoTier
+    };
+}
+
+function updateDemoModeBadge() {
+    const config = resolveActiveAssessmentConfig();
+    const badge = document.getElementById('demo-mode-badge');
+    const icon = document.getElementById('demo-mode-icon');
+    const text = document.getElementById('demo-mode-text');
+
+    if (!badge || !text) return;
+
+    if (config.isOverride) {
+        badge.style.background = '#F59E0B'; // Amber background for Manual Override
+        if (icon) icon.innerText = 'tune';
+        text.innerText = 'MANUAL OVERRIDE';
+    } else {
+        badge.style.background = '#3B82F6'; // Blue background for Auto Mode
+        if (icon) icon.innerText = 'autorenew';
+        text.innerText = 'AUTO MODE';
+    }
+}
+
+function resetDemoControlsToAuto() {
+    const levelSelect = document.getElementById('demo-level-select');
+    const templateSelect = document.getElementById('demo-template-select');
+    const tierSelect = document.getElementById('demo-tier-select');
+
+    if (levelSelect) levelSelect.value = 'AUTO';
+    if (templateSelect) templateSelect.value = 'AUTO';
+    if (tierSelect) tierSelect.value = 'AUTO';
+
+    populateTemplatesForLevel('AUTO');
+    updateDemoModeBadge();
+
+    if (screens.ACTIVITY && screens.ACTIVITY.classList.contains('active')) {
+        renderCurrentActivity();
+    } else if (screens.HOME && screens.HOME.classList.contains('active')) {
+        renderTeacherHome();
+    }
+}
+
 function initDemoControls() {
     const levelSelect = document.getElementById('demo-level-select');
     const tierSelect = document.getElementById('demo-tier-select');
@@ -864,54 +963,85 @@ function initDemoControls() {
     if (!levelSelect || !tierSelect || !templateSelect) return;
 
     levelSelect.onchange = (e) => {
-        currentLevel = e.target.value;
         sampleIndex = 0;
         studentSampleCount = 1;
-        populateTemplatesForLevel(currentLevel);
-        if (screens.ACTIVITY.classList.contains('active')) {
+        populateTemplatesForLevel(e.target.value);
+        updateDemoModeBadge();
+        if (screens.ACTIVITY && screens.ACTIVITY.classList.contains('active')) {
+            renderCurrentActivity();
+        } else if (screens.HOME && screens.HOME.classList.contains('active')) {
+            renderTeacherHome();
+        }
+    };
+
+    tierSelect.onchange = () => {
+        sampleIndex = 0;
+        studentSampleCount = 1;
+        updateDemoModeBadge();
+        if (screens.ACTIVITY && screens.ACTIVITY.classList.contains('active')) {
             renderCurrentActivity();
         }
     };
 
-    tierSelect.onchange = (e) => {
-        currentTier = e.target.value;
+    templateSelect.onchange = () => {
         sampleIndex = 0;
         studentSampleCount = 1;
-        if (screens.ACTIVITY.classList.contains('active')) {
+        updateDemoModeBadge();
+        if (screens.ACTIVITY && screens.ACTIVITY.classList.contains('active')) {
             renderCurrentActivity();
         }
     };
 
-    templateSelect.onchange = (e) => {
-        currentTemplate = e.target.value;
-        sampleIndex = 0;
-        studentSampleCount = 1;
-        if (screens.ACTIVITY.classList.contains('active')) {
-            renderCurrentActivity();
-        }
-    };
-
-    populateTemplatesForLevel(currentLevel);
+    populateTemplatesForLevel('AUTO');
+    updateDemoModeBadge();
 }
 
-function populateTemplatesForLevel(level) {
+function populateTemplatesForLevel(levelVal) {
     const templateSelect = document.getElementById('demo-template-select');
     if (!templateSelect) return;
+
+    const prevSelected = templateSelect.value;
     templateSelect.innerHTML = '';
 
-    const levelObj = PROTOTYPE_DATA[level];
-    if (!levelObj) return;
+    const autoOpt = document.createElement('option');
+    autoOpt.value = 'AUTO';
+    autoOpt.innerText = '⚡ Auto (Engine Template)';
+    templateSelect.appendChild(autoOpt);
 
-    const templates = Object.keys(levelObj.templates);
-    templates.forEach(tKey => {
+    let templatesToInclude = [];
+    if (!levelVal || levelVal === 'AUTO') {
+        Object.keys(PROTOTYPE_DATA).forEach(lKey => {
+            const tMap = PROTOTYPE_DATA[lKey].templates || {};
+            Object.keys(tMap).forEach(tKey => {
+                if (!templatesToInclude.includes(tKey)) templatesToInclude.push(tKey);
+            });
+        });
+    } else {
+        const levelObj = PROTOTYPE_DATA[levelVal];
+        if (levelObj && levelObj.templates) {
+            templatesToInclude = Object.keys(levelObj.templates);
+        }
+    }
+
+    templatesToInclude.forEach(tKey => {
         const opt = document.createElement('option');
         opt.value = tKey;
-        opt.innerText = tKey;
+        
+        let friendlyTitle = tKey;
+        Object.values(PROTOTYPE_DATA).forEach(lObj => {
+            if (lObj.templates && lObj.templates[tKey] && lObj.templates[tKey].title) {
+                friendlyTitle = `${lObj.templates[tKey].title} (${tKey})`;
+            }
+        });
+        opt.innerText = friendlyTitle;
         templateSelect.appendChild(opt);
     });
 
-    currentTemplate = templates[0];
-    templateSelect.value = currentTemplate;
+    if (prevSelected && Array.from(templateSelect.options).some(o => o.value === prevSelected)) {
+        templateSelect.value = prevSelected;
+    } else {
+        templateSelect.value = 'AUTO';
+    }
 }
 
 // Simulate Progression (Advance, Stay, Move Down)
@@ -955,15 +1085,12 @@ function simulateProgression(action) {
 
     if (subtitle) subtitle.innerText = `${prevLevel}  ➔  ${stageDisplay}`;
 
-    currentLevel = activeStudent.level;
-    populateTemplatesForLevel(currentLevel);
-
     if (toast) {
         toast.classList.remove('hidden');
         setTimeout(() => { toast.classList.add('hidden'); }, 2800);
     }
 
-    if (screens.ACTIVITY.classList.contains('active') || screens.COMPREHENSION.classList.contains('active')) {
+    if (screens.ACTIVITY && screens.ACTIVITY.classList.contains('active')) {
         renderCurrentActivity();
     }
 }
@@ -1005,11 +1132,15 @@ function renderTeacherHome() {
 
     if (activeStudent) {
         currentStudentIndex = AppState.students.findIndex(s => s.id === activeStudent.id);
-        currentLevel = activeStudent.level || "L1"; // Auto-set active student's level!
+        const config = resolveActiveAssessmentConfig();
+        currentLevel = config.level;
+        currentTemplate = config.template;
+        currentTier = config.tier;
+
         const heroContent = document.getElementById('hero-card-content');
         const heroActions = document.getElementById('hero-card-actions');
         const avatarPath = activeStudent.avatarImg || `assets/kid_avatar_${(currentStudentIndex % 4) + 1}.jpg`;
-        const stageText = activeStudent.stageDisplay || activeStudent.level || "L1";
+        const stageText = config.isOverride ? `${config.level} (${config.tier.toUpperCase()}) [Testing Mode]` : (activeStudent.stageDisplay || activeStudent.level || "L1");
 
         if (heroContent) {
             heroContent.style.display = 'flex';
@@ -1110,8 +1241,11 @@ function triggerStartSession() {
     studentSampleCount = 1;
     sampleIndex = 0;
     const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0] || { name: 'Aarav Patel' };
-    currentLevel = activeStudent.level || "L1"; // Auto-set active student level!
-    populateTemplatesForLevel(currentLevel);
+    const config = resolveActiveAssessmentConfig();
+    currentLevel = config.level;
+    currentTemplate = config.template;
+    currentTier = config.tier;
+    isManualOverrideSession = config.isOverride;
     startTransitionScreen(activeStudent.name);
 }
 
@@ -1168,10 +1302,11 @@ function renderCurrentActivity() {
     isStepTransitioning = false;
     clearLiveTranscript();
 
-    const activeStudent = AppState.students[currentStudentIndex] || AppState.students[0];
-    if (activeStudent) {
-        currentLevel = activeStudent.level || "L1";
-    }
+    const config = resolveActiveAssessmentConfig();
+    currentLevel = config.level;
+    currentTemplate = config.template;
+    currentTier = config.tier;
+    isManualOverrideSession = config.isOverride;
 
     const levelData = PROTOTYPE_DATA[currentLevel];
     if (!levelData) return;
@@ -1186,9 +1321,9 @@ function renderCurrentActivity() {
     const counterBadge = document.getElementById('activity-sample-counter');
     const instructText = document.getElementById('activity-instruction-text');
 
-    if (lvlBadge) lvlBadge.innerText = levelData.name;
+    if (lvlBadge) lvlBadge.innerText = isManualOverrideSession ? `${levelData.name} [Test]` : levelData.name;
     if (tmplBadge) tmplBadge.innerText = currentTemplate;
-    if (counterBadge) counterBadge.innerText = `Sample ${studentSampleCount} of 3`;
+    if (counterBadge) counterBadge.innerText = `Sample ${studentSampleCount} of 3 (${currentTier.toUpperCase()})`;
     if (instructText) instructText.innerText = templateData.instruction;
 
     // Rule: Hide WCPM Badge for L1 (Balvatika) & L2 (Grade 1); Show ONLY for L3 (Grade 2) & L4 (Grade 3)
@@ -1536,23 +1671,33 @@ function completeAssessmentSampleStep() {
             activeStudent.compScore = 90;
             activeStudent.assessments = (activeStudent.assessments || 0) + 1;
 
-            // Automatically Compute Next Progression Stage
-            const { action: outcome, stageDisplay } = calculateAutomaticProgression(activeStudent, {
-                accuracy: activeStudent.accuracy,
-                wcpm: activeStudent.wcpm,
-                compScore: activeStudent.compScore
-            });
+            let outcome = "Completed";
+            let stageDisplay = activeStudent.stageDisplay || activeStudent.level;
+
+            if (!isManualOverrideSession) {
+                // Automatically Compute Next Progression Stage ONLY in Automatic Mode
+                const res = calculateAutomaticProgression(activeStudent, {
+                    accuracy: activeStudent.accuracy,
+                    wcpm: activeStudent.wcpm,
+                    compScore: activeStudent.compScore
+                });
+                outcome = res.action;
+                stageDisplay = res.stageDisplay;
+            } else {
+                outcome = "Manual Test";
+                stageDisplay = `${currentLevel} (${currentTier.toUpperCase()}) [Testing Mode]`;
+            }
 
             // Log session into unified responseLog
             AppState.responseLog.unshift({
-                date: "2026-07-22",
+                date: "2026-07-23",
                 studentId: activeStudent.id,
                 name: activeStudent.name,
                 avatarImg: activeStudent.avatarImg,
                 grade: activeStudent.grade || AppState.config.grade,
                 lang: activeStudent.lang || AppState.config.languageTrack,
-                level: activeStudent.level,
-                tier: activeStudent.tier,
+                level: currentLevel,
+                tier: currentTier,
                 accuracy: activeStudent.accuracy,
                 wcpm: activeStudent.wcpm,
                 compScore: activeStudent.compScore,
@@ -1568,7 +1713,7 @@ function completeAssessmentSampleStep() {
         const countEl = document.getElementById('countdown');
 
         if (greetingEl) greetingEl.innerText = "Great Reading!";
-        if (subEl) subEl.innerText = `Session Complete 🌟 (${activeStudent ? activeStudent.stageDisplay : 'Finished'})`;
+        if (subEl) subEl.innerText = `Session Complete 🌟 (${activeStudent ? (isManualOverrideSession ? 'Manual Test Mode' : activeStudent.stageDisplay) : 'Finished'})`;
         if (countEl) countEl.innerText = "✓";
 
         setTimeout(() => {
